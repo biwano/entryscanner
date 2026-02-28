@@ -40,22 +40,21 @@ export interface MonitoredPair {
 }
 
 export interface AssetMeta {
-  name: string
-  szDecimals: number
-  maxLeverage: number
-  onlyIsolated: boolean
+  name: string;
+  szDecimals: number;
+  maxLeverage: number;
+  onlyIsolated?: boolean;
 }
 
 export interface AssetCtx {
-  coin: string
-  dayNiv: number
-  daySam: number
-  funding: number
-  impactPxs: [string, string]
-  markPx: number
-  midPx: number
-  openInterest: number
-  oraclePx: number
-  prevDayPx: number
-  premium: number
+  prevDayPx: string;
+  dayNtlVlm: string;
+  markPx: string;
+  midPx: string | null;
+  funding: string;
+  openInterest: string;
+  premium: string | null;
+  oraclePx: string;
+  impactPxs: string[] | null;
+  dayBaseVlm: string;
 }
