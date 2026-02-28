@@ -30,7 +30,7 @@ Entry scanner is a web-based application that monitors real-time market data on 
 - **Subscription Management**: Users can subscribe/unsubscribe to specific pair/timeframe combinations (e.g., BTC/Daily, ETH/Weekly) to receive personalized notifications.
 - **Trend Indicators**:
   - **Bullish/Bearish Status**: Visual indicator of the current trend based on SMA 50 crossover on **Daily (D1) and Weekly (W1)** timeframes.
-  - **Trend Duration**: Show since when the pair turned bullish or bearish (timestamp/relative time).
+  - **Trend Duration**: Show since when the pair turned bullish or bearish (timestamp/relative time from the last event).
   - **Sorting**: Pairs are sorted by how long they have been in their current trend (ascending order - showing most recent trend changes first).
 - **Navigation**: Click on any pair to open the **Pair Analysis** view.
 - **Price Ticker**: Display live-polled prices for all active perpetual assets on Hyperliquid.
@@ -75,22 +75,22 @@ All server-side workers (Trend Worker, Notification Dispatcher) can be triggered
 
 #### 3.2.2. Automated Trend Worker
 
-- **Sequential Update Logic**: For each timeframe (Daily, Weekly), the worker identifies the coin in `monitored_pairs` that has the oldest trend record (or no record) in the `trends` table. It prioritizes coins where the `created_at` of the referenced `last_trend_flip_[timeframe]_id` is the oldest, ensuring that pairs which have maintained a trend the longest (or have never been analyzed) are checked for potential flips.
+- **Sequential Update Logic**: For each timeframe (Daily, Weekly), the worker identifies the coin in `monitored_pairs` that has the oldest trend record (or no record) in the `trends` table. It prioritizes coins where the `last_analyzed` or `last_updated` timestamps are the oldest, ensuring that all pairs are regularly checked.
 - **Simplified Processing Flow**:
   1.  **Get Candles**: Fetch the last 400 candles for the coin and timeframe.
-  2.  **Check Database**: Verify if a record already exists in the `trends` table for the last closed candle's timestamp (`timestamp`).
-  3.  **Trend Calculation**: If no record exists, run the `determineTrend` logic using the fetched candles.
-  4.  **Entry Creation**: Create a new entry in the `trends` table for the current candle.
-  5.  **Database Synchronization**: Update the corresponding `last_trend_flip_[timeframe]_id` in `monitored_pairs` if the calculated trend status represents a flip from the previous state.
+  2.  **Trend Calculation**: Run the `determineTrend` logic using the fetched candles (SMA 50 crossover).
+  3.  **Trend Update**: Update the single row in the `trends` table for the coin/timeframe (upsert with uniqueness on `coin` and `timeframe`).
+  4.  **Event Creation**: If the calculated trend status represents a flip from the previous state (or if it's the first record), create a new record in the `events` table.
+  5.  **Database Synchronization**: Update the corresponding `last_trend_flip_[timeframe]_id` in `monitored_pairs` with the new `event_id`.
   6.  **Activity Tracking**: Update `last_analyzed` and `last_updated` timestamps in `monitored_pairs` on every run.
 - **Reliability**: Ensures that all tracked pairs are eventually updated, even with API rate limits, by focusing on the least recently updated pair.
 
 #### 3.2.3. Alert & Notification Engine (Server-Side)
 
 - **Notification Dispatcher Worker**: The primary background process responsible for sending alerts. It ensures reliability by:
-  - **Gap Analysis**: Periodically comparing entries in the `trends` table against `notification_history` for each user's `user_subscriptions`.
-  - **Delivery Logic**: Identifying users who are subscribed to a specific pair/timeframe that experienced a trend flip but do not yet have a corresponding entry in `notification_history` for that `trend_id`.
-  - **Execution**: Sending the Discord notifications to the users' configured webhooks and logging the successful delivery to `notification_history`.
+  - **Event Gap Analysis**: For each user's `user_subscriptions`, it identifies all `events` for which the user hasn't received a notification yet.
+  - **Selection Logic**: It selects events where the `event.timestamp` is greater than the timestamp of the event referenced by the user's last notification for that specific coin/timeframe.
+  - **Execution**: Sending the Discord notifications to the users' configured webhooks and logging the successful delivery to `notification_history` (referencing the `event_id`).
 
 ### 3.3. Shared Features
 
@@ -144,8 +144,8 @@ Tables use **Row Level Security (RLS)** to ensure appropriate data access. User-
 - `id`: uuid (primary key)
 - `coin`: string
 - `active`: boolean (default: true, used to toggle monitoring without deletion)
-- `last_trend_flip_daily_id`: uuid (foreign key to `trends.id`, nullable, **ON DELETE SET NULL**)
-- `last_trend_flip_weekly_id`: uuid (foreign key to `trends.id`, nullable, **ON DELETE SET NULL**)
+- `last_trend_flip_daily_id`: uuid (foreign key to `events.id`, nullable, **ON DELETE SET NULL**)
+- `last_trend_flip_weekly_id`: uuid (foreign key to `events.id`, nullable, **ON DELETE SET NULL**)
 - `last_analyzed`: timestamp (last time the trend logic was run)
 - `last_updated`: timestamp (last time the record was updated)
 - `created_at`: timestamp
@@ -157,20 +157,30 @@ Tables use **Row Level Security (RLS)** to ensure appropriate data access. User-
 - `coin`: string (e.g., "BTC", "ETH")
 - `timeframe`: string (e.g., "D1", "W1")
 - `status`: enum ("bullish", "bearish")
+- `timestamp`: timestamp (the opening time of the last closed candle)
+- **RLS Policy**: Publicly readable. Only system-level processes can insert/update.
+- **Note**: This table stores the *current* trend for each pair and timeframe. There is only one row per coin/timeframe couple. Uniqueness is ensured at the database level.
+
+### `events`
+
+- `id`: uuid (primary key)
+- `coin`: string
+- `timeframe`: string
+- `status`: enum ("bullish", "bearish")
 - `timestamp`: timestamp (the opening time of the candle where the trend flipped)
-- `created_at`: timestamp (for history and tracking changes)
+- `created_at`: timestamp
 - **RLS Policy**: Publicly readable. Only system-level processes can insert.
-- **Note**: This table stores the current trend and a full history of trend changes per pair and timeframe.
+- **Note**: This table stores the history of trend flips.
 
 ### `notification_history`
 
 - `id`: uuid (primary key)
 - `user_id`: uuid (foreign key to profiles.id)
-- `trend_id`: uuid (foreign key to trends.id)
+- `event_id`: uuid (foreign key to `events.id`, nullable, **ON DELETE SET NULL**)
 - `message`: text (e.g., "BTC Daily Trend flipped to bullish")
 - `triggered_at`: timestamp
 - **RLS Policy**: Users can only view notifications triggered for their own account. Only system-level processes can insert.
-- **Note**: This table tracks which trend flips were successfully sent to which users. Metadata like coin and timeframe are found in the referenced `trends` table.
+- **Note**: This table tracks which events were successfully sent to which users. Metadata like coin and timeframe are found in the referenced `events` table.
 
 ## 5. System Architecture
 
@@ -178,8 +188,8 @@ Tables use **Row Level Security (RLS)** to ensure appropriate data access. User-
 2.  **Condition & Trend Engine**:
     - Uses shared trend logic from the integration library to compare data against the SMA 50.
     - Calculates bullish/bearish trends on **Daily and Weekly** timeframes.
-    - Updates the `trends` table (with history) and the latest trend reference in `monitored_pairs` if a trend flip occurs.
-    - **Notification Dispatcher**: A background worker that compares `trends` against `notification_history` for all `user_subscriptions` and sends pending alerts to ensure full delivery reliability.
-3.  **Server-Side Workers**: Background processes (via Nitro/Server API) that cycle through monitored pairs (Trend Worker) and notification gaps (Dispatcher). These workers can be triggered through API endpoints, scheduled Nuxt cron tasks, or direct bash commands.
+    - Updates the `trends` table (single row per coin/timeframe) and creates an entry in `events` if a trend flip occurs.
+    - **Notification Dispatcher**: A background worker that identifies new `events` for which the user hasn't been notified (based on timestamp comparison with last notification) and sends alerts.
+3.  **Server-Side Workers**: Background processes (via Nitro/Server API) that cycle through monitored pairs (Trend Worker) and events (Dispatcher). These workers can be triggered through API endpoints, scheduled Nuxt cron tasks, or direct bash commands.
 4.  **Persistence Layer**: Supabase handles all system and user-specific data, ensuring monitored states and alerts remain persistent.
 5.  **Market Integration**: Uses the `InfoClient` for real-time market data retrieval.

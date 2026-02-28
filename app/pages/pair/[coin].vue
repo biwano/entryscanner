@@ -34,8 +34,8 @@ const { data: pair } = await useAsyncData<MonitoredPairWithTrends | null>(`pair_
     .select(
       `
       *,
-      last_trend_flip_daily:trends!last_trend_flip_daily_id (*),
-      last_trend_flip_weekly:trends!last_trend_flip_weekly_id (*)
+      last_trend_flip_daily:events!last_trend_flip_daily_id (*),
+      last_trend_flip_weekly:events!last_trend_flip_weekly_id (*)
     `
     )
     .eq("coin", coin)

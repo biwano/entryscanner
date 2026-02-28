@@ -21,59 +21,65 @@ export async function runNotificationDispatcher() {
   for (const sub of subscriptions) {
     if (!sub.monitored_pairs?.active) continue;
 
-    const trendId =
-      sub.timeframe === "D1"
-        ? sub.monitored_pairs?.last_trend_flip_daily_id
-        : sub.monitored_pairs?.last_trend_flip_weekly_id;
+    if (!sub.profiles?.discord_webhook_url) continue;
 
-    if (!trendId || !sub.profiles?.discord_webhook_url) continue;
-
-    const { data: existingNotif } = await supabase
+    // Get the last notification for this subscription (user_id, coin, timeframe)
+    // We join with events to filter by coin and timeframe
+    const { data: lastNotif } = await supabase
       .from("notification_history")
-      .select("id")
+      .select("id, event_id, events!inner(created_at, coin, timeframe)")
       .eq("user_id", sub.user_id)
-      .eq("trend_id", trendId)
+      .eq("events.coin", sub.coin)
+      .eq("events.timeframe", sub.timeframe)
+      .order("events(created_at)", { ascending: false })
+      .limit(1)
       .maybeSingle();
 
-    if (existingNotif) continue;
+    const lastCreatedAt =
+      lastNotif?.events?.created_at || "1970-01-01T00:00:00Z";
 
-    const { data: trend } = await supabase
-      .from("trends")
+    // Get all events since the last notification
+    const { data: pendingEvents } = await supabase
+      .from("events")
       .select("*")
-      .eq("id", trendId)
-      .single();
+      .eq("coin", sub.coin)
+      .eq("timeframe", sub.timeframe)
+      .gt("created_at", lastCreatedAt)
+      .order("created_at", { ascending: true });
 
-    if (!trend) continue;
+    if (!pendingEvents || pendingEvents.length === 0) continue;
 
-    const message = `${sub.coin} ${
-      sub.timeframe
-    } trend flipped to **${trend.status.toUpperCase()}**!`;
-    try {
-      await $fetch(sub.profiles.discord_webhook_url, {
-        method: "POST",
-        body: {
-          content: message,
-          embeds: [
-            {
-              title: `Trend Flip Alert: ${sub.coin}`,
-              description: message,
-              color: trend.status === "bullish" ? 0x00ff00 : 0xff0000,
-              timestamp: new Date(trend.timestamp).toISOString(),
-            },
-          ],
-        },
-      });
+    for (const event of pendingEvents) {
+      const message = `${sub.coin} ${
+        sub.timeframe
+      } trend flipped to **${event.status.toUpperCase()}**!`;
+      try {
+        await $fetch(sub.profiles.discord_webhook_url, {
+          method: "POST",
+          body: {
+            content: message,
+            embeds: [
+              {
+                title: `Trend Flip Alert: ${sub.coin}`,
+                description: message,
+                color: event.status === "bullish" ? 0x00ff00 : 0xff0000,
+                timestamp: new Date(event.timestamp).toISOString(),
+              },
+            ],
+          },
+        });
 
-      await supabase.from("notification_history").insert({
-        user_id: sub.user_id,
-        trend_id: trend.id,
-        message,
-      });
+        await supabase.from("notification_history").insert({
+          user_id: sub.user_id,
+          event_id: event.id,
+          message,
+        });
 
-      sent.push({ user_id: sub.user_id, coin: sub.coin });
-    } catch (err: unknown) {
-      const errorMsg = err instanceof Error ? err.message : String(err);
-      console.error("Dispatcher error:", errorMsg);
+        sent.push({ user_id: sub.user_id, coin: sub.coin });
+      } catch (err: unknown) {
+        const errorMsg = err instanceof Error ? err.message : String(err);
+        console.error("Dispatcher error:", errorMsg);
+      }
     }
   }
   return { status: "ok", sent: sent.length };

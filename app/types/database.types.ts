@@ -39,6 +39,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      events: {
+        Row: {
+          coin: string
+          created_at: string
+          id: string
+          status: string
+          timeframe: string
+          timestamp: string
+        }
+        Insert: {
+          coin: string
+          created_at?: string
+          id?: string
+          status: string
+          timeframe: string
+          timestamp: string
+        }
+        Update: {
+          coin?: string
+          created_at?: string
+          id?: string
+          status?: string
+          timeframe?: string
+          timestamp?: string
+        }
+        Relationships: []
+      }
       monitored_pairs: {
         Row: {
           active: boolean
@@ -75,46 +102,46 @@ export type Database = {
             foreignKeyName: "fk_last_trend_daily"
             columns: ["last_trend_flip_daily_id"]
             isOneToOne: false
-            referencedRelation: "trends"
+            referencedRelation: "events"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "fk_last_trend_weekly"
             columns: ["last_trend_flip_weekly_id"]
             isOneToOne: false
-            referencedRelation: "trends"
+            referencedRelation: "events"
             referencedColumns: ["id"]
           },
         ]
       }
       notification_history: {
         Row: {
+          event_id: string
           id: string
           message: string | null
-          trend_id: string
           triggered_at: string | null
           user_id: string
         }
         Insert: {
+          event_id: string
           id?: string
           message?: string | null
-          trend_id: string
           triggered_at?: string | null
           user_id: string
         }
         Update: {
+          event_id?: string
           id?: string
           message?: string | null
-          trend_id?: string
           triggered_at?: string | null
           user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "notification_history_trend_id_fkey"
-            columns: ["trend_id"]
+            foreignKeyName: "notification_history_event_id_fkey"
+            columns: ["event_id"]
             isOneToOne: false
-            referencedRelation: "trends"
+            referencedRelation: "events"
             referencedColumns: ["id"]
           },
           {

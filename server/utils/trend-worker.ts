@@ -55,78 +55,107 @@ export async function runTrendWorker() {
     const lastClosedCandle = candles[lastClosedCandleIdx]!;
     const lastCandleTime = new Date(lastClosedCandle.t).toISOString();
 
-    // Check if there is an entry in the database for that last candle
+    // Check current status in trends table (one row per coin/timeframe)
     const { data: existingTrend } = await supabase
       .from("trends")
-      .select("id, status")
+      .select("id, status, timestamp")
       .eq("coin", coin)
       .eq("timeframe", timeframe)
-      .eq("timestamp", lastCandleTime)
       .maybeSingle();
 
-    if (existingTrend) {
-      await supabase
-        .from("monitored_pairs")
-        .update({ last_analyzed: new Date().toISOString() })
-        .eq("id", pair.id);
-      return { status: "already_processed", coin, timeframe };
-    }
-
-    // If not run determineTrend (using candles up to the last closed one)
+    // Run determineTrend (using candles up to the last closed one)
     const candlesToAnalyze = candles.slice(0, lastClosedCandleIdx + 1);
     const currentTrend = determineTrend(coin, timeframe, candlesToAnalyze);
     if (!currentTrend) {
       return { status: "error", coin, message: "trend calculation failed" };
     }
 
-    // Create the trend entry for this candle
-    const { data: newTrend, error: insertError } = await supabase
-      .from("trends")
-      .insert({
-        coin,
-        timeframe,
-        status: currentTrend.status,
-        timestamp: lastCandleTime,
-      })
-      .select()
-      .single();
-
-    if (insertError || !newTrend) {
-      return { status: "error", coin, message: "insert failed", error: insertError };
-    }
-
-    // Update monitored pairs if necessary (if trend status flipped compared to previous recorded flip)
-    const trendFlipColumn =
-      timeframe === "D1"
-        ? "last_trend_flip_daily_id"
-        : "last_trend_flip_weekly_id";
-    const lastTrendFlipId = pair[trendFlipColumn];
-
     let isFlip = false;
-    if (!lastTrendFlipId) {
+    let eventId: string | null = null;
+
+    if (!existingTrend) {
+      // First time processing this coin/timeframe
       isFlip = true;
-    } else {
-      const { data: lastFlipRecord } = await supabase
+      const { data: newTrend, error: insertError } = await supabase
         .from("trends")
-        .select("status")
-        .eq("id", lastTrendFlipId)
+        .insert({
+          coin,
+          timeframe,
+          status: currentTrend.status,
+          timestamp: lastCandleTime,
+        })
+        .select()
+        .single();
+
+      if (insertError || !newTrend) {
+        return { status: "error", coin, message: "trends insert failed", error: insertError };
+      }
+
+      // Create initial event
+      const { data: newEvent, error: eventError } = await supabase
+        .from("events")
+        .insert({
+          coin,
+          timeframe,
+          status: currentTrend.status,
+          timestamp: lastCandleTime,
+        })
+        .select()
         .single();
       
-      if (lastFlipRecord && lastFlipRecord.status !== currentTrend.status) {
-        isFlip = true;
+      if (eventError || !newEvent) {
+        return { status: "error", coin, message: "events insert failed", error: eventError };
       }
+      eventId = newEvent.id;
+    } else if (existingTrend.status !== currentTrend.status) {
+      // Trend flipped
+      isFlip = true;
+      const { error: updateError } = await supabase
+        .from("trends")
+        .update({
+          status: currentTrend.status,
+          timestamp: lastCandleTime,
+        })
+        .eq("id", existingTrend.id);
+
+      if (updateError) {
+        return { status: "error", coin, message: "trends update failed", error: updateError };
+      }
+
+      // Create new flip event
+      const { data: newEvent, error: eventError } = await supabase
+        .from("events")
+        .insert({
+          coin,
+          timeframe,
+          status: currentTrend.status,
+          timestamp: lastCandleTime,
+        })
+        .select()
+        .single();
+      
+      if (eventError || !newEvent) {
+        return { status: "error", coin, message: "events flip insert failed", error: eventError };
+      }
+      eventId = newEvent.id;
+    } else {
+      // Trend is the same, just update the timestamp
+      await supabase
+        .from("trends")
+        .update({ timestamp: lastCandleTime })
+        .eq("id", existingTrend.id);
     }
 
     const updates: TablesUpdate<"monitored_pairs"> = {
       last_analyzed: new Date().toISOString(),
     };
 
-    if (isFlip) {
+    if (isFlip && eventId) {
       updates.last_updated = new Date().toISOString();
       if (timeframe === "D1") {
-        updates.last_trend_flip_daily_id = newTrend.id;
+        updates.last_trend_flip_daily_id = eventId;
       } else {
-        updates.last_trend_flip_weekly_id = newTrend.id;
+        updates.last_trend_flip_weekly_id = eventId;
       }
     }
 
