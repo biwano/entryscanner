@@ -27,14 +27,9 @@ export function determineTrend(
   coin: string,
   timeframe: Timeframe,
   candles: HyperliquidCandle[] // From InfoClient.candleSnapshot
-): TrendStatus {
+): TrendStatus | null {
   if (candles.length === 0) {
-    return {
-      coin,
-      timeframe,
-      status: "bearish",
-      since: Date.now(),
-    };
+    return null;
   }
 
   const closePrices = candles.map((c) => parseFloat(c.c));

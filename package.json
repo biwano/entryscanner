@@ -18,6 +18,7 @@
     "@pinia/nuxt": "^0.11.3",
     "@supa-kit/auth-ui-vue": "^0.4.3",
     "@supabase/auth-ui-shared": "^0.1.8",
+    "@supabase/supabase-js": "^2.98.0",
     "@tanstack/vue-query": "^5.92.9",
     "date-fns": "^4.1.0",
     "echarts": "^6.0.0",

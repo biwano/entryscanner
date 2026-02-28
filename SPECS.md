@@ -76,12 +76,13 @@ All server-side workers (Trend Worker, Notification Dispatcher) can be triggered
 #### 3.2.2. Automated Trend Worker
 
 - **Sequential Update Logic**: For each timeframe (Daily, Weekly), the worker identifies the coin in `monitored_pairs` that has the oldest trend record (or no record) in the `trends` table. It prioritizes coins where the `created_at` of the referenced `last_trend_flip_[timeframe]_id` is the oldest, ensuring that pairs which have maintained a trend the longest (or have never been analyzed) are checked for potential flips.
-- **Trend Analysis**: Re-calculates bullishness/bearishness based on the 50 SMA logic for the targeted timeframe using the shared library.
-- **Database Synchronization**:
-  - **Candle Closure Check**: Before creating a new trend entry, the worker must verify that the candle for the targeted timeframe (Daily or Weekly) is fully closed. If the candle is still active, the worker logs a debug message and skips the update for that pair/timeframe.
-  - Compares the calculated trend against the most recent record in the `trends` table.
-  - If a flip is detected (and the candle is closed), a new entry is inserted into the `trends` table and the corresponding `last_trend_flip_[timeframe]_id` in `monitored_pairs` is updated.
-  - Updates `last_analyzed` and `last_updated` timestamps in `monitored_pairs` on every run to track activity.
+- **Simplified Processing Flow**:
+  1.  **Get Candles**: Fetch the last 400 candles for the coin and timeframe.
+  2.  **Check Database**: Verify if a record already exists in the `trends` table for the last closed candle's timestamp (`since`).
+  3.  **Trend Calculation**: If no record exists, run the `determineTrend` logic using the fetched candles.
+  4.  **Entry Creation**: Create a new entry in the `trends` table for the current candle.
+  5.  **Database Synchronization**: Update the corresponding `last_trend_flip_[timeframe]_id` in `monitored_pairs` if the calculated trend status represents a flip from the previous state.
+  6.  **Activity Tracking**: Update `last_analyzed` and `last_updated` timestamps in `monitored_pairs` on every run.
 - **Reliability**: Ensures that all tracked pairs are eventually updated, even with API rate limits, by focusing on the least recently updated pair.
 
 #### 3.2.3. Alert & Notification Engine (Server-Side)
@@ -99,7 +100,7 @@ All server-side workers (Trend Worker, Notification Dispatcher) can be triggered
 - **Class-Based Implementation**: The logic is encapsulated in a `HyperliquidClient` class within `shared/hyperliquid.ts`, providing a clean interface for data fetching and trend computation.
 - **Core Features**:
   - **Get Candles**: Fetch historical candle data for a specific pair and timeframe (e.g., "D1", "W1"). The system should always request enough data to provide exactly **400 candles** for consistent visualization and analysis.
-  - **Compute Current Trend**: Logic to determine the current trend (bullish/bearish) based on the 50 SMA crossover for a given pair and timeframe. This should only be computed if the trend is not already stored in the database for the current candle.
+  - **Compute Current Trend**: Logic to determine the current trend (bullish/bearish) based on the **50 SMA** crossover for a given pair and timeframe. This function returns `null` if no candle data is available.
   - **Get Known Pairs**: Retrieve a list of all available perpetual pairs from Hyperliquid.
 - **Data Fetching Utilities**: Standardized methods for fetching prices and market metadata.
 - **Type Safety**: Common TypeScript interfaces and types for Hyperliquid data structures.
