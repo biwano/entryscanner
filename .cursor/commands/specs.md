@@ -1,3 +1,7 @@
 # specs
 
-Before excuting the following update the specs accordingly and wait for my review before implementing
+Before excuting the following:
+
+- Update the SPECS.md file accordingly.
+- Plan the next steps
+- Wait for my review before implementing

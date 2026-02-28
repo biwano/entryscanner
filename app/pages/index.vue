@@ -54,6 +54,7 @@ const { data: monitoredPairs, refresh: refreshMonitored } = await useAsyncData(
       last_trend_flip_weekly:trends!last_trend_flip_weekly_id (*)
     `
       )
+      .eq("active", true)
       .order("last_updated", { ascending: false });
     return data as MonitoredPair[] | null;
   }

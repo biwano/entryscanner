@@ -1,32 +1,40 @@
 import { useQuery } from "@tanstack/vue-query";
-import {
-  createInfoClient,
-  fetchAllMids,
-  fetchMetaAndAssetCtxs,
-} from "#shared/hyperliquid";
+import { HyperliquidClient, type CandleInterval } from "#shared/hyperliquid";
 
 export const useHyperliquid = () => {
-  const client = createInfoClient();
+  const client = new HyperliquidClient();
 
   const useAllMids = () => {
     return useQuery({
       queryKey: ["allMids"],
-      queryFn: () => fetchAllMids(client),
+      queryFn: () => client.fetchAllMids(),
       refetchInterval: 50000, // Poll every 50 seconds
     });
   };
 
   const useMetaAndAssetCtxs = () => {
-    console.log("useMetaAndAssetCtxs");
     return useQuery({
       queryKey: ["metaAndAssetCtxs"],
-      queryFn: () => fetchMetaAndAssetCtxs(client),
+      queryFn: () => client.fetchMetaAndAssetCtxs(),
       refetchInterval: 100000, // Poll every 100 seconds
+    });
+  };
+
+  const useCandles = (
+    coin: string,
+    interval: CandleInterval,
+    startTime: number,
+    endTime?: number
+  ) => {
+    return useQuery({
+      queryKey: ["candles", coin, interval, startTime, endTime],
+      queryFn: () => client.fetchCandles(coin, interval, startTime, endTime),
     });
   };
 
   return {
     useAllMids,
     useMetaAndAssetCtxs,
+    useCandles,
   };
 };

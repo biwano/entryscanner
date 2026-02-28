@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { createInfoClient, fetchCandles } from '#shared/hyperliquid';
+import { HyperliquidClient } from '#shared/hyperliquid';
 import { determineTrend, isCandleClosed } from '#shared/trends';
 import type { Timeframe } from '#shared/types';
 
@@ -20,13 +20,14 @@ const getSupabaseServiceClient = () => {
 
 export async function runTrendWorker() {
   const supabase = getSupabaseServiceClient();
-  const client = createInfoClient();
+  const client = new HyperliquidClient();
   
   const timeframe = (Math.random() > 0.5 ? 'D1' : 'W1') as Timeframe;
   
   const { data: pair, error: pairError } = await supabase
     .from('monitored_pairs')
     .select('*')
+    .eq('active', true)
     .order('last_analyzed', { ascending: true, nullsFirst: true })
     .limit(1)
     .single();
@@ -40,7 +41,7 @@ export async function runTrendWorker() {
   const startTime = Date.now() - (250 * (timeframe === 'D1' ? 24 * 60 * 60 * 1000 : 7 * 24 * 60 * 60 * 1000));
   
   try {
-    const candles: any[] = await fetchCandles(client, coin, interval, startTime);
+    const candles: any[] = await client.fetchCandles(coin, interval, startTime);
     if (!candles || candles.length === 0) return { status: 'error', coin, message: 'no candles' };
 
     const latestCandleTime = candles[candles.length - 1].t;
@@ -88,13 +89,14 @@ export async function runNotificationDispatcher() {
     .select(`
       user_id, coin, timeframe,
       profiles (discord_webhook_url),
-      monitored_pairs!coin (last_trend_flip_daily_id, last_trend_flip_weekly_id)
+      monitored_pairs!coin (active, last_trend_flip_daily_id, last_trend_flip_weekly_id)
     `);
     
   if (subError || !subscriptions) return { status: 'no_subscriptions', error: subError };
   
   const sent = [];
   for (const sub of (subscriptions as any[])) {
+    if (!sub.monitored_pairs?.active) continue;
     const trendId = sub.timeframe === 'D1' ? sub.monitored_pairs?.last_trend_flip_daily_id : sub.monitored_pairs?.last_trend_flip_weekly_id;
     if (!trendId || !sub.profiles?.discord_webhook_url) continue;
 

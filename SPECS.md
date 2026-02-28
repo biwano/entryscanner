@@ -17,7 +17,7 @@ Entry scanner is a web-based application that monitors real-time market data on 
 ### 3.1. UI Features
 
 #### 3.1.1. Dashboard
-- **Monitored Pairs View**: Display all system-wide monitored pairs with their current trend status.
+- **Monitored Pairs View**: Display all system-wide monitored pairs (where `active` is `true`) with their current trend status.
 - **Subscription Management**: Users can subscribe/unsubscribe to specific pair/timeframe combinations (e.g., BTC/Daily, ETH/Weekly) to receive personalized notifications.
 - **Trend Indicators**: 
     - **Bullish/Bearish Status**: Visual indicator of the current trend based on 200 EMA crossover on **Daily (D1) and Weekly (W1)** timeframes.
@@ -37,6 +37,7 @@ Entry scanner is a web-based application that monitors real-time market data on 
 - **Global Pair Configuration**: A dedicated settings area to manage the system-wide list of tracked coins.
 - **Searchable Asset Universe**: Users can search through all perpetual pairs available on Hyperliquid (fetched from `info.meta`).
 - **Pair Selection**: A grid or list interface allowing users to toggle (select/deselect) which pairs are monitored by the system.
+- **Persistence & Toggle**: When a pair is no longer monitored, it is not deleted from the database. Instead, an `active` boolean flag is toggled to `false`.
 - **Bulk Management**: Capabilities to quickly add or remove multiple pairs from the active monitoring list.
 - **Persistence**: All configurations are saved to the `monitored_pairs` table in Supabase.
 
@@ -76,6 +77,7 @@ All server-side workers (Trend Worker, Notification Dispatcher) can be triggered
 
 #### 3.3.1. Hyperliquid Integration Library
 - **Centralized SDK Wrapper**: A shared library used by both the UI and Server Workers to interact with Hyperliquid via `@nktkas/hyperliquid`.
+- **Class-Based Implementation**: The logic is encapsulated in a `HyperliquidClient` class within `shared/hyperliquid.ts`, providing a clean interface for data fetching and trend computation.
 - **Core Features**:
     - **Get Candles**: Fetch historical candle data for a specific pair and timeframe (e.g., "D1", "W1").
     - **Compute Current Trend**: Logic to determine the current trend (bullish/bearish) based on the 200 EMA crossover for a given pair and timeframe. This should only be computed if the trend is not already stored in the database for the current candle.
@@ -111,6 +113,7 @@ Tables use **Row Level Security (RLS)** to ensure appropriate data access. User-
 ### `monitored_pairs`
 - `id`: uuid (primary key)
 - `coin`: string
+- `active`: boolean (default: true, used to toggle monitoring without deletion)
 - `last_trend_flip_daily_id`: uuid (foreign key to trends.id, nullable)
 - `last_trend_flip_weekly_id`: uuid (foreign key to trends.id, nullable)
 - `last_analyzed`: timestamp (last time the trend logic was run)

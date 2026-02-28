@@ -20,6 +20,7 @@ watchEffect(() => {
 interface MonitoredPair {
   id: string;
   coin: string;
+  active: boolean;
   last_updated: string;
 }
 
@@ -32,7 +33,6 @@ const { data: monitoredPairs, refresh: refreshMonitored } = await useAsyncData(
 );
 
 const allAvailableCoins = computed<string[]>(() => {
-  console.log("metaAndAssetCtxs.value", metaAndAssetCtxs.value);
   if (!metaAndAssetCtxs.value) return [];
   const meta = metaAndAssetCtxs.value[0] as any;
   return meta.universe.map((u: any) => u.name).sort();
@@ -40,27 +40,30 @@ const allAvailableCoins = computed<string[]>(() => {
 
 const isMonitored = (coin: string) => {
   return (monitoredPairs.value as MonitoredPair[] | null)?.some(
-    (p) => p.coin === coin
+    (p) => p.coin === coin && p.active
   );
 };
 
 const toggleMonitored = async (coin: string) => {
   if (!isAdmin.value) return;
 
-  if (isMonitored(coin)) {
-    // Remove
-    const pair = (monitoredPairs.value as MonitoredPair[] | null)?.find(
-      (p) => p.coin === coin
-    );
-    if (pair) {
-      await (supabase.from("monitored_pairs") as any)
-        .delete()
-        .eq("id", pair.id);
-    }
+  const existingPair = (monitoredPairs.value as MonitoredPair[] | null)?.find(
+    (p) => p.coin === coin
+  );
+
+  if (existingPair) {
+    // Toggle active state
+    await (supabase.from("monitored_pairs") as any)
+      .update({
+        active: !existingPair.active,
+        last_updated: new Date().toISOString(),
+      })
+      .eq("id", existingPair.id);
   } else {
-    // Add
+    // Add new active pair
     await (supabase.from("monitored_pairs") as any).insert({
       coin,
+      active: true,
       last_updated: new Date().toISOString(),
     });
   }
@@ -77,14 +80,25 @@ const filteredCoins = computed(() => {
 
 const bulkAddVisible = async () => {
   if (!isAdmin.value) return;
-  const toAdd = filteredCoins.value.filter((c) => !isMonitored(c));
-  if (toAdd.length === 0) return;
+  const toProcess = filteredCoins.value.filter((c) => !isMonitored(c));
+  if (toProcess.length === 0) return;
 
-  const entries = toAdd.map((coin) => ({
-    coin,
-    last_updated: new Date().toISOString(),
-  }));
-  await (supabase.from("monitored_pairs") as any).insert(entries);
+  for (const coin of toProcess) {
+    const existing = (monitoredPairs.value as MonitoredPair[] | null)?.find(
+      (p) => p.coin === coin
+    );
+    if (existing) {
+      await (supabase.from("monitored_pairs") as any)
+        .update({ active: true, last_updated: new Date().toISOString() })
+        .eq("id", existing.id);
+    } else {
+      await (supabase.from("monitored_pairs") as any).insert({
+        coin,
+        active: true,
+        last_updated: new Date().toISOString(),
+      });
+    }
+  }
   await refreshMonitored();
 };
 
@@ -93,7 +107,9 @@ const bulkRemoveVisible = async () => {
   const toRemove = filteredCoins.value.filter((c) => isMonitored(c));
   if (toRemove.length === 0) return;
 
-  await (supabase.from("monitored_pairs") as any).delete().in("coin", toRemove);
+  await (supabase.from("monitored_pairs") as any)
+    .update({ active: false, last_updated: new Date().toISOString() })
+    .in("coin", toRemove);
   await refreshMonitored();
 };
 </script>
@@ -133,7 +149,7 @@ const bulkRemoveVisible = async () => {
         <div class="flex items-center justify-between">
           <h2 class="text-xl font-bold">Available Perpetual Markets</h2>
           <span class="text-sm text-gray-500"
-            >{{ monitoredPairs?.length }} Monitored /
+            >{{ monitoredPairs?.filter((p: any) => p.active).length }} Monitored /
             {{ allAvailableCoins?.length }} Available</span
           >
         </div>
