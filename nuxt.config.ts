@@ -10,7 +10,7 @@ export default defineNuxtConfig({
     "#shared": fileURLToPath(new URL("./shared", import.meta.url)),
   },
   css: ["~/assets/css/main.css"],
-  modules: ["@nuxt/ui", "@nuxtjs/supabase", "@pinia/nuxt"],
+  modules: ["@nuxt/ui", "@nuxtjs/supabase"],
   supabase: {
     redirect: false, // For now, we'll handle redirects manually if needed
   },

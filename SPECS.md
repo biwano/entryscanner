@@ -17,7 +17,6 @@ Entry scanner is a web-based application that monitors real-time market data on 
 - **Architecture (Feature-Slice Design)**:
   - **Pages (`/app/pages`)**: Orchestrate the layout and combine multiple features to form a complete view. Pages handle routing and high-level data orchestration.
   - **Features (`/app/features`)**: Small, focused, and self-contained units of functionality. A feature is a granular piece of the UI and logic (e.g., `MonitoredPairsList`, `PriceChart`, `AssetToggle`). Features should be reusable where possible.
-- **State Management**: TanStack Query (for managed polling and data fetching) and Pinia (for UI state).
 - **Package Manager**: pnpm
 
 ## 3. Core Features
@@ -158,7 +157,7 @@ Tables use **Row Level Security (RLS)** to ensure appropriate data access. User-
 - `timestamp`: timestamp (the opening time of the last closed candle)
 - **Primary Key**: `(coin, timeframe)`
 - **RLS Policy**: Publicly readable. Only system-level processes can insert/update.
-- **Note**: This table stores the *current* trend for each pair and timeframe. There is only one row per coin/timeframe couple. Uniqueness is ensured by the composite primary key.
+- **Note**: This table stores the _current_ trend for each pair and timeframe. There is only one row per coin/timeframe couple. Uniqueness is ensured by the composite primary key.
 
 ### `events`
 

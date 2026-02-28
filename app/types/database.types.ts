@@ -216,6 +216,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "user_subscriptions_coin_fkey"
+            columns: ["coin"]
+            isOneToOne: false
+            referencedRelation: "monitored_pairs"
+            referencedColumns: ["coin"]
+          },
+          {
             foreignKeyName: "user_subscriptions_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
