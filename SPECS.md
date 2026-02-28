@@ -29,7 +29,7 @@ Entry scanner is a web-based application that monitors real-time market data on 
 - **Monitored Pairs View**: Display all system-wide monitored pairs (where `active` is `true`) with their current trend status.
 - **Subscription Management**: Users can subscribe/unsubscribe to specific pair/timeframe combinations (e.g., BTC/Daily, ETH/Weekly) to receive personalized notifications.
 - **Trend Indicators**:
-  - **Bullish/Bearish Status**: Visual indicator of the current trend based on 200 EMA crossover on **Daily (D1) and Weekly (W1)** timeframes.
+  - **Bullish/Bearish Status**: Visual indicator of the current trend based on 50 SMA crossover on **Daily (D1) and Weekly (W1)** timeframes.
   - **Trend Duration**: Show since when the pair turned bullish or bearish (timestamp/relative time).
   - **Sorting**: Pairs are sorted by how long they have been in their current trend (ascending order - showing most recent trend changes first).
 - **Navigation**: Click on any pair to open the **Pair Analysis** view.
@@ -38,7 +38,9 @@ Entry scanner is a web-based application that monitors real-time market data on 
 
 #### 3.1.2. Pair Analysis
 
-- **Historical Price Chart**: Interactive price chart showing historical data (using candles from `info.candles`).
+- **Historical Price Chart**: Interactive price chart showing historical data (using candles from `info.candles`). The system displays exactly **400 candles** regardless of the timeframe (Daily or Weekly) to ensure a consistent view. Users can switch between **Daily (D1)** and **Weekly (W1)** timeframes by clicking the corresponding trend status badges. The chart displays two simple moving averages:
+  - **SMA 50**: Used for trend flip triggers and primary visualization.
+  - **SMA 200**: Provided for additional technical context.
 - **Trend Details**: Detailed breakdown of the current trend status and duration.
 - **Asset Statistics**: Display key metrics such as 24h volume, open interest, and funding rate (from `info.metaAndAssetCtxs`).
 
@@ -74,7 +76,7 @@ All server-side workers (Trend Worker, Notification Dispatcher) can be triggered
 #### 3.2.2. Automated Trend Worker
 
 - **Sequential Update Logic**: For each timeframe (Daily, Weekly), the worker identifies the coin in `monitored_pairs` that has the oldest trend record (or no record) in the `trends` table. It prioritizes coins where the `created_at` of the referenced `last_trend_flip_[timeframe]_id` is the oldest, ensuring that pairs which have maintained a trend the longest (or have never been analyzed) are checked for potential flips.
-- **Trend Analysis**: Re-calculates bullishness/bearishness based on the 200 EMA logic for the targeted timeframe using the shared library.
+- **Trend Analysis**: Re-calculates bullishness/bearishness based on the 50 SMA logic for the targeted timeframe using the shared library.
 - **Database Synchronization**:
   - **Candle Closure Check**: Before creating a new trend entry, the worker must verify that the candle for the targeted timeframe (Daily or Weekly) is fully closed. If the candle is still active, the worker logs a debug message and skips the update for that pair/timeframe.
   - Compares the calculated trend against the most recent record in the `trends` table.
@@ -96,11 +98,17 @@ All server-side workers (Trend Worker, Notification Dispatcher) can be triggered
 - **Centralized SDK Wrapper**: A shared library used by both the UI and Server Workers to interact with Hyperliquid via `@nktkas/hyperliquid`.
 - **Class-Based Implementation**: The logic is encapsulated in a `HyperliquidClient` class within `shared/hyperliquid.ts`, providing a clean interface for data fetching and trend computation.
 - **Core Features**:
-  - **Get Candles**: Fetch historical candle data for a specific pair and timeframe (e.g., "D1", "W1").
-  - **Compute Current Trend**: Logic to determine the current trend (bullish/bearish) based on the 200 EMA crossover for a given pair and timeframe. This should only be computed if the trend is not already stored in the database for the current candle.
+  - **Get Candles**: Fetch historical candle data for a specific pair and timeframe (e.g., "D1", "W1"). The system should always request enough data to provide exactly **400 candles** for consistent visualization and analysis.
+  - **Compute Current Trend**: Logic to determine the current trend (bullish/bearish) based on the 50 SMA crossover for a given pair and timeframe. This should only be computed if the trend is not already stored in the database for the current candle.
   - **Get Known Pairs**: Retrieve a list of all available perpetual pairs from Hyperliquid.
 - **Data Fetching Utilities**: Standardized methods for fetching prices and market metadata.
 - **Type Safety**: Common TypeScript interfaces and types for Hyperliquid data structures.
+
+#### 3.3.2. UI Formatting Utilities
+
+- **Shared Formatting Logic**: Centralized formatting functions located in `app/utils/format.ts` for consistent UI representation.
+- **Price Formatting**: `formatPrice` handles USD currency formatting for asset prices.
+- **Volume Formatting**: `formatVolume` uses compact notation (e.g., "1.2M") for trading volumes and open interest.
 
 ## 4. Database Schema (Supabase)
 
@@ -167,7 +175,7 @@ Tables use **Row Level Security (RLS)** to ensure appropriate data access. User-
 
 1.  **Market Data Layer**: The app uses a shared **Hyperliquid Integration Library** (wrapping `@nktkas/hyperliquid`) to poll for `allMids`, `l2Book`, and `candles` data.
 2.  **Condition & Trend Engine**:
-    - Uses shared trend logic from the integration library to compare data against the 200 EMA.
+    - Uses shared trend logic from the integration library to compare data against the 50 SMA.
     - Calculates bullish/bearish trends on **Daily and Weekly** timeframes.
     - Updates the `trends` table (with history) and the latest trend reference in `monitored_pairs` if a trend flip occurs.
     - **Notification Dispatcher**: A background worker that compares `trends` against `notification_history` for all `user_subscriptions` and sends pending alerts to ensure full delivery reliability.

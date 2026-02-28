@@ -170,7 +170,7 @@ const bulkRemoveVisible = async () => {
           <h3 class="font-bold text-primary">System Information</h3>
           <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
             Adding a coin here enables system-wide monitoring. The Trend Worker
-            will automatically start tracking its 200 EMA status on Daily and
+            will automatically start tracking its 50 SMA status on Daily and
             Weekly timeframes.
           </p>
         </div>

@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import { useRoute } from "vue-router";
 import { useAsyncData } from "#app";
 import { useSupabaseClient } from "#imports";
 import { useHyperliquid } from "~/composables/useHyperliquid";
 import type { MonitoredPairWithTrends } from "~/types/database.friendly.types";
 import type { AssetCtx, AssetMeta } from "#shared/types";
+import { calculateStartTime } from "#shared/trends";
+import { CANDLE_COUNT } from "#shared/constants";
 import PriceChart from "~/features/charts/PriceChart.vue";
 import AssetStats from "~/features/monitored-pairs/AssetStats.vue";
 
@@ -17,12 +19,13 @@ const { useAllMids, useMetaAndAssetCtxs, useCandles } = useHyperliquid();
 const { data: allMids } = useAllMids();
 const { data: metaAndAssetCtxs } = useMetaAndAssetCtxs();
 
-const startTime = Date.now() - 300 * 24 * 60 * 60 * 1000;
-const { data: candlesD1 } = useCandles(
-  coin,
-  "1d",
-  startTime
-);
+const startTimeD1 = calculateStartTime("D1", CANDLE_COUNT);
+const startTimeW1 = calculateStartTime("W1", CANDLE_COUNT);
+const { data: candlesD1 } = useCandles(coin, "1d", startTimeD1);
+const { data: candlesW1 } = useCandles(coin, "1w", startTimeW1);
+
+const timeframe = ref<"1d" | "1w">("1d");
+const selectedCandles = computed(() => (timeframe.value === "1d" ? candlesD1.value : candlesW1.value) || []);
 
 const supabase = useSupabaseClient();
 const { data: pair } = await useAsyncData<MonitoredPairWithTrends | null>(`pair_${coin}`, async () => {
@@ -68,21 +71,25 @@ const currentPrice = computed(() => allMids.value?.[coin] ?? "0.00");
             >INACTIVE</UBadge
           >
           <UBadge
+            @click="timeframe = '1d'"
+            class="cursor-pointer"
             :color="
               pair.last_trend_flip_daily?.status === 'bullish'
                 ? 'success'
                 : 'error'
             "
-            variant="subtle"
+            :variant="timeframe === '1d' ? 'solid' : 'subtle'"
             >D1: {{ pair.last_trend_flip_daily?.status?.toUpperCase() }}</UBadge
           >
           <UBadge
+            @click="timeframe = '1w'"
+            class="cursor-pointer"
             :color="
               pair.last_trend_flip_weekly?.status === 'bullish'
                 ? 'success'
                 : 'error'
             "
-            variant="subtle"
+            :variant="timeframe === '1w' ? 'solid' : 'subtle'"
             >W1:
             {{ pair.last_trend_flip_weekly?.status?.toUpperCase() }}</UBadge
           >
@@ -99,9 +106,10 @@ const currentPrice = computed(() => allMids.value?.[coin] ?? "0.00");
     <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
       <div class="lg:col-span-3">
         <PriceChart
-          v-if="candlesD1"
+          v-if="selectedCandles && selectedCandles.length > 0"
           :coin="coin"
-          :candles="candlesD1"
+          :candles="selectedCandles"
+          :timeframe="timeframe === '1d' ? 'D1' : 'W1'"
         />
       </div>
 
