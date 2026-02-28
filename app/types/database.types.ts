@@ -128,19 +128,16 @@ export type Database = {
           created_at: string | null
           discord_webhook_url: string | null
           id: string
-          wallet_address: string | null
         }
         Insert: {
           created_at?: string | null
           discord_webhook_url?: string | null
           id: string
-          wallet_address?: string | null
         }
         Update: {
           created_at?: string | null
           discord_webhook_url?: string | null
           id?: string
-          wallet_address?: string | null
         }
         Relationships: []
       }
@@ -202,6 +199,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_system: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_admin: boolean
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_admin?: boolean
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_admin?: boolean
+          user_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {
