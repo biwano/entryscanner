@@ -2,23 +2,56 @@
 import { ref } from 'vue';
 import { useAsyncData } from '#app';
 import { useSupabaseClient, useSupabaseUser } from '#imports';
+import { Auth } from 'auth-ui-vue';
+import { ThemeSupa } from '@supabase/auth-ui-shared';
+import 'auth-ui-vue/dist/style.css';
+
+interface Profile {
+  id: string;
+  discord_webhook_url: string | null;
+  created_at: string;
+}
+
+interface Trend {
+  id: string;
+  coin: string;
+  timeframe: string;
+  status: 'bullish' | 'bearish';
+  since: string;
+  created_at: string;
+}
+
+interface UserSubscription {
+  id: string;
+  user_id: string;
+  coin: string;
+  timeframe: 'D1' | 'W1';
+  created_at: string;
+}
+
+interface NotificationHistory {
+  id: string;
+  user_id: string;
+  trend_id: string;
+  message: string;
+  triggered_at: string;
+  trend?: Trend;
+}
 
 const supabase = useSupabaseClient();
 const user = useSupabaseUser();
-const email = ref('');
-const password = ref('');
-const loading = ref(false);
+const colorMode = useColorMode();
 
 const { data: profile, refresh: refreshProfile } = await useAsyncData('profile', async () => {
   if (!user.value) return null;
   const { data } = await supabase.from('profiles').select('*').eq('id', user.value.id).single();
-  return data;
+  return data as Profile | null;
 });
 
 const { data: subscriptions, refresh: refreshSubscriptions } = await useAsyncData('subscriptions', async () => {
   if (!user.value) return [];
   const { data } = await supabase.from('user_subscriptions').select('*').eq('user_id', user.value.id);
-  return data || [];
+  return (data as UserSubscription[]) || [];
 });
 
 const { data: notifications } = await useAsyncData('notification_history_profile', async () => {
@@ -31,55 +64,18 @@ const { data: notifications } = await useAsyncData('notification_history_profile
     `)
     .eq('user_id', user.value.id)
     .order('triggered_at', { ascending: false });
-  return data || [];
+  return (data as NotificationHistory[]) || [];
 });
 
 const discordWebhookUrl = ref(profile.value?.discord_webhook_url || '');
 
-const handleEmailLogin = async () => {
-  if (!email.value || !password.value) return;
-  loading.value = true;
-  try {
-    const { error } = await supabase.auth.signInWithPassword({
-      email: email.value,
-      password: password.value
-    });
-    if (error) throw error;
-  } catch (err: any) {
-    alert(err.message);
-  } finally {
-    loading.value = false;
-  }
-};
-
-const handleEmailSignUp = async () => {
-  if (!email.value || !password.value) return;
-  loading.value = true;
-  try {
-    const { error } = await supabase.auth.signUp({
-      email: email.value,
-      password: password.value
-    });
-    if (error) throw error;
-    alert('Check your email for the confirmation link!');
-  } catch (err: any) {
-    alert(err.message);
-  } finally {
-    loading.value = false;
-  }
-};
-
 const saveProfile = async () => {
     if (!user.value) return;
-    await supabase.from('profiles').update({
+    await (supabase.from('profiles') as any).update({
         discord_webhook_url: discordWebhookUrl.value
     }).eq('id', user.value.id);
     await refreshProfile();
     // Show success notification
-}
-
-const loginWithGithub = async () => {
-    await supabase.auth.signInWithOAuth({ provider: 'github' });
 }
 
 const logout = async () => {
@@ -108,33 +104,21 @@ const formatRelativeTime = (timestamp?: string) => {
         <p class="text-gray-500 max-w-sm">Sign in to manage your subscriptions and notification settings.</p>
       </div>
       
-      <UCard class="w-full max-w-sm">
-        <form @submit.prevent="handleEmailLogin" class="space-y-4 text-left">
-          <UFormField label="Email">
-            <UInput v-model="email" type="email" placeholder="you@example.com" />
-          </UFormField>
-          <UFormField label="Password">
-            <UInput v-model="password" type="password" />
-          </UFormField>
-          <div class="flex flex-col gap-2 pt-2">
-            <UButton type="submit" block :loading="loading">Sign In</UButton>
-            <UButton variant="outline" block :loading="loading" @click="handleEmailSignUp">Create Account</UButton>
-          </div>
-        </form>
-        
-        <div class="relative my-6">
-          <div class="absolute inset-0 flex items-center"><span class="w-full border-t border-gray-200 dark:border-gray-800" /></div>
-          <div class="relative flex justify-center text-xs uppercase"><span class="bg-white dark:bg-gray-900 px-2 text-gray-500">Or continue with</span></div>
-        </div>
-        
-        <UButton color="neutral" variant="outline" icon="i-lucide-github" block @click="loginWithGithub">GitHub</UButton>
+      <UCard class="w-full max-w-sm p-4">
+        <Auth 
+          :supabase-client="supabase"
+          :providers="['github']"
+          :dark="colorMode.value === 'dark'"
+          :appearance="{ theme: ThemeSupa }"
+          theme="default"
+        />
       </UCard>
     </div>
 
     <div v-else class="space-y-8">
       <div class="flex items-center justify-between">
         <h1 class="text-3xl font-bold">Your Profile</h1>
-        <UButton color="red" variant="subtle" icon="i-lucide-log-out" @click="logout">Logout</UButton>
+        <UButton color="error" variant="subtle" icon="i-lucide-log-out" @click="logout">Logout</UButton>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -157,14 +141,14 @@ const formatRelativeTime = (timestamp?: string) => {
               <h2 class="text-xl font-bold">Active Subscriptions</h2>
             </template>
             <div class="divide-y divide-gray-100 dark:divide-gray-800">
-              <div v-for="sub in subscriptions" :key="sub.id" class="flex items-center justify-between py-3">
+              <div v-for="sub in (subscriptions || [])" :key="sub.id" class="flex items-center justify-between py-3">
                 <div class="flex items-center gap-3">
                   <span class="font-bold">{{ sub.coin }}</span>
                   <UBadge size="xs" color="neutral" variant="outline">{{ sub.timeframe }}</UBadge>
                 </div>
-                <UButton size="xs" color="red" variant="ghost" icon="i-lucide-trash" />
+                <UButton size="xs" color="error" variant="ghost" icon="i-lucide-trash" />
               </div>
-              <div v-if="subscriptions.length === 0" class="py-10 text-center text-gray-500 text-sm">
+              <div v-if="!subscriptions || subscriptions.length === 0" class="py-10 text-center text-gray-500 text-sm">
                 No active subscriptions. Go to the dashboard to subscribe to trend flips.
               </div>
             </div>
@@ -177,10 +161,10 @@ const formatRelativeTime = (timestamp?: string) => {
               <h2 class="text-xl font-bold">Notification History</h2>
             </template>
             <div class="space-y-4 max-h-[600px] overflow-y-auto">
-              <div v-for="notif in notifications" :key="notif.id" class="p-4 rounded-lg bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
+              <div v-for="notif in (notifications || [])" :key="notif.id" class="p-4 rounded-lg bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
                 <div class="flex justify-between items-start">
                   <span class="text-xs text-gray-500">{{ formatRelativeTime(notif.triggered_at) }} ago</span>
-                  <UBadge :color="notif.trend?.status === 'bullish' ? 'green' : 'red'" size="xs" variant="subtle">
+                  <UBadge :color="notif.trend?.status === 'bullish' ? 'success' : 'error'" size="xs" variant="subtle">
                     {{ notif.trend?.status?.toUpperCase() }}
                   </UBadge>
                 </div>
@@ -188,7 +172,7 @@ const formatRelativeTime = (timestamp?: string) => {
                 <div class="mt-1 text-[10px] text-gray-400 font-mono">{{ notif.id }}</div>
               </div>
               
-              <div v-if="notifications.length === 0" class="py-10 text-center text-gray-500 text-sm">
+              <div v-if="!notifications || notifications.length === 0" class="py-10 text-center text-gray-500 text-sm">
                 No notifications triggered yet.
               </div>
             </div>

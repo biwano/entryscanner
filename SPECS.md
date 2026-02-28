@@ -7,6 +7,7 @@ A web-based application that monitors real-time market data on the Hyperliquid d
 - **Frontend**: Nuxt 4 (Vue.js) with Nuxt UI (which includes Tailwind CSS).
 - **Hyperliquid SDK**: `@nktkas/hyperliquid` (TypeScript SDK) wrapped in a custom shared library.
 - **Database/Backend**: Supabase (PostgreSQL for storage, Supabase Auth for users).
+- **Authentication UI**: `auth-ui-vue` for managing the login and registration flows.
 - **Data Fetching**: Polling via Hyperliquid's `InfoClient` (using standardized shared utilities).
 - **State Management**: TanStack Query (for managed polling and data fetching) and Pinia (for UI state).
 
@@ -39,6 +40,7 @@ A web-based application that monitors real-time market data on the Hyperliquid d
 - **Persistence**: All configurations are saved to the `monitored_pairs` table in Supabase.
 
 #### 3.1.4. User Authentication & Profile
+- **Supabase Auth UI**: Uses `auth-ui-vue` with the **Supa theme** to provide a standardized login/registration interface.
 - **Email-Based Authentication**: Users can sign up and sign in using their email address and password via Supabase Auth.
 - **Supabase Auth**: Secure authentication flow for managing personal settings, subscriptions, and webhooks.
 - **Subscription Overview**: View and manage all active pair/timeframe subscriptions from the profile or dashboard.

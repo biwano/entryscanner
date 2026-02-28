@@ -20,9 +20,15 @@ importers:
       '@pinia/nuxt':
         specifier: ^0.11.3
         version: 0.11.3(magicast@0.5.2)(pinia@3.0.4(typescript@5.9.3)(vue@3.5.29(typescript@5.9.3)))
+      '@supabase/auth-ui-shared':
+        specifier: ^0.1.8
+        version: 0.1.8(@supabase/supabase-js@2.98.0)
       '@tanstack/vue-query':
         specifier: ^5.92.9
         version: 5.92.9(vue@3.5.29(typescript@5.9.3))
+      auth-ui-vue:
+        specifier: ^0.1.1
+        version: 0.1.1(typescript@5.9.3)
       date-fns:
         specifier: ^4.1.0
         version: 4.1.0
@@ -1307,6 +1313,11 @@ packages:
     resolution: {integrity: sha512-GBH361T0peHU91AQNzOlIrjUZw9TZbB9YDRiyFgk/3Kvr3/Z1NWUZ2athWTfHhwNNi8IrW00foyFxQD9IO/Trg==}
     engines: {node: '>=20.0.0'}
 
+  '@supabase/auth-ui-shared@0.1.8':
+    resolution: {integrity: sha512-ouQ0DjKcEFg+0gZigFIEgu01V3e6riGZPzgVD0MJsCBNsMsiDT74+GgCEIElMUpTGkwSja3xLwdFRFgMNFKcjg==}
+    peerDependencies:
+      '@supabase/supabase-js': ^2.21.0
+
   '@supabase/functions-js@2.98.0':
     resolution: {integrity: sha512-N/xEyiNU5Org+d+PNCpv+TWniAXRzxIURxDYsS/m2I/sfAB/HcM9aM2Dmf5edj5oWb9GxID1OBaZ8NMmPXL+Lg==}
     engines: {node: '>=20.0.0'}
@@ -1966,6 +1977,9 @@ packages:
 
   async@3.2.6:
     resolution: {integrity: sha512-htCUDlxyyCLMgaM3xXg0C0LW2xqfuQ6p05pCEIsXuyQ+a1koYKTuBMzRNwmybfLgvJDMd0r1LTn4+E0Ti6C2AA==}
+
+  auth-ui-vue@0.1.1:
+    resolution: {integrity: sha512-2aiSwGNyXEsykbxkO1l0GS2PyiJpYyModPzbBXlsH6N3KynvZ1mDOvK7GiDwcZI3Fu5/LvkHiNiQf46bVckuRg==}
 
   autoprefixer@10.4.27:
     resolution: {integrity: sha512-NP9APE+tO+LuJGn7/9+cohklunJsXWiaWEfV3si4Gi/XHDwVNgkwr1J3RQYFIvPy76GmJ9/bW8vyoU1LcxwKHA==}
@@ -5736,6 +5750,10 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
+  '@supabase/auth-ui-shared@0.1.8(@supabase/supabase-js@2.98.0)':
+    dependencies:
+      '@supabase/supabase-js': 2.98.0
+
   '@supabase/functions-js@2.98.0':
     dependencies:
       tslib: 2.8.1
@@ -6460,6 +6478,12 @@ snapshots:
   async-sema@3.1.1: {}
 
   async@3.2.6: {}
+
+  auth-ui-vue@0.1.1(typescript@5.9.3):
+    dependencies:
+      vue: 3.5.29(typescript@5.9.3)
+    transitivePeerDependencies:
+      - typescript
 
   autoprefixer@10.4.27(postcss@8.5.6):
     dependencies:
