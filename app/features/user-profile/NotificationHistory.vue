@@ -2,15 +2,15 @@
 import { formatRelativeTime } from "#shared/time";
 import type { NotificationHistory } from "~/types/database.friendly.types";
 
-// Local type for notifications with joined trend
-type NotificationWithTrend = NotificationHistory & {
-  trend: {
+// Local type for notifications with joined event
+type NotificationWithEvent = NotificationHistory & {
+  event: {
     status: string;
   } | null;
 };
 
 defineProps<{
-  notifications: NotificationWithTrend[];
+  notifications: NotificationWithEvent[];
 }>();
 </script>
 
@@ -27,16 +27,16 @@ defineProps<{
       >
         <div class="flex justify-between items-start">
           <span class="text-xs text-gray-500"
-            >{{ formatRelativeTime(notif.triggered_at) }} ago</span
+            >{{ formatRelativeTime(notif.triggered_at || undefined) }} ago</span
           >
           <UBadge
             :color="
-              notif.trend?.status === 'bullish' ? 'success' : 'error'
+              notif.event?.status === 'bullish' ? 'success' : 'error'
             "
             size="xs"
             variant="subtle"
           >
-            {{ notif.trend?.status?.toUpperCase() }}
+            {{ notif.event?.status?.toUpperCase() }}
           </UBadge>
         </div>
         <p

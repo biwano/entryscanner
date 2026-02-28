@@ -87,6 +87,7 @@ async function processTimeframe(
           timeframe,
           status: currentTrend.status,
           timestamp: lastCandleTime,
+          since: currentTrend.timestamp,
         })
         .select()
         .single();

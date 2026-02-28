@@ -74,13 +74,13 @@ const getPrice = (allMids: Record<string, string> | null, coin: string) => {
             <td class="px-6 py-4">
               <TrendIndicator
                 :status="pair.last_trend_flip_daily?.status as 'bullish' | 'bearish' | undefined"
-                :timestamp="pair.last_trend_flip_daily?.timestamp"
+                :since="pair.last_trend_flip_daily?.since"
               />
             </td>
             <td class="px-6 py-4">
               <TrendIndicator
                 :status="pair.last_trend_flip_weekly?.status as 'bullish' | 'bearish' | undefined"
-                :timestamp="pair.last_trend_flip_weekly?.timestamp"
+                :since="pair.last_trend_flip_weekly?.since"
               />
             </td>
             <td class="px-6 py-4 text-xs text-gray-500">

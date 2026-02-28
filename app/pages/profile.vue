@@ -41,13 +41,13 @@ const { data: subscriptions, refresh: refreshSubscriptions } =
     return data || [];
   });
 
-type NotificationWithTrend = NotificationHistory & {
-  trend: {
+type NotificationWithEvent = NotificationHistory & {
+  event: {
     status: string;
   } | null;
 };
 
-const { data: notifications } = await useAsyncData<NotificationWithTrend[]>(
+const { data: notifications } = await useAsyncData<NotificationWithEvent[]>(
   "notification_history_profile",
   async () => {
     if (!userId.value) return [];
@@ -56,12 +56,12 @@ const { data: notifications } = await useAsyncData<NotificationWithTrend[]>(
       .select(
         `
       *,
-      trend:trends (status)
+      event:events (status)
     `
       )
       .eq("user_id", userId.value)
       .order("triggered_at", { ascending: false })
-      .returns<NotificationWithTrend[]>();
+      .returns<NotificationWithEvent[]>();
     return data || [];
   }
 );

@@ -29,8 +29,8 @@ Entry scanner is a web-based application that monitors real-time market data on 
 - **Subscription Management**: Users can subscribe/unsubscribe to specific pair/timeframe combinations (e.g., BTC/Daily, ETH/Weekly) to receive personalized notifications.
 - **Trend Indicators**:
   - **Bullish/Bearish Status**: Visual indicator of the current trend based on SMA 50 crossover on **Daily (D1) and Weekly (W1)** timeframes.
-  - **Trend Duration**: Show since when the pair turned bullish or bearish (timestamp/relative time from the last event).
-  - **Sorting**: Pairs are sorted by how long they have been in their current trend (ascending order - showing most recent trend changes first).
+  - **Trend Duration**: Show since when the pair turned bullish or bearish (using the `since` column from the `events` table).
+  - **Sorting**: Pairs are sorted by how long they have been in their current trend (ascending order - showing most recent trend changes first, based on `events.since`).
 - **Navigation**: Click on any pair to open the **Pair Analysis** view.
 - **Price Ticker**: Display live-polled prices for all active perpetual assets on Hyperliquid.
 - **Manage Assets**: Link to the **Asset Management** settings to add or remove monitored pairs.
@@ -40,7 +40,7 @@ Entry scanner is a web-based application that monitors real-time market data on 
 - **Historical Price Chart**: Interactive price chart showing historical data (using candles from `info.candles`). The system displays exactly **400 candles** regardless of the timeframe (Daily or Weekly) to ensure a consistent view. Users can switch between **Daily (D1)** and **Weekly (W1)** timeframes by clicking the corresponding trend status badges. The chart displays two simple moving averages:
   - **SMA 50**: Used for trend flip triggers and primary visualization.
   - **SMA 200**: Provided for additional technical context.
-- **Trend Details**: Detailed breakdown of the current trend status and duration.
+- **Trend Details**: Detailed breakdown of the current trend status and duration (using the `since` column from the `events` table).
 - **Asset Statistics**: Display key metrics such as 24h volume, open interest, and funding rate (from `info.metaAndAssetCtxs`).
 
 #### 3.1.3. Asset Management & Configuration
@@ -74,23 +74,25 @@ All server-side workers (Trend Worker, Notification Dispatcher) can be triggered
 
 #### 3.2.2. Automated Trend Worker
 
-- **Systematic Update Logic**: For each run, the worker identifies the coin in `monitored_pairs` that has the oldest `last_analyzed` timestamp (or no record). It then processes ALL supported timeframes (Daily "D1" and Weekly "W1") for that specific coin in a single execution. This ensures that a coin's trend status is kept consistent across all timeframes.
+- **Systematic Update Logic**: The worker runs frequently (e.g., every minute) to ensure data is up-to-date. For each run, it identifies the coin in `monitored_pairs` that has the oldest `last_analyzed` timestamp (or no record). It then processes ALL supported timeframes (Daily "D1" and Weekly "W1") for that specific coin in a single execution. This ensures that a coin's trend status is kept consistent across all timeframes.
 - **Simplified Processing Flow**:
   1.  **Select Coin**: Pick the least recently analyzed active coin from `monitored_pairs`.
   2.  **Iterate Timeframes**: For each timeframe (D1, W1):
       a. **Get Candles**: Fetch the last 400 candles for the coin and timeframe.
-      b. **Trend Calculation**: Run the `determineTrend` logic using the fetched candles (SMA 50 crossover).
-      c. **Trend Update**: Update the single row in the `trends` table for the coin/timeframe (upsert with uniqueness on `coin` and `timeframe`).
+      b. **Trend Calculation**: Run the `determineTrend` logic using the fetched candles (SMA 50 crossover). This returns both the current trend and the `since` timestamp (start of the trend).
+      c. **Trend Update**: Update the single row in the `trends` table for the coin/timeframe (upsert with uniqueness on `coin` and `timeframe`). Set `timestamp` to the latest closed candle.
       d. **Event Creation**: If the calculated trend status represents a flip from the previous state (or if it's the first record), create a new record in the `events` table.
+         - `since`: The opening time of the candle where the trend flipped (from `determineTrend`).
+         - `timestamp`: The opening time of the latest closed candle at the time of detection.
       e. **Database Synchronization**: Update the corresponding `last_trend_flip_[timeframe]_id` in `monitored_pairs` with the new `event_id`.
   3.  **Activity Tracking**: Update `last_analyzed` and `last_updated` (if any flip occurred) timestamps in `monitored_pairs` after all timeframes are processed.
 - **Reliability**: Ensures that all tracked pairs are systematically updated across all timeframes, preventing data staleness in any specific interval.
 
 #### 3.2.3. Alert & Notification Engine (Server-Side)
 
-- **Notification Dispatcher Worker**: The primary background process responsible for sending alerts. It ensures reliability by:
+- **Notification Dispatcher Worker**: The primary background process responsible for sending alerts. It is executed **daily** via a single cron job. It ensures reliability by:
   - **Event Gap Analysis**: For each user's `user_subscriptions`, it identifies all `events` for which the user hasn't received a notification yet.
-  - **Selection Logic**: It selects events where the `event.timestamp` is greater than the timestamp of the event referenced by the user's last notification for that specific coin/timeframe.
+  - **Selection Logic**: It selects events where the `event.created_at` is greater than the `created_at` value of the event referenced by the user's last notification for that specific coin/timeframe.
   - **Execution**: Sending the Discord notifications to the users' configured webhooks and logging the successful delivery to `notification_history` (referencing the `event_id`).
 
 ### 3.3. Shared Features
@@ -101,7 +103,7 @@ All server-side workers (Trend Worker, Notification Dispatcher) can be triggered
 - **Class-Based Implementation**: The logic is encapsulated in a `HyperliquidClient` class within `shared/hyperliquid.ts`, providing a clean interface for data fetching and trend computation.
 - **Core Features**:
   - **Get Candles**: Fetch historical candle data for a specific pair and timeframe (e.g., "D1", "W1"). The system should always request enough data to provide exactly **400 candles** for consistent visualization and analysis.
-  - **Compute Current Trend**: Logic to determine the current trend (bullish/bearish) based on the **SMA 50** crossover for a given pair and timeframe. This function returns `null` if no candle data is available.
+  - **Compute Current Trend**: Logic to determine the current trend (bullish/bearish) based on the **SMA 50** crossover for a given pair and timeframe. This function returns both the current status and the `since` timestamp (start of the current trend).
   - **Get Known Pairs**: Retrieve a list of all available perpetual pairs from Hyperliquid.
 - **Data Fetching Utilities**: Standardized methods for fetching prices and market metadata.
 - **Type Safety**: Common TypeScript interfaces and types for Hyperliquid data structures.
@@ -156,7 +158,7 @@ Tables use **Row Level Security (RLS)** to ensure appropriate data access. User-
 - `coin`: string (primary key component)
 - `timeframe`: string (primary key component, e.g., "D1", "W1")
 - `status`: enum ("bullish", "bearish")
-- `timestamp`: timestamp (the opening time of the last closed candle)
+- `timestamp`: timestamp (the opening time of the last closed candle analyzed)
 - **Primary Key**: `(coin, timeframe)`
 - **RLS Policy**: Publicly readable. Only system-level processes can insert/update.
 - **Note**: This table stores the _current_ trend for each pair and timeframe. There is only one row per coin/timeframe couple. Uniqueness is ensured by the composite primary key.
@@ -167,10 +169,11 @@ Tables use **Row Level Security (RLS)** to ensure appropriate data access. User-
 - `coin`: string
 - `timeframe`: string
 - `status`: enum ("bullish", "bearish")
-- `timestamp`: timestamp (the opening time of the candle where the trend flipped)
+- `timestamp`: timestamp (the opening time of the latest closed candle at detection)
+- `since`: timestamp (the opening time of the candle where the trend flipped)
 - `created_at`: timestamp
 - **RLS Policy**: Publicly readable. Only system-level processes can insert.
-- **Note**: This table stores the history of trend flips.
+- **Note**: This table stores the history of trend flips. The `since` column is used to show the trend duration in the UI.
 
 ### `notification_history`
 
@@ -189,7 +192,7 @@ Tables use **Row Level Security (RLS)** to ensure appropriate data access. User-
     - Uses shared trend logic from the integration library to compare data against the SMA 50.
     - Calculates bullish/bearish trends on **Daily and Weekly** timeframes.
     - Updates the `trends` table (single row per coin/timeframe) and creates an entry in `events` if a trend flip occurs.
-    - **Notification Dispatcher**: A background worker that identifies new `events` for which the user hasn't been notified (based on timestamp comparison with last notification) and sends alerts.
+    - **Notification Dispatcher**: A background worker that identifies new `events` for which the user hasn't been notified (based on `created_at` value comparison with last notification) and sends alerts daily.
 3.  **Server-Side Workers**: Background processes (via Nitro/Server API) that cycle through monitored pairs (Trend Worker) and events (Dispatcher). These workers can be triggered through API endpoints, scheduled Nuxt cron tasks, or direct bash commands.
 4.  **Persistence Layer**: Supabase handles all system and user-specific data, ensuring monitored states and alerts remain persistent.
 5.  **Market Integration**: Uses the `InfoClient` for real-time market data retrieval.

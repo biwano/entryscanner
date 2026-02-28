@@ -44,6 +44,7 @@ export type Database = {
           coin: string
           created_at: string
           id: string
+          since: string | null
           status: string
           timeframe: string
           timestamp: string
@@ -52,6 +53,7 @@ export type Database = {
           coin: string
           created_at?: string
           id?: string
+          since?: string | null
           status: string
           timeframe: string
           timestamp: string
@@ -60,6 +62,7 @@ export type Database = {
           coin?: string
           created_at?: string
           id?: string
+          since?: string | null
           status?: string
           timeframe?: string
           timestamp?: string
