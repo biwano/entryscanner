@@ -7,7 +7,7 @@
     "dev": "nuxt dev --host",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "codegen": "supabase gen types --linked > shared/database.types.ts",
+    "codegen": "supabase gen types --linked > app/types/database.types.ts",
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
