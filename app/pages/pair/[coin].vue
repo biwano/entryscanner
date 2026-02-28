@@ -10,6 +10,7 @@ import { calculateStartTime } from "#shared/trends";
 import { CANDLE_COUNT } from "#shared/constants";
 import PriceChart from "~/features/charts/PriceChart.vue";
 import AssetStats from "~/features/monitored-pairs/AssetStats.vue";
+import EventHistory from "~/features/monitored-pairs/EventHistory.vue";
 
 const route = useRoute();
 const coinParam = route.params.coin;
@@ -40,6 +41,16 @@ const { data: pair } = await useAsyncData<MonitoredPairWithTrends | null>(`pair_
     )
     .eq("coin", coin)
     .single();
+  return data;
+});
+
+const { data: events } = await useAsyncData(`events_${coin}`, async () => {
+  const { data } = await supabase
+    .from("events")
+    .select("*")
+    .eq("coin", coin)
+    .order("since", { ascending: false })
+    .limit(15);
   return data;
 });
 
@@ -125,11 +136,7 @@ const currentPrice = computed(() => allMids.value?.[coin] ?? "0.00");
           :current-price="currentPrice"
         />
 
-        <UCard title="Trend History">
-          <div class="text-center py-8 text-gray-500 text-sm italic">
-            Trend history visualization coming soon.
-          </div>
-        </UCard>
+        <EventHistory :events="events ?? null" />
       </div>
     </div>
   </div>

@@ -38,9 +38,7 @@ const props = defineProps<{
 const option = computed(() => {
   if (!props.candles || props.candles.length === 0) return {};
 
-  const dates = props.candles.map(
-    (c) => dayjs(c.t).format("YYYY-MM-DD")
-  );
+  const dates = props.candles.map((c) => dayjs(c.t).format("YYYY-MM-DD"));
   const data = props.candles.map((c) => [
     parseFloat(c.o),
     parseFloat(c.c),
