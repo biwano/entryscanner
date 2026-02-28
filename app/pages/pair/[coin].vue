@@ -5,9 +5,13 @@ import { useAsyncData, useNuxtApp } from "#app";
 import { useSupabaseClient } from "#imports";
 import { useHyperliquid } from "~/composables/useHyperliquid";
 import { calculateEMA } from "#shared/trends";
+import type { MonitoredPairWithTrends } from "~/types/database.friendly.types";
+
+import type { HyperliquidCandle } from "#shared/types";
 
 const route = useRoute();
-const coin = route.params.coin as string;
+const coinParam = route.params.coin;
+const coin = Array.isArray(coinParam) ? coinParam[0] : coinParam;
 
 const { useAllMids, useMetaAndAssetCtxs, useCandles } = useHyperliquid();
 const { data: allMids } = useAllMids();
@@ -21,7 +25,7 @@ const { data: candlesD1, refetch: refreshCandles } = useCandles(
 );
 
 const supabase = useSupabaseClient();
-const { data: pair } = await useAsyncData(`pair_${coin}`, async () => {
+const { data: pair } = await useAsyncData<MonitoredPairWithTrends | null>(`pair_${coin}`, async () => {
   const { data } = await supabase
     .from("monitored_pairs")
     .select(
@@ -38,12 +42,14 @@ const { data: pair } = await useAsyncData(`pair_${coin}`, async () => {
 
 const ema200 = computed(() => {
   if (!candlesD1.value) return [];
-  const closePrices = (candlesD1.value as any[]).map((c) => parseFloat(c.c));
+  const closePrices = candlesD1.value.map((c) => parseFloat(c.c));
   return calculateEMA(closePrices, 200);
 });
 
 const assetCtx = computed(() => {
-  return (metaAndAssetCtxs.value?.[1] as any[])?.find((c) => c.coin === coin);
+  if (!metaAndAssetCtxs.value) return undefined;
+  const ctxs = metaAndAssetCtxs.value[1];
+  return ctxs.find((c) => c.coin === coin);
 });
 
 const formatPrice = (price: string | number) => {

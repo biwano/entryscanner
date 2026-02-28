@@ -12,6 +12,8 @@ import {
 } from 'echarts/components';
 import VChart from 'vue-echarts';
 
+import type { HyperliquidCandle } from '#shared/types';
+
 use([
   CanvasRenderer,
   CandlestickChart,
@@ -26,7 +28,7 @@ use([
 ]);
 
 const props = defineProps<{
-  candles: any[]
+  candles: HyperliquidCandle[]
   coin: string
   ema200?: number[]
 }>()

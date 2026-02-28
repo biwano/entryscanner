@@ -1,5 +1,5 @@
 import { EMA } from 'technicalindicators';
-import type { Timeframe, TrendStatus } from './types';
+import type { Timeframe, TrendStatus, HyperliquidCandle } from './types';
 
 export function calculateEMA(prices: number[], period: number = 200): number[] {
   if (prices.length < period) return [];
@@ -9,7 +9,7 @@ export function calculateEMA(prices: number[], period: number = 200): number[] {
 export function determineTrend(
   coin: string,
   timeframe: Timeframe,
-  candles: any[] // From InfoClient.candleSnapshot
+  candles: HyperliquidCandle[] // From InfoClient.candleSnapshot
 ): TrendStatus {
   if (candles.length < 200) {
     // Not enough data for EMA 200

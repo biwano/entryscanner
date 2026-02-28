@@ -4,8 +4,10 @@ import { useAsyncData, navigateTo } from "#app";
 import { useSupabaseClient } from "#imports";
 import { useHyperliquid } from "~/composables/useHyperliquid";
 import { useUser } from "~/composables/useUser";
+import type { Database } from "~/types/database.types";
+import type { MonitoredPair } from "~/types/database.friendly.types";
 
-const supabase = useSupabaseClient();
+const supabase = useSupabaseClient<Database>();
 const { isAdmin, userSystem } = useUser();
 const { useMetaAndAssetCtxs } = useHyperliquid();
 const { data: metaAndAssetCtxs, status: metaStatus } = useMetaAndAssetCtxs();
@@ -17,29 +19,22 @@ watchEffect(() => {
   }
 });
 
-interface MonitoredPair {
-  id: string;
-  coin: string;
-  active: boolean;
-  last_updated: string;
-}
-
-const { data: monitoredPairs, refresh: refreshMonitored } = await useAsyncData(
+const { data: monitoredPairs, refresh: refreshMonitored } = await useAsyncData<MonitoredPair[]>(
   "monitored_pairs_mgmt",
   async () => {
     const { data } = await supabase.from("monitored_pairs").select("*");
-    return (data as MonitoredPair[]) || [];
+    return data || [];
   }
 );
 
 const allAvailableCoins = computed<string[]>(() => {
   if (!metaAndAssetCtxs.value) return [];
-  const meta = metaAndAssetCtxs.value[0] as any;
-  return meta.universe.map((u: any) => u.name).sort();
+  const meta = metaAndAssetCtxs.value[0];
+  return meta.universe.map((u) => u.name).sort();
 });
 
 const isMonitored = (coin: string) => {
-  return (monitoredPairs.value as MonitoredPair[] | null)?.some(
+  return monitoredPairs.value?.some(
     (p) => p.coin === coin && p.active
   );
 };
@@ -47,13 +42,13 @@ const isMonitored = (coin: string) => {
 const toggleMonitored = async (coin: string) => {
   if (!isAdmin.value) return;
 
-  const existingPair = (monitoredPairs.value as MonitoredPair[] | null)?.find(
+  const existingPair = monitoredPairs.value?.find(
     (p) => p.coin === coin
   );
 
   if (existingPair) {
     // Toggle active state
-    await (supabase.from("monitored_pairs") as any)
+    await supabase.from("monitored_pairs")
       .update({
         active: !existingPair.active,
         last_updated: new Date().toISOString(),
@@ -61,7 +56,7 @@ const toggleMonitored = async (coin: string) => {
       .eq("id", existingPair.id);
   } else {
     // Add new active pair
-    await (supabase.from("monitored_pairs") as any).insert({
+    await supabase.from("monitored_pairs").insert({
       coin,
       active: true,
       last_updated: new Date().toISOString(),
@@ -84,15 +79,15 @@ const bulkAddVisible = async () => {
   if (toProcess.length === 0) return;
 
   for (const coin of toProcess) {
-    const existing = (monitoredPairs.value as MonitoredPair[] | null)?.find(
+    const existing = monitoredPairs.value?.find(
       (p) => p.coin === coin
     );
     if (existing) {
-      await (supabase.from("monitored_pairs") as any)
+      await supabase.from("monitored_pairs")
         .update({ active: true, last_updated: new Date().toISOString() })
         .eq("id", existing.id);
     } else {
-      await (supabase.from("monitored_pairs") as any).insert({
+      await supabase.from("monitored_pairs").insert({
         coin,
         active: true,
         last_updated: new Date().toISOString(),
@@ -107,7 +102,7 @@ const bulkRemoveVisible = async () => {
   const toRemove = filteredCoins.value.filter((c) => isMonitored(c));
   if (toRemove.length === 0) return;
 
-  await (supabase.from("monitored_pairs") as any)
+  await supabase.from("monitored_pairs")
     .update({ active: false, last_updated: new Date().toISOString() })
     .in("coin", toRemove);
   await refreshMonitored();
@@ -149,7 +144,7 @@ const bulkRemoveVisible = async () => {
         <div class="flex items-center justify-between">
           <h2 class="text-xl font-bold">Available Perpetual Markets</h2>
           <span class="text-sm text-gray-500"
-            >{{ monitoredPairs?.filter((p: any) => p.active).length }} Monitored /
+            >{{ monitoredPairs?.filter((p) => p.active).length }} Monitored /
             {{ allAvailableCoins?.length }} Available</span
           >
         </div>

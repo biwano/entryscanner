@@ -5,44 +5,17 @@ import { useAsyncData } from "#app";
 import { useHyperliquid } from "~/composables/useHyperliquid";
 import { useUser } from "~/composables/useUser";
 import { formatRelativeTime } from "#shared/time";
+import type { Database } from "~/types/database.types";
+import type { Trend, UserSubscription, MonitoredPairWithTrends } from "~/types/database.friendly.types";
 
 const { useAllMids, useMetaAndAssetCtxs } = useHyperliquid();
 const { isAdmin } = useUser();
 const { data: allMids } = useAllMids();
 const { data: metaAndAssetCtxs } = useMetaAndAssetCtxs();
 
-interface Trend {
-  id: string;
-  coin: string;
-  timeframe: string;
-  status: "bullish" | "bearish";
-  since: string;
-  created_at: string;
-}
-
-interface MonitoredPair {
-  id: string;
-  coin: string;
-  last_trend_flip_daily_id: string | null;
-  last_trend_flip_weekly_id: string | null;
-  last_analyzed: string;
-  last_updated: string;
-  created_at: string;
-  last_trend_flip_daily?: Trend;
-  last_trend_flip_weekly?: Trend;
-}
-
-interface UserSubscription {
-  id: string;
-  user_id: string;
-  coin: string;
-  timeframe: "D1" | "W1";
-  created_at: string;
-}
-
-const supabase = useSupabaseClient();
+const supabase = useSupabaseClient<Database>();
 const user = useSupabaseUser();
-const { data: monitoredPairs, refresh: refreshMonitored } = await useAsyncData(
+const { data: monitoredPairs, refresh: refreshMonitored } = await useAsyncData<MonitoredPairWithTrends[] | null>(
   "monitored_pairs",
   async () => {
     const { data } = await supabase
@@ -56,18 +29,18 @@ const { data: monitoredPairs, refresh: refreshMonitored } = await useAsyncData(
       )
       .eq("active", true)
       .order("last_updated", { ascending: false });
-    return data as MonitoredPair[] | null;
+    return data;
   }
 );
 
 const { data: userSubscriptions, refresh: refreshSubscriptions } =
-  await useAsyncData("user_subscriptions_dash", async () => {
+  await useAsyncData<UserSubscription[]>("user_subscriptions_dash", async () => {
     if (!user.value) return [];
     const { data } = await supabase
       .from("user_subscriptions")
       .select("*")
       .eq("user_id", user.value.id);
-    return (data as UserSubscription[]) || [];
+    return data || [];
   });
 
 const sortedPairs = computed(() => {
@@ -82,7 +55,7 @@ const sortedPairs = computed(() => {
 });
 
 const isSubscribed = (coin: string, timeframe: "D1" | "W1") => {
-  return (userSubscriptions.value as UserSubscription[] | null)?.some(
+  return userSubscriptions.value?.some(
     (s) => s.coin === coin && s.timeframe === timeframe
   );
 };
@@ -94,16 +67,16 @@ const toggleSubscription = async (coin: string, timeframe: "D1" | "W1") => {
   }
 
   if (isSubscribed(coin, timeframe)) {
-    const sub = (userSubscriptions.value as UserSubscription[] | null)?.find(
+    const sub = userSubscriptions.value?.find(
       (s) => s.coin === coin && s.timeframe === timeframe
     );
     if (sub) {
-      await (supabase.from("user_subscriptions") as any)
+      await supabase.from("user_subscriptions")
         .delete()
         .eq("id", sub.id);
     }
   } else {
-    await (supabase.from("user_subscriptions") as any).insert({
+    await supabase.from("user_subscriptions").insert({
       user_id: user.value.id,
       coin,
       timeframe,

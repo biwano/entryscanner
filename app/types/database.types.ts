@@ -41,6 +41,7 @@ export type Database = {
     Tables: {
       monitored_pairs: {
         Row: {
+          active: boolean
           coin: string
           created_at: string | null
           id: string
@@ -50,6 +51,7 @@ export type Database = {
           last_updated: string | null
         }
         Insert: {
+          active?: boolean
           coin: string
           created_at?: string | null
           id?: string
@@ -59,6 +61,7 @@ export type Database = {
           last_updated?: string | null
         }
         Update: {
+          active?: boolean
           coin?: string
           created_at?: string | null
           id?: string

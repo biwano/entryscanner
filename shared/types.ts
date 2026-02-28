@@ -7,6 +7,19 @@ export interface Candle {
   volume: number
 }
 
+/**
+ * Raw candle from Hyperliquid API
+ */
+export interface HyperliquidCandle {
+  t: number // timestamp
+  o: string // open price
+  h: string // high price
+  l: string // low price
+  c: string // close price
+  v: string // volume
+  i: number // interval/identifier
+}
+
 export type Timeframe = 'D1' | 'W1'
 
 export interface TrendStatus {

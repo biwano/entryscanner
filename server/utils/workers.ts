@@ -1,12 +1,14 @@
 import { createClient } from '@supabase/supabase-js';
 import { HyperliquidClient } from '#shared/hyperliquid';
 import { determineTrend, isCandleClosed } from '#shared/trends';
-import type { Timeframe } from '#shared/types';
+import type { Timeframe, HyperliquidCandle } from '#shared/types';
+import type { Database, TablesUpdate } from '~/types/database.types';
+import type { MonitoredPair, Trend, UserSubscriptionWithDetails } from '~/types/database.friendly.types';
 
 // Supabase client for Nitro tasks (using environment variables)
 const getSupabaseServiceClient = () => {
   const config = useRuntimeConfig();
-  return createClient(
+  return createClient<Database>(
     config.public.supabase.url,
     process.env.SUPABASE_SERVICE_KEY || config.supabase.serviceKey,
     {
@@ -22,7 +24,7 @@ export async function runTrendWorker() {
   const supabase = getSupabaseServiceClient();
   const client = new HyperliquidClient();
   
-  const timeframe = (Math.random() > 0.5 ? 'D1' : 'W1') as Timeframe;
+  const timeframe: Timeframe = Math.random() > 0.5 ? 'D1' : 'W1';
   
   const { data: pair, error: pairError } = await supabase
     .from('monitored_pairs')
@@ -41,11 +43,13 @@ export async function runTrendWorker() {
   const startTime = Date.now() - (250 * (timeframe === 'D1' ? 24 * 60 * 60 * 1000 : 7 * 24 * 60 * 60 * 1000));
   
   try {
-    const candles: any[] = await client.fetchCandles(coin, interval, startTime);
+    const candlesResponse = await client.fetchCandles(coin, interval, startTime);
+    const candles: HyperliquidCandle[] = candlesResponse;
+    
     if (!candles || candles.length === 0) return { status: 'error', coin, message: 'no candles' };
 
-    const latestCandleTime = candles[candles.length - 1].t;
-    if (!isCandleClosed(timeframe, latestCandleTime)) {
+    const lastCandle = candles[candles.length - 1];
+    if (!isCandleClosed(timeframe, lastCandle.t)) {
       await supabase.from('monitored_pairs').update({ last_analyzed: new Date().toISOString() }).eq('id', pair.id);
       return { status: 'candle_not_closed', coin, timeframe };
     }
@@ -59,17 +63,29 @@ export async function runTrendWorker() {
       needsFlip = true;
     } else {
       const { data: lastTrend } = await supabase.from('trends').select('*').eq('id', lastTrendFlipId).single();
-      if (!lastTrend || lastTrend.status !== currentTrend.status) needsFlip = true;
+      if (!lastTrend || lastTrend.status !== currentTrend.status) {
+        needsFlip = true;
+      }
     }
 
     if (needsFlip) {
       const { data: newTrend, error: insertError } = await supabase.from('trends').insert({
-        coin, timeframe, status: currentTrend.status, since: new Date(currentTrend.since).toISOString()
+        coin, 
+        timeframe, 
+        status: currentTrend.status, 
+        since: new Date(currentTrend.since).toISOString()
       }).select().single();
       
       if (!insertError && newTrend) {
-        const updates: any = { last_analyzed: new Date().toISOString(), last_updated: new Date().toISOString() };
-        updates[trendFlipColumn] = newTrend.id;
+        const updates: TablesUpdate<'monitored_pairs'> = { 
+          last_analyzed: new Date().toISOString(), 
+          last_updated: new Date().toISOString() 
+        };
+        if (timeframe === 'D1') {
+          updates.last_trend_flip_daily_id = newTrend.id;
+        } else {
+          updates.last_trend_flip_weekly_id = newTrend.id;
+        }
         await supabase.from('monitored_pairs').update(updates).eq('id', pair.id);
         return { status: 'trend_flipped', coin, timeframe, newStatus: currentTrend.status };
       }
@@ -77,8 +93,9 @@ export async function runTrendWorker() {
 
     await supabase.from('monitored_pairs').update({ last_analyzed: new Date().toISOString() }).eq('id', pair.id);
     return { status: 'no_flip', coin, timeframe };
-  } catch (err) {
-    return { status: 'error', coin, message: err.message };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    return { status: 'error', coin, message };
   }
 }
 
@@ -87,23 +104,39 @@ export async function runNotificationDispatcher() {
   const { data: subscriptions, error: subError } = await supabase
     .from('user_subscriptions')
     .select(`
-      user_id, coin, timeframe,
-      profiles (discord_webhook_url),
-      monitored_pairs!coin (active, last_trend_flip_daily_id, last_trend_flip_weekly_id)
-    `);
+      *,
+      profiles:user_id (discord_webhook_url),
+      monitored_pairs!coin (active, last_trend_flip_daily_id, last_trend_flip_weekly_id, coin)
+    `)
+    .returns<UserSubscriptionWithDetails[]>();
     
   if (subError || !subscriptions) return { status: 'no_subscriptions', error: subError };
   
   const sent = [];
-  for (const sub of (subscriptions as any[])) {
+  for (const sub of subscriptions) {
     if (!sub.monitored_pairs?.active) continue;
-    const trendId = sub.timeframe === 'D1' ? sub.monitored_pairs?.last_trend_flip_daily_id : sub.monitored_pairs?.last_trend_flip_weekly_id;
+    
+    const trendId = sub.timeframe === 'D1' 
+      ? sub.monitored_pairs?.last_trend_flip_daily_id 
+      : sub.monitored_pairs?.last_trend_flip_weekly_id;
+      
     if (!trendId || !sub.profiles?.discord_webhook_url) continue;
 
-    const { data: existingNotif } = await supabase.from('notification_history').select('id').eq('user_id', sub.user_id).eq('trend_id', trendId).single();
+    const { data: existingNotif } = await supabase
+      .from('notification_history')
+      .select('id')
+      .eq('user_id', sub.user_id)
+      .eq('trend_id', trendId)
+      .maybeSingle();
+      
     if (existingNotif) continue;
 
-    const { data: trend } = await supabase.from('trends').select('*').eq('id', trendId).single();
+    const { data: trend } = await supabase
+      .from('trends')
+      .select('*')
+      .eq('id', trendId)
+      .single();
+      
     if (!trend) continue;
 
     const message = `${sub.coin} ${sub.timeframe} trend flipped to **${trend.status.toUpperCase()}**!`;
@@ -121,10 +154,16 @@ export async function runNotificationDispatcher() {
         }
       });
       
-      await supabase.from('notification_history').insert({ user_id: sub.user_id, trend_id: trend.id, message });
+      await supabase.from('notification_history').insert({ 
+        user_id: sub.user_id, 
+        trend_id: trend.id, 
+        message 
+      });
+      
       sent.push({ user_id: sub.user_id, coin: sub.coin });
-    } catch (err) {
-      console.error('Dispatcher error:', err);
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      console.error('Dispatcher error:', errorMsg);
     }
   }
   return { status: 'ok', sent: sent.length };

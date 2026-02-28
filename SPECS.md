@@ -9,6 +9,9 @@ Entry scanner is a web-based application that monitors real-time market data on 
 - **Database/Backend**: Supabase (PostgreSQL for storage, Supabase Auth for users).
 - **Authentication UI**: `@supa-kit/auth-ui-vue` for managing the login and registration flows.
 - **Data Fetching**: Polling via Hyperliquid's `InfoClient` (using standardized shared utilities).
+- **Coding Standards**: 
+    - **No `any`**: The `any` type is strictly forbidden. Use proper interfaces or `unknown` with type guards.
+    - **No Typecasting**: Avoid `as` type assertions. Use type guards or properly defined types from the database schema.
 - **State Management**: TanStack Query (for managed polling and data fetching) and Pinia (for UI state).
 - **Package Manager**: pnpm
 
