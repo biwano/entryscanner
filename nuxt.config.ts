@@ -18,10 +18,6 @@ export default defineNuxtConfig({
     experimental: {
       tasks: true,
     },
-    scheduledTasks: {
-      "* * * * *": ["trend-worker"], // Every 5 minutes
-      "*/10 * * * *": ["notification-dispatcher"], // Every 10 minutes
-    },
   },
   devtools: { enabled: true },
 });

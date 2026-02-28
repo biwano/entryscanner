@@ -39,7 +39,6 @@ Entry Scanner is a web-based application designed to monitor real-time market da
    SUPABASE_URL=your_supabase_project_url
    SUPABASE_KEY=your_supabase_anon_key
    SUPABASE_SERVICE_KEY=your_supabase_service_role_key
-   CRON_SECRET=your_custom_secret_for_cron_jobs
    ```
 
 ## 🛠 Development
@@ -82,7 +81,6 @@ The application uses server-side workers for trend analysis and alert dispatchin
 
 These can be triggered via:
 - API endpoints
-- Scheduled Nuxt cron tasks
 - Bash commands
 
 ---

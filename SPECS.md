@@ -69,7 +69,6 @@ Entry scanner is a web-based application that monitors real-time market data on 
 All server-side workers (Trend Worker, Notification Dispatcher) can be triggered via:
 
 - **API Calls**: Dedicated server endpoints (e.g., for manual triggers or external webhooks).
-- **Nuxt Cron**: Scheduled execution using Nuxt's built-in task scheduling/cron capabilities.
 - **Bash Command**: Direct execution from the command line (e.g., for manual maintenance or CI/CD integration).
 
 #### 3.2.2. Automated Trend Worker
@@ -90,7 +89,7 @@ All server-side workers (Trend Worker, Notification Dispatcher) can be triggered
 
 #### 3.2.3. Alert & Notification Engine (Server-Side)
 
-- **Notification Dispatcher Worker**: The primary background process responsible for sending alerts. It is executed **daily** via a single cron job. It ensures reliability by:
+- **Notification Dispatcher Worker**: The primary background process responsible for sending alerts. It ensures reliability by:
   - **Event Gap Analysis**: For each user's `user_subscriptions`, it identifies all `events` for which the user hasn't received a notification yet.
   - **Selection Logic**: It selects events where the `event.created_at` is greater than the `created_at` value of the event referenced by the user's last notification for that specific coin/timeframe.
   - **Execution**: Sending the Discord notifications to the users' configured webhooks and logging the successful delivery to `notification_history` (referencing the `event_id`).
@@ -192,7 +191,7 @@ Tables use **Row Level Security (RLS)** to ensure appropriate data access. User-
     - Uses shared trend logic from the integration library to compare data against the SMA 50.
     - Calculates bullish/bearish trends on **Daily and Weekly** timeframes.
     - Updates the `trends` table (single row per coin/timeframe) and creates an entry in `events` if a trend flip occurs.
-    - **Notification Dispatcher**: A background worker that identifies new `events` for which the user hasn't been notified (based on `created_at` value comparison with last notification) and sends alerts daily.
-3.  **Server-Side Workers**: Background processes (via Nitro/Server API) that cycle through monitored pairs (Trend Worker) and events (Dispatcher). These workers can be triggered through API endpoints, scheduled Nuxt cron tasks, or direct bash commands.
+    - **Notification Dispatcher**: A background worker that identifies new `events` for which the user hasn't been notified (based on `created_at` value comparison with last notification) and sends alerts.
+3.  **Server-Side Workers**: Background processes (via Nitro/Server API) that cycle through monitored pairs (Trend Worker) and events (Dispatcher). These workers can be triggered through API endpoints or direct bash commands.
 4.  **Persistence Layer**: Supabase handles all system and user-specific data, ensuring monitored states and alerts remain persistent.
 5.  **Market Integration**: Uses the `InfoClient` for real-time market data retrieval.
