@@ -78,7 +78,7 @@ const option = computed(() => {
       },
     ],
     yAxis: [
-      { scale: true, splitArea: { show: true } },
+      { scale: true, splitArea: { show: false } },
       {
         scale: true,
         gridIndex: 1,
