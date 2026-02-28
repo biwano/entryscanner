@@ -1,15 +1,16 @@
-# Specifications: Hyperliquid Alert Web App
+# Specifications: Entry scanner
 
 ## 1. Project Overview
-A web-based application that monitors real-time market data on the Hyperliquid decentralized exchange and triggers automated alerts based on predefined conditions (Trend Flips, Price milestones).
+Entry scanner is a web-based application that monitors real-time market data on the Hyperliquid decentralized exchange and triggers automated alerts based on predefined conditions (Trend Flips, Price milestones).
 
 ## 2. Technical Stack
-- **Frontend**: Nuxt 4 (Vue.js) with Nuxt UI (which includes Tailwind CSS).
+- **Frontend**: Nuxt 4 (Vue.js) with Nuxt UI (using a **Fuchsia** primary theme and Tailwind CSS).
 - **Hyperliquid SDK**: `@nktkas/hyperliquid` (TypeScript SDK) wrapped in a custom shared library.
 - **Database/Backend**: Supabase (PostgreSQL for storage, Supabase Auth for users).
-- **Authentication UI**: `auth-ui-vue` for managing the login and registration flows.
+- **Authentication UI**: `@supa-kit/auth-ui-vue` for managing the login and registration flows.
 - **Data Fetching**: Polling via Hyperliquid's `InfoClient` (using standardized shared utilities).
 - **State Management**: TanStack Query (for managed polling and data fetching) and Pinia (for UI state).
+- **Package Manager**: pnpm
 
 ## 3. Core Features
 
@@ -40,7 +41,7 @@ A web-based application that monitors real-time market data on the Hyperliquid d
 - **Persistence**: All configurations are saved to the `monitored_pairs` table in Supabase.
 
 #### 3.1.4. User Authentication & Profile
-- **Supabase Auth UI**: Uses `auth-ui-vue` with the **Supa theme** to provide a standardized login/registration interface.
+- **Supabase Auth UI**: Uses `@supa-kit/auth-ui-vue` with the **Supa theme** to provide a standardized login/registration interface.
 - **Email-Based Authentication**: Users can sign up and sign in using their email address and password via Supabase Auth.
 - **Supabase Auth**: Secure authentication flow for managing personal settings, subscriptions, and webhooks.
 - **Subscription Overview**: View and manage all active pair/timeframe subscriptions from the profile or dashboard.

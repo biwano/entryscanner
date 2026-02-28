@@ -1,21 +1,21 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watchEffect } from 'vue';
 import { useAsyncData, navigateTo } from '#app';
 import { useSupabaseClient } from '#imports';
 import { useHyperliquid } from '~/composables/useHyperliquid';
 import { useUser } from '~/composables/useUser';
 
 const supabase = useSupabaseClient();
-const { isAdmin } = useUser();
+const { isAdmin, userSystem } = useUser();
 const { useMetaAndAssetCtxs } = useHyperliquid();
-const { data: metaAndAssetCtxs } = useMetaAndAssetCtxs();
+const { data: metaAndAssetCtxs, status: metaStatus } = useMetaAndAssetCtxs();
 
-// Check admin status on load
-if (!isAdmin.value) {
-  // We can't use middleware easily in this setup without complex file changes, 
-  // so we'll do a simple redirect if not admin.
-  // Note: Nuxt 4 async components might need careful handling.
-}
+// Simple redirect if not admin
+watchEffect(() => {
+  if (userSystem.value && !isAdmin.value) {
+    navigateTo('/');
+  }
+});
 
 interface MonitoredPair {
   id: string;
@@ -59,13 +59,36 @@ const filteredCoins = computed(() => {
   if (!searchQuery.value) return allAvailableCoins.value;
   return allAvailableCoins.value.filter((c: string) => c.toLowerCase().includes(searchQuery.value.toLowerCase()));
 });
+
+const bulkAddVisible = async () => {
+  if (!isAdmin.value) return;
+  const toAdd = filteredCoins.value.filter(c => !isMonitored(c));
+  if (toAdd.length === 0) return;
+  
+  const entries = toAdd.map(coin => ({ coin, last_updated: new Date().toISOString() }));
+  await (supabase.from('monitored_pairs') as any).insert(entries);
+  await refreshMonitored();
+};
+
+const bulkRemoveVisible = async () => {
+  if (!isAdmin.value) return;
+  const toRemove = filteredCoins.value.filter(c => isMonitored(c));
+  if (toRemove.length === 0) return;
+  
+  await (supabase.from('monitored_pairs') as any).delete().in('coin', toRemove);
+  await refreshMonitored();
+};
 </script>
 
 <template>
   <div v-if="isAdmin" class="space-y-8">
     <div class="flex items-center justify-between">
       <h1 class="text-3xl font-bold">Asset Management</h1>
-      <UInput v-model="searchQuery" icon="i-lucide-search" placeholder="Search assets..." class="w-64" />
+      <div class="flex gap-4">
+        <UButton v-if="filteredCoins.length > 0" color="neutral" variant="ghost" size="sm" @click="bulkAddVisible">Add All Visible</UButton>
+        <UButton v-if="filteredCoins.length > 0" color="neutral" variant="ghost" size="sm" @click="bulkRemoveVisible">Remove All Visible</UButton>
+        <UInput v-model="searchQuery" icon="i-lucide-search" placeholder="Search assets..." class="w-64" />
+      </div>
     </div>
 
     <UCard class="shadow-sm">
