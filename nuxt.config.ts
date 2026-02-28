@@ -9,6 +9,7 @@ export default defineNuxtConfig({
   alias: {
     '#shared': fileURLToPath(new URL('./shared', import.meta.url))
   },
+  css: ['~/assets/css/main.css'],
   modules: [
     '@nuxt/ui',
     '@nuxtjs/supabase',

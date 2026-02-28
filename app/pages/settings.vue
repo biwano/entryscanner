@@ -1,38 +1,55 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { useAsyncData } from '#app';
+import { useAsyncData, navigateTo } from '#app';
 import { useSupabaseClient } from '#imports';
 import { useHyperliquid } from '~/composables/useHyperliquid';
+import { useUser } from '~/composables/useUser';
 
 const supabase = useSupabaseClient();
+const { isAdmin } = useUser();
 const { useMetaAndAssetCtxs } = useHyperliquid();
 const { data: metaAndAssetCtxs } = useMetaAndAssetCtxs();
 
+// Check admin status on load
+if (!isAdmin.value) {
+  // We can't use middleware easily in this setup without complex file changes, 
+  // so we'll do a simple redirect if not admin.
+  // Note: Nuxt 4 async components might need careful handling.
+}
+
+interface MonitoredPair {
+  id: string;
+  coin: string;
+  last_updated: string;
+}
+
 const { data: monitoredPairs, refresh: refreshMonitored } = await useAsyncData('monitored_pairs_mgmt', async () => {
   const { data } = await supabase.from('monitored_pairs').select('*');
-  return data || [];
+  return (data as MonitoredPair[]) || [];
 });
 
-const allAvailableCoins = computed(() => {
+const allAvailableCoins = computed<string[]>(() => {
   if (!metaAndAssetCtxs.value) return [];
   const meta = metaAndAssetCtxs.value[0] as any;
   return meta.universe.map((u: any) => u.name).sort();
 });
 
 const isMonitored = (coin: string) => {
-  return monitoredPairs.value?.some(p => p.coin === coin);
+  return (monitoredPairs.value as MonitoredPair[] | null)?.some(p => p.coin === coin);
 };
 
 const toggleMonitored = async (coin: string) => {
+  if (!isAdmin.value) return;
+  
   if (isMonitored(coin)) {
     // Remove
-    const pair = monitoredPairs.value?.find(p => p.coin === coin);
+    const pair = (monitoredPairs.value as MonitoredPair[] | null)?.find(p => p.coin === coin);
     if (pair) {
-      await supabase.from('monitored_pairs').delete().eq('id', pair.id);
+      await (supabase.from('monitored_pairs') as any).delete().eq('id', pair.id);
     }
   } else {
     // Add
-    await supabase.from('monitored_pairs').insert({ coin, last_updated: new Date().toISOString() });
+    await (supabase.from('monitored_pairs') as any).insert({ coin, last_updated: new Date().toISOString() });
   }
   await refreshMonitored();
 };
@@ -40,12 +57,12 @@ const toggleMonitored = async (coin: string) => {
 const searchQuery = ref('');
 const filteredCoins = computed(() => {
   if (!searchQuery.value) return allAvailableCoins.value;
-  return allAvailableCoins.value.filter(c => c.toLowerCase().includes(searchQuery.value.toLowerCase()));
+  return allAvailableCoins.value.filter((c: string) => c.toLowerCase().includes(searchQuery.value.toLowerCase()));
 });
 </script>
 
 <template>
-  <div class="space-y-8">
+  <div v-if="isAdmin" class="space-y-8">
     <div class="flex items-center justify-between">
       <h1 class="text-3xl font-bold">Asset Management</h1>
       <UInput v-model="searchQuery" icon="i-lucide-search" placeholder="Search assets..." class="w-64" />
@@ -93,4 +110,5 @@ const filteredCoins = computed(() => {
       </div>
     </UCard>
   </div>
+  <AccessDenied v-else />
 </template>

@@ -23,7 +23,7 @@ A web-based application that monitors real-time market data on the Hyperliquid d
     - **Sorting**: Pairs are sorted by how long they have been in their current trend (ascending order - showing most recent trend changes first).
 - **Navigation**: Click on any pair to open the **Pair Analysis** view.
 - **Price Ticker**: Display live-polled prices for all active perpetual assets on Hyperliquid.
-- **Asset Selection**: A searchable list of assets (BTC, ETH, etc.) to add to the system-wide monitored list.
+- **Manage Assets**: Link to the **Asset Management** settings to add or remove monitored pairs.
 
 #### 3.1.2. Pair Analysis
 - **Historical Price Chart**: Interactive price chart showing historical data (using candles from `info.candles`).
@@ -31,8 +31,11 @@ A web-based application that monitors real-time market data on the Hyperliquid d
 - **Asset Statistics**: Display key metrics such as 24h volume, open interest, and funding rate (from `info.metaAndAssetCtxs`).
 
 #### 3.1.3. Asset Management & Configuration
+- **Admin Only Access**: This area is restricted to users with the `admin` role in the `user_system` table.
 - **Global Pair Configuration**: A dedicated settings area to manage the system-wide list of tracked coins.
-- **Bulk Selection**: Interface to quickly add or remove multiple pairs from Hyperliquid's available perpetual markets.
+- **Searchable Asset Universe**: Users can search through all perpetual pairs available on Hyperliquid (fetched from `info.meta`).
+- **Pair Selection**: A grid or list interface allowing users to toggle (select/deselect) which pairs are monitored by the system.
+- **Bulk Management**: Capabilities to quickly add or remove multiple pairs from the active monitoring list.
 - **Persistence**: All configurations are saved to the `monitored_pairs` table in Supabase.
 
 #### 3.1.4. User Authentication & Profile
@@ -87,6 +90,13 @@ Tables use **Row Level Security (RLS)** to ensure appropriate data access. User-
 - `discord_webhook_url`: string (optional, for notifications)
 - `created_at`: timestamp
 - **RLS Policy**: Users can only read/update their own profile.
+
+### `user_system`
+- `id`: uuid (primary key)
+- `user_id`: uuid (references auth.users, unique)
+- `is_admin`: boolean (default: false)
+- `created_at`: timestamp
+- **RLS Policy**: Publicly readable. Only administrators can update. Used to restrict access to system management features.
 
 ### `user_subscriptions`
 - `id`: uuid (primary key)

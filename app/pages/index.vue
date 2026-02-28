@@ -3,10 +3,41 @@ import { computed } from 'vue';
 import { useSupabaseClient, useSupabaseUser } from '#imports';
 import { useAsyncData } from '#app';
 import { useHyperliquid } from '~/composables/useHyperliquid';
+import { useUser } from '~/composables/useUser';
 
 const { useAllMids, useMetaAndAssetCtxs } = useHyperliquid();
+const { isAdmin } = useUser();
 const { data: allMids } = useAllMids();
 const { data: metaAndAssetCtxs } = useMetaAndAssetCtxs();
+
+interface Trend {
+  id: string;
+  coin: string;
+  timeframe: string;
+  status: 'bullish' | 'bearish';
+  since: string;
+  created_at: string;
+}
+
+interface MonitoredPair {
+  id: string;
+  coin: string;
+  last_trend_flip_daily_id: string | null;
+  last_trend_flip_weekly_id: string | null;
+  last_analyzed: string;
+  last_updated: string;
+  created_at: string;
+  last_trend_flip_daily?: Trend;
+  last_trend_flip_weekly?: Trend;
+}
+
+interface UserSubscription {
+  id: string;
+  user_id: string;
+  coin: string;
+  timeframe: 'D1' | 'W1';
+  created_at: string;
+}
 
 const supabase = useSupabaseClient();
 const user = useSupabaseUser();
@@ -19,20 +50,20 @@ const { data: monitoredPairs, refresh: refreshMonitored } = await useAsyncData('
       last_trend_flip_weekly:trends!last_trend_flip_weekly_id (*)
     `)
     .order('last_updated', { ascending: false });
-  return data;
+  return data as MonitoredPair[] | null;
 });
 
 const { data: userSubscriptions, refresh: refreshSubscriptions } = await useAsyncData('user_subscriptions_dash', async () => {
   if (!user.value) return [];
   const { data } = await supabase.from('user_subscriptions').select('*').eq('user_id', user.value.id);
-  return data || [];
+  return (data as UserSubscription[]) || [];
 });
 
 const sortedPairs = computed(() => {
   if (!monitoredPairs.value) return [];
   
   // Sort by how long they have been in their current trend (descending order - most recent first)
-  return [...monitoredPairs.value].sort((a: any, b: any) => {
+  return [...monitoredPairs.value].sort((a, b) => {
     const timeA = new Date(a.last_trend_flip_daily?.since || 0).getTime();
     const timeB = new Date(b.last_trend_flip_daily?.since || 0).getTime();
     return timeB - timeA; 
@@ -40,7 +71,7 @@ const sortedPairs = computed(() => {
 });
 
 const isSubscribed = (coin: string, timeframe: 'D1' | 'W1') => {
-  return userSubscriptions.value?.some(s => s.coin === coin && s.timeframe === timeframe);
+  return (userSubscriptions.value as UserSubscription[] | null)?.some(s => s.coin === coin && s.timeframe === timeframe);
 };
 
 const toggleSubscription = async (coin: string, timeframe: 'D1' | 'W1') => {
@@ -50,12 +81,12 @@ const toggleSubscription = async (coin: string, timeframe: 'D1' | 'W1') => {
   }
   
   if (isSubscribed(coin, timeframe)) {
-    const sub = userSubscriptions.value?.find(s => s.coin === coin && s.timeframe === timeframe);
+    const sub = (userSubscriptions.value as UserSubscription[] | null)?.find(s => s.coin === coin && s.timeframe === timeframe);
     if (sub) {
-      await supabase.from('user_subscriptions').delete().eq('id', sub.id);
+      await (supabase.from('user_subscriptions') as any).delete().eq('id', sub.id);
     }
   } else {
-    await supabase.from('user_subscriptions').insert({ user_id: user.value.id, coin, timeframe });
+    await (supabase.from('user_subscriptions') as any).insert({ user_id: user.value.id, coin, timeframe });
   }
   await refreshSubscriptions();
 };
@@ -88,7 +119,7 @@ const formatRelativeTime = (timestamp?: string) => {
         <template #header>
           <div class="flex items-center justify-between">
             <span class="font-bold text-lg text-gray-900 dark:text-white">{{ pair.coin }}</span>
-            <UBadge :color="pair.last_trend_flip_daily?.status === 'bullish' ? 'green' : 'red'">
+            <UBadge :color="pair.last_trend_flip_daily?.status === 'bullish' ? 'success' : 'error'">
               {{ pair.last_trend_flip_daily?.status?.toUpperCase() || 'UNKNOWN' }}
             </UBadge>
           </div>
@@ -115,7 +146,7 @@ const formatRelativeTime = (timestamp?: string) => {
       <template #header>
         <div class="flex items-center justify-between">
           <h2 class="text-xl font-bold">Monitored Pairs</h2>
-          <UButton to="/settings" icon="i-lucide-plus" size="sm" color="neutral" variant="ghost">Manage Pairs</UButton>
+          <UButton v-if="isAdmin" to="/settings" icon="i-lucide-plus" size="sm" color="neutral" variant="ghost">Manage Pairs</UButton>
         </div>
       </template>
 
