@@ -16,6 +16,7 @@ A web-based application that monitors real-time market data on the Hyperliquid d
 
 #### 3.1.1. Dashboard
 - **Monitored Pairs View**: Display all system-wide monitored pairs with their current trend status.
+- **Subscription Management**: Users can subscribe/unsubscribe to specific pair/timeframe combinations (e.g., BTC/Daily, ETH/Weekly) to receive personalized notifications.
 - **Trend Indicators**: 
     - **Bullish/Bearish Status**: Visual indicator of the current trend based on 200 EMA crossover on **Daily (D1) and Weekly (W1)** timeframes.
     - **Trend Duration**: Show since when the pair turned bullish or bearish (timestamp/relative time).
@@ -37,16 +38,19 @@ A web-based application that monitors real-time market data on the Hyperliquid d
 #### 3.1.4. User Authentication & Profile
 - **Supabase Auth**: Users can sign up to manage their personal settings (like webhooks).
 - **Wallet Integration**: Support for connecting Web3 wallets (MetaMask, Rabby) to monitor user-specific data.
-- **Notification History**: View a personal log of past automated alerts triggered by trend flips.
+- **Subscription Overview**: View and manage all active pair/timeframe subscriptions from the profile or dashboard.
+- **Notification History**: View a personal log of past automated alerts triggered by trend flips for subscribed pairs.
 - **Profile Settings**: Configure and test the Discord Webhook URL for personal notifications.
 
 ### 3.2. Server Scripts (Workers)
 
-#### 3.2.1. Automated Trend Worker
-- **Triggering Mechanisms**: The worker can be triggered via:
-    - **API Calls**: Dedicated server endpoints (e.g., for manual triggers or external webhooks).
-    - **Nuxt Cron**: Scheduled execution using Nuxt's built-in task scheduling/cron capabilities.
-    - **Bash Command**: Direct execution from the command line (e.g., for manual maintenance or CI/CD integration).
+#### 3.2.1. Common Triggering Mechanisms
+All server-side workers (Trend Worker, Notification Dispatcher) can be triggered via:
+- **API Calls**: Dedicated server endpoints (e.g., for manual triggers or external webhooks).
+- **Nuxt Cron**: Scheduled execution using Nuxt's built-in task scheduling/cron capabilities.
+- **Bash Command**: Direct execution from the command line (e.g., for manual maintenance or CI/CD integration).
+
+#### 3.2.2. Automated Trend Worker
 - **Sequential Update Logic**: For each timeframe (Daily, Weekly), the worker identifies the coin in `monitored_pairs` that has the oldest trend record (or no record) in the `trends` table. It prioritizes coins where the `created_at` of the referenced `last_trend_flip_[timeframe]_id` is the oldest, ensuring that pairs which have maintained a trend the longest (or have never been analyzed) are checked for potential flips.
 - **Trend Analysis**: Re-calculates bullishness/bearishness based on the 200 EMA logic for the targeted timeframe using the shared library.
 - **Database Synchronization**:
@@ -56,13 +60,11 @@ A web-based application that monitors real-time market data on the Hyperliquid d
     - Updates `last_analyzed` and `last_updated` timestamps in `monitored_pairs` on every run to track activity.
 - **Reliability**: Ensures that all tracked pairs are eventually updated, even with API rate limits, by focusing on the least recently updated pair.
 
-#### 3.2.2. Alert & Notification Engine (Server-Side)
-- **Predefined Alerts**: The system automatically triggers notifications for:
-    - **Trend Flips**: When a pair crosses the 200 EMA on Daily or Weekly timeframes.
-    - **Price Thresholds**: Significant price milestones.
-- **Notification Delivery**:
-    - **Discord Integration**: The server identifies all users with a configured `discord_webhook_url` and sends alerts to their respective channels.
-    - **User-Specific Logs**: For every notification sent, the server logs an entry in `notification_history` referencing both the user and the specific `trend_id`.
+#### 3.2.3. Alert & Notification Engine (Server-Side)
+- **Notification Dispatcher Worker**: The primary background process responsible for sending alerts. It ensures reliability by:
+    - **Gap Analysis**: Periodically comparing entries in the `trends` table against `notification_history` for each user's `user_subscriptions`.
+    - **Delivery Logic**: Identifying users who are subscribed to a specific pair/timeframe that experienced a trend flip but do not yet have a corresponding entry in `notification_history` for that `trend_id`.
+    - **Execution**: Sending the Discord notifications to the users' configured webhooks and logging the successful delivery to `notification_history`.
 
 ### 3.3. Shared Features
 
@@ -85,6 +87,14 @@ Tables use **Row Level Security (RLS)** to ensure appropriate data access. User-
 - `discord_webhook_url`: string (optional, for notifications)
 - `created_at`: timestamp
 - **RLS Policy**: Users can only read/update their own profile.
+
+### `user_subscriptions`
+- `id`: uuid (primary key)
+- `user_id`: uuid (foreign key to profiles.id)
+- `coin`: string (e.g., "BTC", "ETH")
+- `timeframe`: enum ("D1", "W1")
+- `created_at`: timestamp
+- **RLS Policy**: Users can only manage (read/insert/delete) their own subscriptions (`user_id = auth.uid()`).
 
 ### `monitored_pairs`
 - `id`: uuid (primary key)
@@ -122,7 +132,7 @@ Tables use **Row Level Security (RLS)** to ensure appropriate data access. User-
     - Uses shared trend logic from the integration library to compare data against the 200 EMA.
     - Calculates bullish/bearish trends on **Daily and Weekly** timeframes. 
     - Updates the `trends` table (with history) and the latest trend reference in `monitored_pairs` if a trend flip occurs.
-    - **Automated Alerts (Server-Side)**: If a trend flip is detected, the server automatically identifies users with a `discord_webhook_url` in their profile, triggers the Discord notification, and logs a unique record to `notification_history` for each user/trend combination.
-3.  **Server-Side Trend Worker**: A background process (via Nitro/Server API) that cycles through monitored pairs in `monitored_pairs`, identifying targets based on the oldest `created_at` values for each timeframe in the `trends` table. It verifies candle closure before committing any flips, fetches fresh data via the shared library, and updates the `trends` table and `monitored_pairs` references when flips occur. This worker can be triggered through API endpoints, scheduled Nuxt cron tasks, or direct bash commands.
+    - **Notification Dispatcher**: A background worker that compares `trends` against `notification_history` for all `user_subscriptions` and sends pending alerts to ensure full delivery reliability.
+3.  **Server-Side Workers**: Background processes (via Nitro/Server API) that cycle through monitored pairs (Trend Worker) and notification gaps (Dispatcher). These workers can be triggered through API endpoints, scheduled Nuxt cron tasks, or direct bash commands.
 4.  **Persistence Layer**: Supabase handles all system and user-specific data, ensuring monitored states and alerts remain persistent.
 5.  **Wallet Layer**: Uses the `ExchangeClient` (if trading features are added later) and `InfoClient` for read-only user account data.
