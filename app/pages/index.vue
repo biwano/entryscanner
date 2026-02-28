@@ -49,8 +49,8 @@ const sortedPairs = computed(() => {
 
   // Sort by how long they have been in their current trend (descending order - most recent first)
   return [...monitoredPairs.value].sort((a, b) => {
-    const timeA = new Date(a.last_trend_flip_daily?.since || 0).getTime();
-    const timeB = new Date(b.last_trend_flip_daily?.since || 0).getTime();
+    const timeA = new Date(a.last_trend_flip_daily?.timestamp || 0).getTime();
+    const timeB = new Date(b.last_trend_flip_daily?.timestamp || 0).getTime();
     return timeB - timeA;
   });
 });

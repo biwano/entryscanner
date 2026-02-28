@@ -3,7 +3,7 @@ import { formatRelativeTime } from '#shared/time'
 
 const props = defineProps<{
   status?: 'bullish' | 'bearish'
-  since?: string
+  timestamp?: string
 }>()
 </script>
 
@@ -22,8 +22,8 @@ const props = defineProps<{
       </span>
     </div>
     
-    <span v-if="since" class="text-[10px] text-gray-500 font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded border border-gray-200 dark:border-gray-700">
-      {{ formatRelativeTime(since) }} ago
+    <span v-if="timestamp" class="text-[10px] text-gray-500 font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded border border-gray-200 dark:border-gray-700">
+      {{ formatRelativeTime(timestamp) }} ago
     </span>
   </div>
 </template>

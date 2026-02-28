@@ -1,5 +1,6 @@
 import { SMA } from "technicalindicators";
-import type { Timeframe, TrendStatus, HyperliquidCandle } from "./types";
+import type { Timeframe, HyperliquidCandle } from "./types";
+import type { Trend } from "~/types/database.friendly.types";
 import { CANDLE_COUNT, SMA_PERIOD_FAST } from "./constants";
 
 export function calculateStartTime(
@@ -27,7 +28,7 @@ export function determineTrend(
   coin: string,
   timeframe: Timeframe,
   candles: HyperliquidCandle[] // From InfoClient.candleSnapshot
-): TrendStatus | null {
+): Pick<Trend, "coin" | "timeframe" | "status" | "timestamp"> | null {
   if (candles.length === 0) {
     return null;
   }
@@ -40,7 +41,7 @@ export function determineTrend(
       coin,
       timeframe,
       status: "bearish",
-      since: candles[0]!.t,
+      timestamp: new Date(candles[0]!.t).toISOString(),
     };
   }
 
@@ -49,9 +50,9 @@ export function determineTrend(
 
   const status = lastClose > lastSma ? "bullish" : "bearish";
 
-  // Find since when the trend flipped
+  // Find when the trend flipped
   // With padding, smas[i] corresponds directly to candles[i]
-  let since = candles[candles.length - 1]!.t;
+  let timestamp = candles[candles.length - 1]!.t;
   for (let i = closePrices.length - 1; i >= 0; i--) {
     const currentPrice = closePrices[i]!;
     const currentSma = smas[i]!;
@@ -59,7 +60,7 @@ export function determineTrend(
     const currentStatus = currentPrice > currentSma ? "bullish" : "bearish";
 
     if (currentStatus === status) {
-      since = candles[i]!.t;
+      timestamp = candles[i]!.t;
     } else {
       break;
     }
@@ -69,7 +70,7 @@ export function determineTrend(
     coin,
     timeframe,
     status,
-    since,
+    timestamp: new Date(timestamp).toISOString(),
   };
 }
 

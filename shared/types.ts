@@ -22,23 +22,6 @@ export interface HyperliquidCandle {
 
 export type Timeframe = "D1" | "W1";
 
-export interface TrendStatus {
-  status: "bullish" | "bearish";
-  since: number; // timestamp
-  coin: string;
-  timeframe: Timeframe;
-}
-
-export interface MonitoredPair {
-  id: string;
-  coin: string;
-  last_trend_flip_daily_id?: string;
-  last_trend_flip_weekly_id?: string;
-  last_analyzed?: string;
-  last_updated?: string;
-  created_at?: string;
-}
-
 export interface AssetMeta {
   name: string;
   szDecimals: number;

@@ -149,25 +149,25 @@ export type Database = {
           coin: string
           created_at: string | null
           id: string
-          since: string
           status: string
           timeframe: string
+          timestamp: string
         }
         Insert: {
           coin: string
           created_at?: string | null
           id?: string
-          since: string
           status: string
           timeframe: string
+          timestamp: string
         }
         Update: {
           coin?: string
           created_at?: string | null
           id?: string
-          since?: string
           status?: string
           timeframe?: string
+          timestamp?: string
         }
         Relationships: []
       }

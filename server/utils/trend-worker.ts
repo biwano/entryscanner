@@ -61,7 +61,7 @@ export async function runTrendWorker() {
       .select("id, status")
       .eq("coin", coin)
       .eq("timeframe", timeframe)
-      .eq("since", lastCandleTime)
+      .eq("timestamp", lastCandleTime)
       .maybeSingle();
 
     if (existingTrend) {
@@ -86,7 +86,7 @@ export async function runTrendWorker() {
         coin,
         timeframe,
         status: currentTrend.status,
-        since: lastCandleTime,
+        timestamp: lastCandleTime,
       })
       .select()
       .single();

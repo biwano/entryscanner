@@ -58,7 +58,7 @@ export async function runNotificationDispatcher() {
               title: `Trend Flip Alert: ${sub.coin}`,
               description: message,
               color: trend.status === "bullish" ? 0x00ff00 : 0xff0000,
-              timestamp: new Date(trend.since).toISOString(),
+              timestamp: new Date(trend.timestamp).toISOString(),
             },
           ],
         },

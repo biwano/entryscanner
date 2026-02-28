@@ -29,7 +29,7 @@ Entry scanner is a web-based application that monitors real-time market data on 
 - **Monitored Pairs View**: Display all system-wide monitored pairs (where `active` is `true`) with their current trend status.
 - **Subscription Management**: Users can subscribe/unsubscribe to specific pair/timeframe combinations (e.g., BTC/Daily, ETH/Weekly) to receive personalized notifications.
 - **Trend Indicators**:
-  - **Bullish/Bearish Status**: Visual indicator of the current trend based on 50 SMA crossover on **Daily (D1) and Weekly (W1)** timeframes.
+  - **Bullish/Bearish Status**: Visual indicator of the current trend based on SMA 50 crossover on **Daily (D1) and Weekly (W1)** timeframes.
   - **Trend Duration**: Show since when the pair turned bullish or bearish (timestamp/relative time).
   - **Sorting**: Pairs are sorted by how long they have been in their current trend (ascending order - showing most recent trend changes first).
 - **Navigation**: Click on any pair to open the **Pair Analysis** view.
@@ -78,7 +78,7 @@ All server-side workers (Trend Worker, Notification Dispatcher) can be triggered
 - **Sequential Update Logic**: For each timeframe (Daily, Weekly), the worker identifies the coin in `monitored_pairs` that has the oldest trend record (or no record) in the `trends` table. It prioritizes coins where the `created_at` of the referenced `last_trend_flip_[timeframe]_id` is the oldest, ensuring that pairs which have maintained a trend the longest (or have never been analyzed) are checked for potential flips.
 - **Simplified Processing Flow**:
   1.  **Get Candles**: Fetch the last 400 candles for the coin and timeframe.
-  2.  **Check Database**: Verify if a record already exists in the `trends` table for the last closed candle's timestamp (`since`).
+  2.  **Check Database**: Verify if a record already exists in the `trends` table for the last closed candle's timestamp (`timestamp`).
   3.  **Trend Calculation**: If no record exists, run the `determineTrend` logic using the fetched candles.
   4.  **Entry Creation**: Create a new entry in the `trends` table for the current candle.
   5.  **Database Synchronization**: Update the corresponding `last_trend_flip_[timeframe]_id` in `monitored_pairs` if the calculated trend status represents a flip from the previous state.
@@ -100,7 +100,7 @@ All server-side workers (Trend Worker, Notification Dispatcher) can be triggered
 - **Class-Based Implementation**: The logic is encapsulated in a `HyperliquidClient` class within `shared/hyperliquid.ts`, providing a clean interface for data fetching and trend computation.
 - **Core Features**:
   - **Get Candles**: Fetch historical candle data for a specific pair and timeframe (e.g., "D1", "W1"). The system should always request enough data to provide exactly **400 candles** for consistent visualization and analysis.
-  - **Compute Current Trend**: Logic to determine the current trend (bullish/bearish) based on the **50 SMA** crossover for a given pair and timeframe. This function returns `null` if no candle data is available.
+  - **Compute Current Trend**: Logic to determine the current trend (bullish/bearish) based on the **SMA 50** crossover for a given pair and timeframe. This function returns `null` if no candle data is available.
   - **Get Known Pairs**: Retrieve a list of all available perpetual pairs from Hyperliquid.
 - **Data Fetching Utilities**: Standardized methods for fetching prices and market metadata.
 - **Type Safety**: Common TypeScript interfaces and types for Hyperliquid data structures.
@@ -157,7 +157,7 @@ Tables use **Row Level Security (RLS)** to ensure appropriate data access. User-
 - `coin`: string (e.g., "BTC", "ETH")
 - `timeframe`: string (e.g., "D1", "W1")
 - `status`: enum ("bullish", "bearish")
-- `since`: timestamp (the opening time of the candle where the trend flipped)
+- `timestamp`: timestamp (the opening time of the candle where the trend flipped)
 - `created_at`: timestamp (for history and tracking changes)
 - **RLS Policy**: Publicly readable. Only system-level processes can insert.
 - **Note**: This table stores the current trend and a full history of trend changes per pair and timeframe.
@@ -176,7 +176,7 @@ Tables use **Row Level Security (RLS)** to ensure appropriate data access. User-
 
 1.  **Market Data Layer**: The app uses a shared **Hyperliquid Integration Library** (wrapping `@nktkas/hyperliquid`) to poll for `allMids`, `l2Book`, and `candles` data.
 2.  **Condition & Trend Engine**:
-    - Uses shared trend logic from the integration library to compare data against the 50 SMA.
+    - Uses shared trend logic from the integration library to compare data against the SMA 50.
     - Calculates bullish/bearish trends on **Daily and Weekly** timeframes.
     - Updates the `trends` table (with history) and the latest trend reference in `monitored_pairs` if a trend flip occurs.
     - **Notification Dispatcher**: A background worker that compares `trends` against `notification_history` for all `user_subscriptions` and sends pending alerts to ensure full delivery reliability.
