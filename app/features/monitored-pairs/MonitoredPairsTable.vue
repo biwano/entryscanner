@@ -53,7 +53,7 @@ const getPrice = (allMids: Record<string, string> | null, coin: string) => {
         <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
           <tr
             v-for="pair in pairs"
-            :key="pair.id"
+            :key="pair.coin"
             class="hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors"
           >
             <td class="px-6 py-4">
@@ -73,18 +73,18 @@ const getPrice = (allMids: Record<string, string> | null, coin: string) => {
             </td>
             <td class="px-6 py-4">
               <TrendIndicator
-                :status="pair.last_trend_flip_daily?.status"
+                :status="pair.last_trend_flip_daily?.status as 'bullish' | 'bearish' | undefined"
                 :timestamp="pair.last_trend_flip_daily?.timestamp"
               />
             </td>
             <td class="px-6 py-4">
               <TrendIndicator
-                :status="pair.last_trend_flip_weekly?.status"
+                :status="pair.last_trend_flip_weekly?.status as 'bullish' | 'bearish' | undefined"
                 :timestamp="pair.last_trend_flip_weekly?.timestamp"
               />
             </td>
             <td class="px-6 py-4 text-xs text-gray-500">
-              {{ formatRelativeTime(pair.last_updated) }} ago
+              {{ formatRelativeTime(pair.last_updated || undefined) }} ago
             </td>
             <td class="px-6 py-4 text-right">
               <div class="flex items-center justify-end gap-2">

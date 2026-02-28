@@ -71,7 +71,6 @@ export type Database = {
           active: boolean
           coin: string
           created_at: string | null
-          id: string
           last_analyzed: string | null
           last_trend_flip_daily_id: string | null
           last_trend_flip_weekly_id: string | null
@@ -81,7 +80,6 @@ export type Database = {
           active?: boolean
           coin: string
           created_at?: string | null
-          id?: string
           last_analyzed?: string | null
           last_trend_flip_daily_id?: string | null
           last_trend_flip_weekly_id?: string | null
@@ -91,7 +89,6 @@ export type Database = {
           active?: boolean
           coin?: string
           created_at?: string | null
-          id?: string
           last_analyzed?: string | null
           last_trend_flip_daily_id?: string | null
           last_trend_flip_weekly_id?: string | null
@@ -175,7 +172,6 @@ export type Database = {
         Row: {
           coin: string
           created_at: string | null
-          id: string
           status: string
           timeframe: string
           timestamp: string
@@ -183,7 +179,6 @@ export type Database = {
         Insert: {
           coin: string
           created_at?: string | null
-          id?: string
           status: string
           timeframe: string
           timestamp: string
@@ -191,7 +186,6 @@ export type Database = {
         Update: {
           coin?: string
           created_at?: string | null
-          id?: string
           status?: string
           timeframe?: string
           timestamp?: string

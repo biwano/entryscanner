@@ -37,20 +37,14 @@ const toggleMonitored = async (coin: string) => {
     (p) => p.coin === coin
   );
 
-  if (existingPair) {
-    await supabase.from("monitored_pairs")
-      .update({
-        active: !existingPair.active,
-        last_updated: new Date().toISOString(),
-      })
-      .eq("id", existingPair.id);
-  } else {
-    await supabase.from("monitored_pairs").insert({
+  // Use upsert on coin primary key
+  await supabase.from("monitored_pairs")
+    .upsert({
       coin,
-      active: true,
+      active: existingPair ? !existingPair.active : true,
       last_updated: new Date().toISOString(),
     });
-  }
+
   emit("refresh");
 };
 
@@ -59,20 +53,15 @@ const bulkAddVisible = async () => {
   const toProcess = filteredCoins.value.filter((c) => !isMonitored(c));
   if (toProcess.length === 0) return;
 
-  for (const coin of toProcess) {
-    const existing = props.monitoredPairs.find((p) => p.coin === coin);
-    if (existing) {
-      await supabase.from("monitored_pairs")
-        .update({ active: true, last_updated: new Date().toISOString() })
-        .eq("id", existing.id);
-    } else {
-      await supabase.from("monitored_pairs").insert({
-        coin,
-        active: true,
-        last_updated: new Date().toISOString(),
-      });
-    }
-  }
+  // Use bulk upsert on coin primary key
+  const now = new Date().toISOString();
+  const records = toProcess.map(coin => ({
+    coin,
+    active: true,
+    last_updated: now,
+  }));
+
+  await supabase.from("monitored_pairs").upsert(records);
   emit("refresh");
 };
 
@@ -81,6 +70,7 @@ const bulkRemoveVisible = async () => {
   const toRemove = filteredCoins.value.filter((c) => isMonitored(c));
   if (toRemove.length === 0) return;
 
+  // Update multiple rows using 'in' filter on coin (the PK)
   await supabase.from("monitored_pairs")
     .update({ active: false, last_updated: new Date().toISOString() })
     .in("coin", toRemove);

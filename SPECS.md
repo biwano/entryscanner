@@ -141,8 +141,7 @@ Tables use **Row Level Security (RLS)** to ensure appropriate data access. User-
 
 ### `monitored_pairs`
 
-- `id`: uuid (primary key)
-- `coin`: string
+- `coin`: string (primary key)
 - `active`: boolean (default: true, used to toggle monitoring without deletion)
 - `last_trend_flip_daily_id`: uuid (foreign key to `events.id`, nullable, **ON DELETE SET NULL**)
 - `last_trend_flip_weekly_id`: uuid (foreign key to `events.id`, nullable, **ON DELETE SET NULL**)
@@ -153,13 +152,13 @@ Tables use **Row Level Security (RLS)** to ensure appropriate data access. User-
 
 ### `trends`
 
-- `id`: uuid (primary key)
-- `coin`: string (e.g., "BTC", "ETH")
-- `timeframe`: string (e.g., "D1", "W1")
+- `coin`: string (primary key component)
+- `timeframe`: string (primary key component, e.g., "D1", "W1")
 - `status`: enum ("bullish", "bearish")
 - `timestamp`: timestamp (the opening time of the last closed candle)
+- **Primary Key**: `(coin, timeframe)`
 - **RLS Policy**: Publicly readable. Only system-level processes can insert/update.
-- **Note**: This table stores the *current* trend for each pair and timeframe. There is only one row per coin/timeframe couple. Uniqueness is ensured at the database level.
+- **Note**: This table stores the *current* trend for each pair and timeframe. There is only one row per coin/timeframe couple. Uniqueness is ensured by the composite primary key.
 
 ### `events`
 
