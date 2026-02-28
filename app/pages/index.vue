@@ -7,7 +7,6 @@ import { useUser } from "~/composables/useUser";
 import { useUserId } from "~/composables/useUserId";
 import type { Database } from "~/types/database.types";
 import type { UserSubscription, MonitoredPairWithTrends } from "~/types/database.friendly.types";
-import TrendCards from "~/features/monitored-pairs/TrendCards.vue";
 import MonitoredPairsTable from "~/features/monitored-pairs/MonitoredPairsTable.vue";
 
 const { useAllMids } = useHyperliquid();
@@ -59,11 +58,6 @@ const sortedPairs = computed(() => {
 
 <template>
   <div class="space-y-8">
-    <TrendCards
-      :pairs="sortedPairs.slice(0, 3)"
-      :all-mids="allMids || null"
-    />
-
     <MonitoredPairsTable
       :pairs="sortedPairs"
       :all-mids="allMids || null"
