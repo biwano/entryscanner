@@ -39,8 +39,8 @@ A web-based application that monitors real-time market data on the Hyperliquid d
 - **Persistence**: All configurations are saved to the `monitored_pairs` table in Supabase.
 
 #### 3.1.4. User Authentication & Profile
-- **Supabase Auth**: Users can sign up to manage their personal settings (like webhooks).
-- **Wallet Integration**: Support for connecting Web3 wallets (MetaMask, Rabby) to monitor user-specific data.
+- **Email-Based Authentication**: Users can sign up and sign in using their email address and password via Supabase Auth.
+- **Supabase Auth**: Secure authentication flow for managing personal settings, subscriptions, and webhooks.
 - **Subscription Overview**: View and manage all active pair/timeframe subscriptions from the profile or dashboard.
 - **Notification History**: View a personal log of past automated alerts triggered by trend flips for subscribed pairs.
 - **Profile Settings**: Configure and test the Discord Webhook URL for personal notifications.
@@ -86,7 +86,6 @@ Tables use **Row Level Security (RLS)** to ensure appropriate data access. User-
 
 ### `profiles`
 - `id`: uuid (references auth.users, primary key)
-- `wallet_address`: string (optional)
 - `discord_webhook_url`: string (optional, for notifications)
 - `created_at`: timestamp
 - **RLS Policy**: Users can only read/update their own profile.
@@ -145,4 +144,4 @@ Tables use **Row Level Security (RLS)** to ensure appropriate data access. User-
     - **Notification Dispatcher**: A background worker that compares `trends` against `notification_history` for all `user_subscriptions` and sends pending alerts to ensure full delivery reliability.
 3.  **Server-Side Workers**: Background processes (via Nitro/Server API) that cycle through monitored pairs (Trend Worker) and notification gaps (Dispatcher). These workers can be triggered through API endpoints, scheduled Nuxt cron tasks, or direct bash commands.
 4.  **Persistence Layer**: Supabase handles all system and user-specific data, ensuring monitored states and alerts remain persistent.
-5.  **Wallet Layer**: Uses the `ExchangeClient` (if trading features are added later) and `InfoClient` for read-only user account data.
+5.  **Market Integration**: Uses the `InfoClient` for real-time market data retrieval.

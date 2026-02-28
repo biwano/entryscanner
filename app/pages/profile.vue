@@ -5,6 +5,9 @@ import { useSupabaseClient, useSupabaseUser } from '#imports';
 
 const supabase = useSupabaseClient();
 const user = useSupabaseUser();
+const email = ref('');
+const password = ref('');
+const loading = ref(false);
 
 const { data: profile, refresh: refreshProfile } = await useAsyncData('profile', async () => {
   if (!user.value) return null;
@@ -32,31 +35,47 @@ const { data: notifications } = await useAsyncData('notification_history_profile
 });
 
 const discordWebhookUrl = ref(profile.value?.discord_webhook_url || '');
-const walletAddress = ref(profile.value?.wallet_address || '');
+
+const handleEmailLogin = async () => {
+  if (!email.value || !password.value) return;
+  loading.value = true;
+  try {
+    const { error } = await supabase.auth.signInWithPassword({
+      email: email.value,
+      password: password.value
+    });
+    if (error) throw error;
+  } catch (err: any) {
+    alert(err.message);
+  } finally {
+    loading.value = false;
+  }
+};
+
+const handleEmailSignUp = async () => {
+  if (!email.value || !password.value) return;
+  loading.value = true;
+  try {
+    const { error } = await supabase.auth.signUp({
+      email: email.value,
+      password: password.value
+    });
+    if (error) throw error;
+    alert('Check your email for the confirmation link!');
+  } catch (err: any) {
+    alert(err.message);
+  } finally {
+    loading.value = false;
+  }
+};
 
 const saveProfile = async () => {
     if (!user.value) return;
     await supabase.from('profiles').update({
-        discord_webhook_url: discordWebhookUrl.value,
-        wallet_address: walletAddress.value
+        discord_webhook_url: discordWebhookUrl.value
     }).eq('id', user.value.id);
     await refreshProfile();
     // Show success notification
-}
-
-const connectWallet = async () => {
-    if ((window as any).ethereum) {
-        try {
-            const accounts = await (window as any).ethereum.request({ method: 'eth_requestAccounts' });
-            if (accounts.length > 0) {
-                walletAddress.value = accounts[0];
-            }
-        } catch (err) {
-            console.error('Wallet connection failed:', err);
-        }
-    } else {
-        alert('MetaMask or Rabby not found!');
-    }
 }
 
 const loginWithGithub = async () => {
@@ -82,11 +101,34 @@ const formatRelativeTime = (timestamp?: string) => {
 
 <template>
   <div class="space-y-8">
-    <div v-if="!user" class="flex flex-col items-center justify-center py-20 text-center space-y-4">
+    <div v-if="!user" class="flex flex-col items-center justify-center py-20 text-center space-y-6">
       <UIcon name="i-lucide-lock" class="w-12 h-12 text-gray-400" />
-      <h1 class="text-2xl font-bold">Authentication Required</h1>
-      <p class="text-gray-500 max-w-sm">Sign in to manage your subscriptions and notification settings.</p>
-      <UButton size="lg" color="neutral" icon="i-lucide-github" @click="loginWithGithub">Continue with GitHub</UButton>
+      <div class="space-y-2">
+        <h1 class="text-2xl font-bold">Authentication Required</h1>
+        <p class="text-gray-500 max-w-sm">Sign in to manage your subscriptions and notification settings.</p>
+      </div>
+      
+      <UCard class="w-full max-w-sm">
+        <form @submit.prevent="handleEmailLogin" class="space-y-4 text-left">
+          <UFormField label="Email">
+            <UInput v-model="email" type="email" placeholder="you@example.com" />
+          </UFormField>
+          <UFormField label="Password">
+            <UInput v-model="password" type="password" />
+          </UFormField>
+          <div class="flex flex-col gap-2 pt-2">
+            <UButton type="submit" block :loading="loading">Sign In</UButton>
+            <UButton variant="outline" block :loading="loading" @click="handleEmailSignUp">Create Account</UButton>
+          </div>
+        </form>
+        
+        <div class="relative my-6">
+          <div class="absolute inset-0 flex items-center"><span class="w-full border-t border-gray-200 dark:border-gray-800" /></div>
+          <div class="relative flex justify-center text-xs uppercase"><span class="bg-white dark:bg-gray-900 px-2 text-gray-500">Or continue with</span></div>
+        </div>
+        
+        <UButton color="neutral" variant="outline" icon="i-lucide-github" block @click="loginWithGithub">GitHub</UButton>
+      </UCard>
     </div>
 
     <div v-else class="space-y-8">
@@ -104,13 +146,6 @@ const formatRelativeTime = (timestamp?: string) => {
             <div class="space-y-4">
               <UFormField label="Discord Webhook URL" description="Get alerts directly in your Discord channel.">
                 <UInput v-model="discordWebhookUrl" placeholder="https://discord.com/api/webhooks/..." />
-              </UFormField>
-              
-              <UFormField label="Wallet Address" description="Connect your Web3 wallet (MetaMask, Rabby).">
-                <div class="flex gap-2">
-                  <UInput v-model="walletAddress" placeholder="0x..." class="flex-grow" />
-                  <UButton color="neutral" variant="outline" icon="i-lucide-wallet" @click="connectWallet">Connect</UButton>
-                </div>
               </UFormField>
 
               <UButton color="primary" block @click="saveProfile">Save Changes</UButton>
