@@ -48,8 +48,8 @@ const assetCtx = computed(() => {
   const meta = metaAndAssetCtxs.value[0];
   const ctxs = metaAndAssetCtxs.value[1];
   const index = meta.universe.findIndex((u: AssetMeta) => u.name === coin);
-  if (index === -1) return undefined;
-  return ctxs[index] as AssetCtx;
+  if (index === -1 || !ctxs || !ctxs[index]) return undefined;
+  return ctxs[index];
 });
 
 const currentPrice = computed(() => allMids.value?.[coin] ?? "0.00");

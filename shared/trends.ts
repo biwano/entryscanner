@@ -8,10 +8,16 @@ export function calculateStartTime(
   candleCount: number = CANDLE_COUNT
 ): number {
   const now = Date.now();
+  const DAY_MS = 24 * 60 * 60 * 1000;
+
   if (timeframe === "D1") {
-    return now - candleCount * 24 * 60 * 60 * 1000;
+    const startOfToday = Math.floor(now / DAY_MS) * DAY_MS;
+    return startOfToday - candleCount * DAY_MS;
   } else if (timeframe === "W1") {
-    return now - candleCount * 7 * 24 * 60 * 60 * 1000;
+    const WEEK_MS = 7 * DAY_MS;
+    // Jan 1 1970 was a Thursday (4 days before Monday Jan 5).
+    const startOfWeek = Math.floor((now - 4 * DAY_MS) / WEEK_MS) * WEEK_MS + 4 * DAY_MS;
+    return startOfWeek - candleCount * WEEK_MS;
   }
   return now;
 }

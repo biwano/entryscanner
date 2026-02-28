@@ -3,13 +3,14 @@ import type { Database } from "~/types/database.types";
 
 export const getSupabaseServiceClient = () => {
   const config = useRuntimeConfig();
-  const publicConfig = config.public as any;
-  const privateConfig = config as any;
+  const url = config.public.supabase?.url;
+  const serviceKey = (process.env.SUPABASE_SERVICE_KEY as string | undefined) || config.supabase?.serviceKey;
 
-  return createClient<Database>(
-    publicConfig.supabase.url,
-    process.env.SUPABASE_SERVICE_KEY || privateConfig.supabase.serviceKey,
-    {
+  if (typeof url !== "string" || typeof serviceKey !== "string") {
+    throw new Error("Supabase URL or service key is missing from runtime config");
+  }
+
+  return createClient<Database>(url, serviceKey, {
       auth: {
         autoRefreshToken: false,
         persistSession: false,

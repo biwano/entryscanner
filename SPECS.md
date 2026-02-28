@@ -144,8 +144,8 @@ Tables use **Row Level Security (RLS)** to ensure appropriate data access. User-
 - `id`: uuid (primary key)
 - `coin`: string
 - `active`: boolean (default: true, used to toggle monitoring without deletion)
-- `last_trend_flip_daily_id`: uuid (foreign key to trends.id, nullable)
-- `last_trend_flip_weekly_id`: uuid (foreign key to trends.id, nullable)
+- `last_trend_flip_daily_id`: uuid (foreign key to `trends.id`, nullable, **ON DELETE SET NULL**)
+- `last_trend_flip_weekly_id`: uuid (foreign key to `trends.id`, nullable, **ON DELETE SET NULL**)
 - `last_analyzed`: timestamp (last time the trend logic was run)
 - `last_updated`: timestamp (last time the record was updated)
 - `created_at`: timestamp
