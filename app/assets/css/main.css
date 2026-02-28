@@ -10,3 +10,7 @@
     @apply antialiased font-sans text-gray-900 dark:text-gray-50;
   }
 }
+
+:root {
+  font-size: 100%;
+}
