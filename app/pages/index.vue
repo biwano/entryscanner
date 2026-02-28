@@ -15,6 +15,8 @@ const { data: metaAndAssetCtxs } = useMetaAndAssetCtxs();
 
 const supabase = useSupabaseClient<Database>();
 const user = useSupabaseUser();
+const userId = useUserId();
+
 const { data: monitoredPairs, refresh: refreshMonitored } = await useAsyncData<MonitoredPairWithTrends[] | null>(
   "monitored_pairs",
   async () => {
@@ -35,11 +37,11 @@ const { data: monitoredPairs, refresh: refreshMonitored } = await useAsyncData<M
 
 const { data: userSubscriptions, refresh: refreshSubscriptions } =
   await useAsyncData<UserSubscription[]>("user_subscriptions_dash", async () => {
-    if (!user.value) return [];
+    if (!userId.value) return [];
     const { data } = await supabase
       .from("user_subscriptions")
       .select("*")
-      .eq("user_id", user.value.id);
+      .eq("user_id", userId.value);
     return data || [];
   });
 
@@ -61,7 +63,7 @@ const isSubscribed = (coin: string, timeframe: "D1" | "W1") => {
 };
 
 const toggleSubscription = async (coin: string, timeframe: "D1" | "W1") => {
-  if (!user.value) {
+  if (!userId.value) {
     alert("Please log in to subscribe to alerts!");
     return;
   }
@@ -77,7 +79,7 @@ const toggleSubscription = async (coin: string, timeframe: "D1" | "W1") => {
     }
   } else {
     await supabase.from("user_subscriptions").insert({
-      user_id: user.value.id,
+      user_id: userId.value,
       coin,
       timeframe,
     });

@@ -14,17 +14,18 @@ import type {
 
 const supabase = useSupabaseClient<Database>();
 const user = useSupabaseUser();
+const userId = useUserId();
 const colorMode = useColorMode();
 const toast = useToast();
 
 const { data: profile, refresh: refreshProfile } = await useAsyncData<Profile | null>(
   "profile",
   async () => {
-    if (!user.value) return null;
+    if (!userId.value) return null;
     const { data } = await supabase
       .from("profiles")
       .select("*")
-      .eq("id", user.value.id)
+      .eq("id", userId.value)
       .single();
     return data;
   }
@@ -32,11 +33,11 @@ const { data: profile, refresh: refreshProfile } = await useAsyncData<Profile | 
 
 const { data: subscriptions, refresh: refreshSubscriptions } =
   await useAsyncData<UserSubscription[]>("subscriptions", async () => {
-    if (!user.value) return [];
+    if (!userId.value) return [];
     const { data } = await supabase
       .from("user_subscriptions")
       .select("*")
-      .eq("user_id", user.value.id);
+      .eq("user_id", userId.value);
     return data || [];
   });
 
@@ -50,7 +51,7 @@ type NotificationWithTrend = NotificationHistory & {
 const { data: notifications } = await useAsyncData<NotificationWithTrend[]>(
   "notification_history_profile",
   async () => {
-    if (!user.value) return [];
+    if (!userId.value) return [];
     const { data } = await supabase
       .from("notification_history")
       .select(
@@ -59,7 +60,7 @@ const { data: notifications } = await useAsyncData<NotificationWithTrend[]>(
       trend:trends (status)
     `
       )
-      .eq("user_id", user.value.id)
+      .eq("user_id", userId.value)
       .order("triggered_at", { ascending: false })
       .returns<NotificationWithTrend[]>();
     return data || [];
@@ -69,12 +70,12 @@ const { data: notifications } = await useAsyncData<NotificationWithTrend[]>(
 const discordWebhookUrl = ref(profile.value?.discord_webhook_url || "");
 
 const saveProfile = async () => {
-  if (!user.value) return;
+  if (!userId.value) return;
   await supabase.from("profiles")
     .update({
       discord_webhook_url: discordWebhookUrl.value,
     })
-    .eq("id", user.value.id);
+    .eq("id", userId.value);
   await refreshProfile();
   toast.add({
     title: "Profile Updated",

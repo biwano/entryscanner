@@ -7,21 +7,22 @@ import type { UserSystem } from "~/types/database.friendly.types";
 export const useUser = () => {
   const supabase = useSupabaseClient<Database>();
   const user = useSupabaseUser();
+  const userId = useUserId();
 
   const { data: userSystem, refresh: refreshUserSystem } =
     useAsyncData<UserSystem | null>(
       "user_system",
       async () => {
-        if (!user.value) return null;
+        if (!userId.value) return null;
         const { data } = await supabase
           .from("user_system")
           .select("*")
-          .eq("user_id", user.value.sub)
+          .eq("user_id", userId.value)
           .single();
         return data;
       },
       {
-        watch: [user],
+        watch: [userId],
       }
     );
 
