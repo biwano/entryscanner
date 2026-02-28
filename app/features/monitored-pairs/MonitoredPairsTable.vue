@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { MonitoredPairWithTrends, UserSubscription } from "~/types/database.friendly.types";
-import { formatRelativeTime } from "#shared/time";
 import SubscriptionToggle from "../subscriptions/SubscriptionToggle.vue";
 
 defineProps<{
@@ -73,18 +72,18 @@ const getPrice = (allMids: Record<string, string> | null, coin: string) => {
             </td>
             <td class="px-6 py-4">
               <TrendIndicator
-                :status="pair.last_trend_flip_daily?.status as 'bullish' | 'bearish' | undefined"
-                :since="pair.last_trend_flip_daily?.since"
+                :status="(pair.last_trend_flip_daily?.status || undefined) as 'bullish' | 'bearish' | undefined"
+                :since="pair.last_trend_flip_daily?.since || undefined"
               />
             </td>
             <td class="px-6 py-4">
               <TrendIndicator
-                :status="pair.last_trend_flip_weekly?.status as 'bullish' | 'bearish' | undefined"
-                :since="pair.last_trend_flip_weekly?.since"
+                :status="(pair.last_trend_flip_weekly?.status || undefined) as 'bullish' | 'bearish' | undefined"
+                :since="pair.last_trend_flip_weekly?.since || undefined"
               />
             </td>
             <td class="px-6 py-4 text-xs text-gray-500">
-              {{ formatRelativeTime(pair.last_updated || undefined) }} ago
+              <RelativeTime :timestamp="pair.last_updated" />
             </td>
             <td class="px-6 py-4 text-right">
               <div class="flex items-center justify-end gap-2">

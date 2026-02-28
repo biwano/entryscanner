@@ -7,7 +7,6 @@ import { useHyperliquid } from "~/composables/useHyperliquid";
 import type { MonitoredPairWithTrends } from "~/types/database.friendly.types";
 import type { AssetCtx, AssetMeta } from "#shared/types";
 import { calculateStartTime } from "#shared/trends";
-import { formatRelativeTime } from "#shared/time";
 import { CANDLE_COUNT } from "#shared/constants";
 import PriceChart from "~/features/charts/PriceChart.vue";
 import AssetStats from "~/features/monitored-pairs/AssetStats.vue";
@@ -82,7 +81,7 @@ const currentPrice = computed(() => allMids.value?.[coin] ?? "0.00");
             :variant="timeframe === '1d' ? 'solid' : 'subtle'"
             >D1: {{ pair.last_trend_flip_daily?.status?.toUpperCase() }}
             <span v-if="pair.last_trend_flip_daily?.since" class="ml-1 opacity-80 text-[10px]"
-              >({{ formatRelativeTime(pair.last_trend_flip_daily.since) }})</span
+              >(<RelativeTime :timestamp="pair.last_trend_flip_daily.since" :show-ago="false" />)</span
             ></UBadge
           >
           <UBadge
@@ -96,7 +95,7 @@ const currentPrice = computed(() => allMids.value?.[coin] ?? "0.00");
             :variant="timeframe === '1w' ? 'solid' : 'subtle'"
             >W1: {{ pair.last_trend_flip_weekly?.status?.toUpperCase() }}
             <span v-if="pair.last_trend_flip_weekly?.since" class="ml-1 opacity-80 text-[10px]"
-              >({{ formatRelativeTime(pair.last_trend_flip_weekly.since) }})</span
+              >(<RelativeTime :timestamp="pair.last_trend_flip_weekly.since" :show-ago="false" />)</span
             ></UBadge
           >
         </div>

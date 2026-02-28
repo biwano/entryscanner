@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { formatRelativeTime } from "#shared/time";
 import type { NotificationHistory } from "~/types/database.friendly.types";
 
 // Local type for notifications with joined event
@@ -26,9 +25,9 @@ defineProps<{
         class="p-4 rounded-lg bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800"
       >
         <div class="flex justify-between items-start">
-          <span class="text-xs text-gray-500"
-            >{{ formatRelativeTime(notif.triggered_at || undefined) }} ago</span
-          >
+          <span class="text-xs text-gray-500">
+            <RelativeTime :timestamp="notif.triggered_at" />
+          </span>
           <UBadge
             :color="
               notif.event?.status === 'bullish' ? 'success' : 'error'
