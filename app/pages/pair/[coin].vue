@@ -50,13 +50,6 @@ const assetCtx = computed(() => {
 });
 
 const currentPrice = computed(() => allMids.value?.[coin] ?? "0.00");
-
-const formatPrice = (price: string | number) => {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(Number(price));
-};
 </script>
 
 <template>

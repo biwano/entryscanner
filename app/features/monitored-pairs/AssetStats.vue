@@ -9,13 +9,6 @@ const props = defineProps<{
   currentPrice: string | number;
 }>();
 
-const formatVolume = (vol: string | number) => {
-  return new Intl.NumberFormat("en-US", {
-    notation: "compact",
-    maximumFractionDigits: 1,
-  }).format(Number(vol));
-};
-
 const fundingPercent = computed(() => {
   return (Number(props.assetCtx?.funding) * 100).toFixed(4);
 });

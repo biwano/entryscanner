@@ -14,13 +14,6 @@ const emit = defineEmits<{
   (e: "refreshSubscriptions"): void;
 }>();
 
-const formatPrice = (price: string | number) => {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(Number(price));
-};
-
 const getPrice = (allMids: Record<string, string> | null, coin: string) => {
   return allMids?.[coin] || "0.00";
 };
