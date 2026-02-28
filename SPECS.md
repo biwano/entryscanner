@@ -74,15 +74,17 @@ All server-side workers (Trend Worker, Notification Dispatcher) can be triggered
 
 #### 3.2.2. Automated Trend Worker
 
-- **Sequential Update Logic**: For each timeframe (Daily, Weekly), the worker identifies the coin in `monitored_pairs` that has the oldest trend record (or no record) in the `trends` table. It prioritizes coins where the `last_analyzed` or `last_updated` timestamps are the oldest, ensuring that all pairs are regularly checked.
+- **Systematic Update Logic**: For each run, the worker identifies the coin in `monitored_pairs` that has the oldest `last_analyzed` timestamp (or no record). It then processes ALL supported timeframes (Daily "D1" and Weekly "W1") for that specific coin in a single execution. This ensures that a coin's trend status is kept consistent across all timeframes.
 - **Simplified Processing Flow**:
-  1.  **Get Candles**: Fetch the last 400 candles for the coin and timeframe.
-  2.  **Trend Calculation**: Run the `determineTrend` logic using the fetched candles (SMA 50 crossover).
-  3.  **Trend Update**: Update the single row in the `trends` table for the coin/timeframe (upsert with uniqueness on `coin` and `timeframe`).
-  4.  **Event Creation**: If the calculated trend status represents a flip from the previous state (or if it's the first record), create a new record in the `events` table.
-  5.  **Database Synchronization**: Update the corresponding `last_trend_flip_[timeframe]_id` in `monitored_pairs` with the new `event_id`.
-  6.  **Activity Tracking**: Update `last_analyzed` and `last_updated` timestamps in `monitored_pairs` on every run.
-- **Reliability**: Ensures that all tracked pairs are eventually updated, even with API rate limits, by focusing on the least recently updated pair.
+  1.  **Select Coin**: Pick the least recently analyzed active coin from `monitored_pairs`.
+  2.  **Iterate Timeframes**: For each timeframe (D1, W1):
+      a. **Get Candles**: Fetch the last 400 candles for the coin and timeframe.
+      b. **Trend Calculation**: Run the `determineTrend` logic using the fetched candles (SMA 50 crossover).
+      c. **Trend Update**: Update the single row in the `trends` table for the coin/timeframe (upsert with uniqueness on `coin` and `timeframe`).
+      d. **Event Creation**: If the calculated trend status represents a flip from the previous state (or if it's the first record), create a new record in the `events` table.
+      e. **Database Synchronization**: Update the corresponding `last_trend_flip_[timeframe]_id` in `monitored_pairs` with the new `event_id`.
+  3.  **Activity Tracking**: Update `last_analyzed` and `last_updated` (if any flip occurred) timestamps in `monitored_pairs` after all timeframes are processed.
+- **Reliability**: Ensures that all tracked pairs are systematically updated across all timeframes, preventing data staleness in any specific interval.
 
 #### 3.2.3. Alert & Notification Engine (Server-Side)
 
