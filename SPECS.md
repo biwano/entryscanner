@@ -17,6 +17,7 @@ Entry scanner is a web-based application that monitors real-time market data on 
 - **Architecture (Feature-Slice Design)**:
   - **Pages (`/app/pages`)**: Orchestrate the layout and combine multiple features to form a complete view. Pages handle routing and high-level data orchestration.
   - **Features (`/app/features`)**: Small, focused, and self-contained units of functionality. A feature is a granular piece of the UI and logic (e.g., `MonitoredPairsList`, `PriceChart`, `AssetToggle`). Features should be reusable where possible.
+- **Relative Time**: Use `dayjs` for date manipulation and relative time formatting across the application.
 - **Package Manager**: pnpm
 
 ## 3. Core Features

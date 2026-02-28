@@ -2,24 +2,21 @@ import { SMA } from "technicalindicators";
 import type { Timeframe, HyperliquidCandle } from "./types";
 import type { Trend } from "~/types/database.friendly.types";
 import { CANDLE_COUNT, SMA_PERIOD_FAST } from "./constants";
+import dayjs from "dayjs";
 
 export function calculateStartTime(
   timeframe: Timeframe,
   candleCount: number = CANDLE_COUNT
 ): number {
-  const now = Date.now();
-  const DAY_MS = 24 * 60 * 60 * 1000;
+  const now = dayjs();
 
   if (timeframe === "D1") {
-    const startOfToday = Math.floor(now / DAY_MS) * DAY_MS;
-    return startOfToday - candleCount * DAY_MS;
+    return now.startOf("day").subtract(candleCount, "day").valueOf();
   } else if (timeframe === "W1") {
-    const WEEK_MS = 7 * DAY_MS;
-    // Jan 1 1970 was a Thursday (4 days before Monday Jan 5).
-    const startOfWeek = Math.floor((now - 4 * DAY_MS) / WEEK_MS) * WEEK_MS + 4 * DAY_MS;
-    return startOfWeek - candleCount * WEEK_MS;
+    // Hyperliquid weeks start on Monday
+    return now.startOf("week").subtract(candleCount, "week").valueOf();
   }
-  return now;
+  return now.valueOf();
 }
 
 export function calculateSMA(prices: number[], period: number = SMA_PERIOD_FAST): number[] {
@@ -47,7 +44,7 @@ export function determineTrend(
       coin,
       timeframe,
       status: "bearish",
-      timestamp: new Date(candles[0]!.t).toISOString(),
+      timestamp: dayjs(candles[0]!.t).toISOString(),
     };
   }
 
@@ -76,7 +73,7 @@ export function determineTrend(
     coin,
     timeframe,
     status,
-    timestamp: new Date(timestamp).toISOString(),
+    timestamp: dayjs(timestamp).toISOString(),
   };
 }
 
@@ -84,15 +81,13 @@ export function isCandleClosed(
   timeframe: Timeframe,
   candleTimestamp: number
 ): boolean {
-  const now = Date.now();
-  const candleStart = candleTimestamp;
+  const now = dayjs();
+  const candleStart = dayjs(candleTimestamp);
 
   if (timeframe === "D1") {
-    const oneDayMs = 24 * 60 * 60 * 1000;
-    return now >= candleStart + oneDayMs;
+    return now.isAfter(candleStart.add(1, "day")) || now.isSame(candleStart.add(1, "day"));
   } else if (timeframe === "W1") {
-    const oneWeekMs = 7 * 24 * 60 * 60 * 1000;
-    return now >= candleStart + oneWeekMs;
+    return now.isAfter(candleStart.add(1, "week")) || now.isSame(candleStart.add(1, "week"));
   }
   return false;
 }

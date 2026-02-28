@@ -8,6 +8,7 @@ import { CANDLE_COUNT } from "#shared/constants";
 import type { Timeframe, HyperliquidCandle } from "#shared/types";
 import type { TablesInsert } from "~/types/database.types";
 import { getSupabaseServiceClient } from "./supabase-service";
+import dayjs from "dayjs";
 
 type SupabaseClient = ReturnType<typeof getSupabaseServiceClient>;
 
@@ -40,7 +41,7 @@ async function processTimeframe(
     }
 
     const lastClosedCandle = candles[lastClosedCandleIdx]!;
-    const lastCandleTime = new Date(lastClosedCandle.t).toISOString();
+    const lastCandleTime = dayjs(lastClosedCandle.t).toISOString();
 
     // Run determineTrend (using candles up to the last closed one)
     const candlesToAnalyze = candles.slice(0, lastClosedCandleIdx + 1);
@@ -151,7 +152,7 @@ export async function runTrendWorker() {
 
   const updates: TablesInsert<"monitored_pairs"> = {
     coin,
-    last_analyzed: new Date().toISOString(),
+    last_analyzed: dayjs().toISOString(),
   };
 
   for (const timeframe of timeframes) {
@@ -170,7 +171,7 @@ export async function runTrendWorker() {
 
   // Update last_updated if any flip occurred during this run
   if (anyFlip) {
-    updates.last_updated = new Date().toISOString();
+    updates.last_updated = dayjs().toISOString();
   }
 
   // 3. Update monitored_pairs (primary key is coin)

@@ -3,6 +3,7 @@ import { ref, computed } from "vue";
 import { useSupabaseClient } from "#imports";
 import type { Database } from "~/types/database.types";
 import type { MonitoredPair } from "~/types/database.friendly.types";
+import dayjs from "dayjs";
 
 const props = defineProps<{
   monitoredPairs: MonitoredPair[];
@@ -42,7 +43,7 @@ const toggleMonitored = async (coin: string) => {
     .upsert({
       coin,
       active: existingPair ? !existingPair.active : true,
-      last_updated: new Date().toISOString(),
+      last_updated: dayjs().toISOString(),
     });
 
   emit("refresh");
@@ -54,7 +55,7 @@ const bulkAddVisible = async () => {
   if (toProcess.length === 0) return;
 
   // Use bulk upsert on coin primary key
-  const now = new Date().toISOString();
+  const now = dayjs().toISOString();
   const records = toProcess.map(coin => ({
     coin,
     active: true,
@@ -72,7 +73,7 @@ const bulkRemoveVisible = async () => {
 
   // Update multiple rows using 'in' filter on coin (the PK)
   await supabase.from("monitored_pairs")
-    .update({ active: false, last_updated: new Date().toISOString() })
+    .update({ active: false, last_updated: dayjs().toISOString() })
     .in("coin", toRemove);
   emit("refresh");
 };

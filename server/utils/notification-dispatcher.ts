@@ -1,5 +1,6 @@
 import type { UserSubscriptionWithDetails } from "~/types/database.friendly.types";
 import { getSupabaseServiceClient } from "./supabase-service";
+import dayjs from "dayjs";
 
 export async function runNotificationDispatcher() {
   const supabase = getSupabaseServiceClient();
@@ -63,7 +64,7 @@ export async function runNotificationDispatcher() {
                 title: `Trend Flip Alert: ${sub.coin}`,
                 description: message,
                 color: event.status === "bullish" ? 0x00ff00 : 0xff0000,
-                timestamp: new Date(event.since).toISOString(),
+                timestamp: dayjs(event.since).toISOString(),
               },
             ],
           },

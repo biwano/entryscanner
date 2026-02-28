@@ -20,7 +20,7 @@
     "@supabase/auth-ui-shared": "^0.1.8",
     "@supabase/supabase-js": "^2.98.0",
     "@tanstack/vue-query": "^5.92.9",
-    "date-fns": "^4.1.0",
+    "dayjs": "^1.11.19",
     "echarts": "^6.0.0",
     "lucide-vue-next": "^0.575.0",
     "nuxt": "^4.3.1",

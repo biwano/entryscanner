@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { formatRelativeTime } from '#shared/time'
-import { format } from 'date-fns'
+import { formatRelativeTime, formatDate } from '#shared/time'
 
 const props = withDefaults(defineProps<{
   timestamp?: string | number | null
@@ -12,7 +11,7 @@ const props = withDefaults(defineProps<{
 
 const formattedDate = computed(() => {
   if (!props.timestamp) return ''
-  return format(new Date(props.timestamp), 'PPP p')
+  return formatDate(props.timestamp, 'LLL')
 })
 </script>
 

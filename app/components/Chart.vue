@@ -11,6 +11,7 @@ import {
   VisualMapComponent,
 } from "echarts/components";
 import VChart from "vue-echarts";
+import dayjs from "dayjs";
 
 import type { HyperliquidCandle } from "#shared/types";
 
@@ -38,7 +39,7 @@ const option = computed(() => {
   if (!props.candles || props.candles.length === 0) return {};
 
   const dates = props.candles.map(
-    (c) => new Date(c.t).toISOString().split("T")[0]
+    (c) => dayjs(c.t).format("YYYY-MM-DD")
   );
   const data = props.candles.map((c) => [
     parseFloat(c.o),

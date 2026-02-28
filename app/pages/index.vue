@@ -8,6 +8,7 @@ import { useUserId } from "~/composables/useUserId";
 import type { Database } from "~/types/database.types";
 import type { UserSubscription, MonitoredPairWithTrends } from "~/types/database.friendly.types";
 import MonitoredPairsTable from "~/features/monitored-pairs/MonitoredPairsTable.vue";
+import dayjs from "dayjs";
 
 const { useAllMids } = useHyperliquid();
 const { isAdmin } = useUser();
@@ -49,8 +50,8 @@ const sortedPairs = computed(() => {
 
   // Sort by how long they have been in their current trend (descending order of since - most recent first)
   return [...monitoredPairs.value].sort((a, b) => {
-    const timeA = new Date(a.last_trend_flip_daily?.since || 0).getTime();
-    const timeB = new Date(b.last_trend_flip_daily?.since || 0).getTime();
+    const timeA = dayjs(a.last_trend_flip_daily?.since || 0).valueOf();
+    const timeB = dayjs(b.last_trend_flip_daily?.since || 0).valueOf();
     return timeB - timeA;
   });
 });
