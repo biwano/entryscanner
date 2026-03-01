@@ -8,9 +8,9 @@ const props = defineProps<{
 <template>
   <div class="flex items-center gap-2">
     <div class="flex items-center gap-1">
-      <div v-if="status === 'bullish'" class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-      <div v-else-if="status === 'bearish'" class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
-      <div v-else class="w-2 h-2 rounded-full bg-gray-400"></div>
+      <div v-if="status === 'bullish'" class="w-2 h-2 rounded-full bg-green-500 animate-pulse"/>
+      <div v-else-if="status === 'bearish'" class="w-2 h-2 rounded-full bg-red-500 animate-pulse"/>
+      <div v-else class="w-2 h-2 rounded-full bg-gray-400"/>
       
       <span v-if="status" :class="status === 'bullish' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'" class="text-xs font-semibold uppercase tracking-wider">
         {{ status }}

@@ -67,7 +67,7 @@ const currentPrice = computed(() => allMids.value?.[coin] ?? "0.00");
 </script>
 
 <template>
-  <div class="space-y-8" v-if="pair">
+  <div v-if="pair" class="space-y-8">
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-4">
         <UButton
@@ -82,7 +82,6 @@ const currentPrice = computed(() => allMids.value?.[coin] ?? "0.00");
             >INACTIVE</UBadge
           >
           <UBadge
-            @click="timeframe = '1d'"
             class="cursor-pointer"
             :color="
               pair.last_trend_flip_daily?.status === 'bullish'
@@ -90,13 +89,13 @@ const currentPrice = computed(() => allMids.value?.[coin] ?? "0.00");
                 : 'error'
             "
             :variant="timeframe === '1d' ? 'solid' : 'subtle'"
+            @click="timeframe = '1d'"
             >D1: {{ pair.last_trend_flip_daily?.status?.toUpperCase() }}
             <span v-if="pair.last_trend_flip_daily?.since" class="ml-1 opacity-80 text-[10px]"
               >(<RelativeTime :timestamp="pair.last_trend_flip_daily.since" :show-ago="false" />)</span
             ></UBadge
           >
           <UBadge
-            @click="timeframe = '1w'"
             class="cursor-pointer"
             :color="
               pair.last_trend_flip_weekly?.status === 'bullish'
@@ -104,6 +103,7 @@ const currentPrice = computed(() => allMids.value?.[coin] ?? "0.00");
                 : 'error'
             "
             :variant="timeframe === '1w' ? 'solid' : 'subtle'"
+            @click="timeframe = '1w'"
             >W1: {{ pair.last_trend_flip_weekly?.status?.toUpperCase() }}
             <span v-if="pair.last_trend_flip_weekly?.since" class="ml-1 opacity-80 text-[10px]"
               >(<RelativeTime :timestamp="pair.last_trend_flip_weekly.since" :show-ago="false" />)</span
