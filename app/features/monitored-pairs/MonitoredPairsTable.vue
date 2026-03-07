@@ -26,28 +26,69 @@ const userId = useUserId();
 const isSubscribingAll = ref(false);
 const isUnsubscribingAll = ref(false);
 
-const sortColumn = ref<string>("daily");
-const sortDirection = ref<"asc" | "desc">("desc");
+const sorting = ref([{ id: "daily", desc: true }]);
 
-const sortBy = (column: string) => {
-  if (sortColumn.value === column) {
-    sortDirection.value = sortDirection.value === "asc" ? "desc" : "asc";
-  } else {
-    sortColumn.value = column;
-    sortDirection.value = "desc";
-  }
-};
+const columns = [
+  {
+    id: "coin",
+    accessorKey: "coin",
+    header: "Asset",
+    enableSorting: true,
+  },
+  {
+    id: "price",
+    accessorFn: (row: MonitoredPairWithTrends) =>
+      getPrice(props.allMids, row.coin),
+    header: "Price",
+    enableSorting: true,
+  },
+  {
+    id: "daily",
+    accessorKey: "last_trend_flip_daily",
+    header: "Daily (D1)",
+    enableSorting: true,
+  },
+  {
+    id: "weekly",
+    accessorKey: "last_trend_flip_weekly",
+    header: "Weekly (W1)",
+    enableSorting: true,
+  },
+  {
+    id: "last_analyzed",
+    accessorKey: "last_analyzed",
+    header: "Last Analyzed",
+    enableSorting: true,
+  },
+  {
+    id: "actions",
+    accessorFn: () => "",
+    header: "Action",
+    meta: {
+      class: {
+        th: "text-right",
+        td: "text-right",
+      },
+    },
+  },
+];
 
 const getPrice = (allMids: Record<string, string> | null, coin: string) => {
   return allMids?.[coin] || "0.00";
 };
 
 const sortedPairs = computed(() => {
+  const sort = sorting.value[0];
+  if (!sort) return props.pairs;
+
+  const { id: sortId, desc } = sort;
+  const sortDirection = desc ? "desc" : "asc";
+
   const sorted = [...props.pairs].sort((a, b) => {
     let valA: string | number = 0;
     let valB: string | number = 0;
 
-    switch (sortColumn.value) {
+    switch (sortId) {
       case "coin":
         valA = a.coin;
         valB = b.coin;
@@ -72,8 +113,8 @@ const sortedPairs = computed(() => {
         return 0;
     }
 
-    if (valA < valB) return sortDirection.value === "asc" ? -1 : 1;
-    if (valA > valB) return sortDirection.value === "asc" ? 1 : -1;
+    if (valA < valB) return sortDirection === "asc" ? -1 : 1;
+    if (valA > valB) return sortDirection === "asc" ? 1 : -1;
     return 0;
   });
 
@@ -172,161 +213,86 @@ const getStatus = (
     </template>
 
     <div class="overflow-x-auto">
-      <table class="w-full text-left">
-        <thead
-          class="bg-gray-50 dark:bg-gray-800 text-xs text-gray-500 uppercase font-semibold"
-        >
-          <tr>
-            <th
-              class="px-6 py-3 cursor-pointer hover:text-primary transition-colors"
-              @click="sortBy('coin')"
-            >
-              <div class="flex items-center gap-1">
-                Asset
-                <UIcon
-                  v-if="sortColumn === 'coin'"
-                  :name="
-                    sortDirection === 'asc'
-                      ? 'i-lucide-arrow-up'
-                      : 'i-lucide-arrow-down'
-                  "
-                  class="w-3 h-3"
-                />
-              </div>
-            </th>
-            <th
-              class="px-6 py-3 cursor-pointer hover:text-primary transition-colors"
-              @click="sortBy('price')"
-            >
-              <div class="flex items-center gap-1">
-                Price
-                <UIcon
-                  v-if="sortColumn === 'price'"
-                  :name="
-                    sortDirection === 'asc'
-                      ? 'i-lucide-arrow-up'
-                      : 'i-lucide-arrow-down'
-                  "
-                  class="w-3 h-3"
-                />
-              </div>
-            </th>
-            <th
-              class="px-6 py-3 cursor-pointer hover:text-primary transition-colors"
-              @click="sortBy('daily')"
-            >
-              <div class="flex items-center gap-1">
-                Daily (D1)
-                <UIcon
-                  v-if="sortColumn === 'daily'"
-                  :name="
-                    sortDirection === 'asc'
-                      ? 'i-lucide-arrow-up'
-                      : 'i-lucide-arrow-down'
-                  "
-                  class="w-3 h-3"
-                />
-              </div>
-            </th>
-            <th
-              class="px-6 py-3 cursor-pointer hover:text-primary transition-colors"
-              @click="sortBy('weekly')"
-            >
-              <div class="flex items-center gap-1">
-                Weekly (W1)
-                <UIcon
-                  v-if="sortColumn === 'weekly'"
-                  :name="
-                    sortDirection === 'asc'
-                      ? 'i-lucide-arrow-up'
-                      : 'i-lucide-arrow-down'
-                  "
-                  class="w-3 h-3"
-                />
-              </div>
-            </th>
-            <th
-              class="px-6 py-3 cursor-pointer hover:text-primary transition-colors"
-              @click="sortBy('last_analyzed')"
-            >
-              <div class="flex items-center gap-1">
-                Last Analyzed
-                <UIcon
-                  v-if="sortColumn === 'last_analyzed'"
-                  :name="
-                    sortDirection === 'asc'
-                      ? 'i-lucide-arrow-up'
-                      : 'i-lucide-arrow-down'
-                  "
-                  class="w-3 h-3"
-                />
-              </div>
-            </th>
-            <th class="px-6 py-3 text-right">Action</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
-          <tr
-            v-for="pair in sortedPairs"
-            :key="pair.coin"
-            class="hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors"
-          >
-            <td class="px-6 py-4">
-              <div class="flex items-center gap-3">
-                <div
-                  class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary text-xs"
-                >
-                  {{ pair.coin[0] }}
-                </div>
-                <span class="font-semibold text-gray-900 dark:text-white">{{
-                  pair.coin
-                }}</span>
-              </div>
-            </td>
-            <td class="px-6 py-4 font-mono text-sm">
-              {{ formatPrice(getPrice(allMids, pair.coin)) }}
-            </td>
-            <td class="px-6 py-4">
-              <TrendIndicator
-                :status="getStatus(pair.last_trend_flip_daily)"
-                :since="pair.last_trend_flip_daily?.since || undefined"
-              />
-            </td>
-            <td class="px-6 py-4">
-              <TrendIndicator
-                :status="getStatus(pair.last_trend_flip_weekly)"
-                :since="pair.last_trend_flip_weekly?.since || undefined"
-              />
-            </td>
-            <td class="px-6 py-4 text-xs text-gray-500">
-              <RelativeTime :timestamp="pair.last_analyzed" />
-            </td>
-            <td class="px-6 py-4 text-right">
-              <div class="flex items-center justify-end gap-2">
-                <SubscriptionToggle
-                  :coin="pair.coin"
-                  timeframe="D1"
-                  :subscriptions="subscriptions"
-                  @refresh="emit('refreshSubscriptions')"
-                />
-                <SubscriptionToggle
-                  :coin="pair.coin"
-                  timeframe="W1"
-                  :subscriptions="subscriptions"
-                  @refresh="emit('refreshSubscriptions')"
-                />
-                <UButton
-                  :to="`/pair/${pair.coin}`"
-                  icon="i-lucide-chevron-right"
-                  size="xs"
-                  variant="ghost"
-                  color="neutral"
-                />
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <UTable
+        v-model:sorting="sorting"
+        :data="sortedPairs"
+        :columns="columns"
+        class="w-full"
+      >
+        <template #coin-header="{ column }">
+          <TableSortButton :column="column" label="Asset" />
+        </template>
+
+        <template #price-header="{ column }">
+          <TableSortButton :column="column" label="Price" />
+        </template>
+
+        <template #daily-header="{ column }">
+          <TableSortButton :column="column" label="Daily (D1)" />
+        </template>
+
+        <template #weekly-header="{ column }">
+          <TableSortButton :column="column" label="Weekly (W1)" />
+        </template>
+
+        <template #last_analyzed-header="{ column }">
+          <TableSortButton :column="column" label="Last Analyzed" />
+        </template>
+
+        <template #coin-cell="{ row }">
+          <CoinDisplay :coin="row.original.coin" />
+        </template>
+
+        <template #price-cell="{ row }">
+          <span class="font-mono text-sm">
+            {{ formatPrice(getPrice(allMids, row.original.coin)) }}
+          </span>
+        </template>
+
+        <template #daily-cell="{ row }">
+          <TrendIndicator
+            :status="getStatus(row.original.last_trend_flip_daily)"
+            :since="row.original.last_trend_flip_daily?.since || undefined"
+          />
+        </template>
+
+        <template #weekly-cell="{ row }">
+          <TrendIndicator
+            :status="getStatus(row.original.last_trend_flip_weekly)"
+            :since="row.original.last_trend_flip_weekly?.since || undefined"
+          />
+        </template>
+
+        <template #last_analyzed-cell="{ row }">
+          <span class="text-xs text-gray-500">
+            <RelativeTime :timestamp="row.original.last_analyzed" />
+          </span>
+        </template>
+
+        <template #actions-cell="{ row }">
+          <div class="flex items-center justify-end gap-2">
+            <SubscriptionToggle
+              :coin="row.original.coin"
+              timeframe="D1"
+              :subscriptions="subscriptions"
+              @refresh="emit('refreshSubscriptions')"
+            />
+            <SubscriptionToggle
+              :coin="row.original.coin"
+              timeframe="W1"
+              :subscriptions="subscriptions"
+              @refresh="emit('refreshSubscriptions')"
+            />
+            <UButton
+              :to="`/pair/${row.original.coin}`"
+              icon="i-lucide-chevron-right"
+              size="xs"
+              variant="ghost"
+              color="neutral"
+            />
+          </div>
+        </template>
+      </UTable>
     </div>
   </UCard>
 </template>

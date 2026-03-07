@@ -81,7 +81,8 @@ const currentPrice = computed(() => allMids.value?.[coin] ?? "0.00");
           variant="ghost"
           color="neutral"
         />
-        <h1 class="text-3xl font-bold">{{ coin }} Analysis</h1>
+        <CoinDisplay :coin="coin" size="xl" />
+        <h1 class="text-3xl font-bold text-gray-500">Analysis</h1>
         <div class="flex gap-2">
           <UBadge v-if="!pair.active" color="neutral" variant="solid"
             >INACTIVE</UBadge

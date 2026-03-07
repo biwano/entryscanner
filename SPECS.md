@@ -26,7 +26,7 @@ Entry scanner is a web-based application that monitors real-time market data on 
 
 #### 3.1.1. Dashboard
 
-- **Monitored Pairs View**: Display all system-wide monitored pairs (where `active` is `true`) with their current trend status. The dashboard table includes the following columns:
+  - **Monitored Pairs View**: Display all system-wide monitored pairs (where `active` is `true`) with their current trend status. The dashboard table (implemented using `UTable`) includes the following columns:
   - **Asset**: The name of the perpetual pair (e.g., BTC, ETH).
   - **Price**: Current live-polled price for the asset.
   - **Daily (D1)**: Bullish/Bearish status and duration for the daily timeframe.
@@ -38,7 +38,7 @@ Entry scanner is a web-based application that monitors real-time market data on 
 - **Trend Indicators**:
   - **Bullish/Bearish Status**: Visual indicator of the current trend based on SMA 50 crossover on **Daily (D1) and Weekly (W1)** timeframes.
   - **Trend Duration**: Show since when the pair turned bullish or bearish (using the `since` column from the `events` table).
-  - **Sorting**: The dashboard table supports sorting by any column. By default, pairs are sorted by how long they have been in their current trend (most recent changes first, based on `events.since`).
+  - **Sorting**: Users can change the dashboard table sort order by clicking on the column headers. The table supports sorting by any column in both ascending and descending order. By default, pairs are sorted by how long they have been in their current trend (most recent changes first, based on `events.since`).
 - **Navigation**: Click on any pair to open the **Pair Analysis** view.
 - **Price Ticker**: Display live-polled prices for all active perpetual assets on Hyperliquid.
 - **Manage Assets**: Link to the **Asset Management** settings to add or remove monitored pairs.
