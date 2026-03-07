@@ -39,7 +39,7 @@ Entry scanner is a web-based application that monitors real-time market data on 
 - **Trend Indicators**:
   - **Bullish/Bearish Status**: Visual indicator of the current trend based on SMA 50 crossover on **Daily (D1) and Weekly (W1)** timeframes.
   - **Trend Duration**: Show since when the pair turned bullish or bearish (using the `since` column from the `events` table).
-  - **Sorting**: Users can change the dashboard table sort order by clicking on the column headers. The table supports sorting by any column in both ascending and descending order. By default, pairs are sorted by how long they have been in their current trend (most recent changes first, based on `events.since`).
+  - **Sorting**: Users can change the dashboard table sort order by clicking on the column headers. The table supports sorting by any column in both ascending and descending order. By default, pairs are sorted by how long they have been in their current trend (most recent changes first, based on `events.since`). **The user's preferred sort configuration is saved in the browser's local storage and persists across page reloads.**
 - **Navigation**: Click on any pair to open the **Pair Analysis** view.
 - **Price Ticker**: Display live-polled prices for all active perpetual assets on Hyperliquid.
 - **Manage Assets**: Link to the **Asset Management** settings to add or remove monitored pairs.

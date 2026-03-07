@@ -18,7 +18,7 @@ const userId = useUserId();
 
 const DASHBOARD_REFRESH_INTERVAL = 60000;
 
-const { data: monitoredPairs, dataUpdatedAt: monitoredPairsUpdatedAt } = useQuery({
+const { data: monitoredPairs, dataUpdatedAt: monitoredPairsUpdatedAt, isLoading } = useQuery({
   queryKey: ["monitored_pairs"],
   queryFn: async () => {
     const { data, error } = await supabase
@@ -63,6 +63,7 @@ const { data: userSubscriptions, refetch: refreshSubscriptions } = useQuery({
       :is-admin="isAdmin"
       :subscriptions="userSubscriptions || []"
       :last-updated="monitoredPairsUpdatedAt"
+      :loading="isLoading"
       @refresh-subscriptions="refreshSubscriptions"
     />
   </div>
