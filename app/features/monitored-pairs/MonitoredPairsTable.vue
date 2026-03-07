@@ -14,6 +14,7 @@ const props = defineProps<{
   allMids: Record<string, string> | null;
   isAdmin: boolean;
   subscriptions: UserSubscription[];
+  lastUpdated?: number;
 }>();
 
 const emit = defineEmits<{
@@ -177,7 +178,12 @@ const getStatus = (
   <UCard class="shadow-sm">
     <template #header>
       <div class="flex items-center justify-between">
-        <h2 class="text-xl font-bold">Monitored Pairs</h2>
+        <div class="flex flex-col">
+          <h2 class="text-xl font-bold">Monitored Pairs</h2>
+          <span v-if="lastUpdated" class="text-[10px] text-gray-400 font-medium">
+            LAST UPDATE: {{ dayjs(lastUpdated).format("HH:mm:ss") }}
+          </span>
+        </div>
         <div class="flex items-center gap-2">
           <UButton
             v-if="userId"

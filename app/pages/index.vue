@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import { computed } from "vue";
 import { useSupabaseClient } from "#imports";
-import { useAsyncData } from "#app";
+import { useQuery } from "@tanstack/vue-query";
 import { useHyperliquid } from "~/composables/useHyperliquid.js";
 import { useUser } from "~/composables/useUser.js";
 import { useUserId } from "~/composables/useUserId.js";
@@ -15,10 +16,12 @@ const { data: allMids } = useAllMids();
 const supabase = useSupabaseClient<Database>();
 const userId = useUserId();
 
-const { data: monitoredPairs } = await useAsyncData<MonitoredPairWithTrends[] | null>(
-  "monitored_pairs",
-  async () => {
-    const { data } = await supabase
+const DASHBOARD_REFRESH_INTERVAL = 60000;
+
+const { data: monitoredPairs, dataUpdatedAt: monitoredPairsUpdatedAt } = useQuery({
+  queryKey: ["monitored_pairs"],
+  queryFn: async () => {
+    const { data, error } = await supabase
       .from("monitored_pairs")
       .select(
         `
@@ -29,19 +32,27 @@ const { data: monitoredPairs } = await useAsyncData<MonitoredPairWithTrends[] | 
       )
       .eq("active", true)
       .order("last_updated", { ascending: false });
-    return data;
-  }
-);
 
-const { data: userSubscriptions, refresh: refreshSubscriptions } =
-  await useAsyncData<UserSubscription[]>("user_subscriptions_dash", async () => {
+    if (error) throw error;
+    return data as MonitoredPairWithTrends[];
+  },
+  refetchInterval: DASHBOARD_REFRESH_INTERVAL,
+});
+
+const { data: userSubscriptions, refetch: refreshSubscriptions } = useQuery({
+  queryKey: ["user_subscriptions", userId],
+  queryFn: async () => {
     if (!userId.value) return [];
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("user_subscriptions")
       .select("*")
       .eq("user_id", userId.value);
-    return data || [];
-  });
+
+    if (error) throw error;
+    return (data || []) as UserSubscription[];
+  },
+  enabled: computed(() => !!userId.value),
+});
 </script>
 
 <template>
@@ -51,6 +62,7 @@ const { data: userSubscriptions, refresh: refreshSubscriptions } =
       :all-mids="allMids || null"
       :is-admin="isAdmin"
       :subscriptions="userSubscriptions || []"
+      :last-updated="monitoredPairsUpdatedAt"
       @refresh-subscriptions="refreshSubscriptions"
     />
   </div>

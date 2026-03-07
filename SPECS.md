@@ -33,6 +33,7 @@ Entry scanner is a web-based application that monitors real-time market data on 
   - **Weekly (W1)**: Bullish/Bearish status and duration for the weekly timeframe.
   - **Last Analyzed**: Relative time since the pair was last processed by the trend worker.
   - **Action**: Options to toggle subscriptions and navigate to detailed analysis.
+- **Data Refresh**: The dashboard table data is automatically reloaded every minute using **TanStack Query**'s polling capabilities (`refetchInterval`) to ensure users are viewing the most up-to-date market information and trend statuses. The time of the last update is displayed to the user for transparency.
 - **Subscription Management**: Users can subscribe/unsubscribe to specific pair/timeframe combinations (e.g., BTC/Daily, ETH/Weekly) to receive personalized notifications.
   - **Bulk Subscription**: Dedicated buttons on the dashboard to "Subscribe to All" or "Unsubscribe from All" alerts for all currently monitored pairs and timeframes.
 - **Trend Indicators**:
