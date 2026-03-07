@@ -106,10 +106,10 @@ const option = computed(() => {
         type: "candlestick",
         data: data,
         itemStyle: {
-          color: "#ef4444",
-          color0: "#10b981",
-          borderColor: "#ef4444",
-          borderColor0: "#10b981",
+          color: "#10b981",
+          color0: "#ef4444",
+          borderColor: "#10b981",
+          borderColor0: "#ef4444",
         },
       },
       {
