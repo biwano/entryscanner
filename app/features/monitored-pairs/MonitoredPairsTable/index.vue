@@ -1,0 +1,230 @@
+<script setup lang="ts">
+import { ref, computed, watch } from "vue";
+import { useSupabaseClient } from "#imports";
+import type { Database } from "~/types/database.types.js";
+import type {
+  MonitoredPairWithTrends,
+  UserSubscription,
+} from "~/types/database.friendly.types.js";
+import dayjs from "dayjs";
+import TableHeader from "./TableHeader.vue";
+import TableBody from "./TableBody.vue";
+import TableSkeleton from "./TableSkeleton.vue";
+
+const props = defineProps<{
+  pairs: MonitoredPairWithTrends[];
+  allMids: Record<string, string> | null;
+  isAdmin: boolean;
+  subscriptions: UserSubscription[];
+  lastUpdated?: number;
+  loading?: boolean;
+}>();
+
+const emit = defineEmits<{
+  (e: "refreshSubscriptions"): void;
+}>();
+
+const supabase = useSupabaseClient<Database>();
+const userId = useUserId();
+
+const isSubscribingAll = ref(false);
+const isUnsubscribingAll = ref(false);
+
+const STORAGE_KEY = "monitored_pairs_sorting";
+const sorting = useLocalStorage(STORAGE_KEY, [{ id: "daily", desc: true }]);
+
+const page = ref(1);
+const itemsPerPage = 10;
+
+const columns = [
+  {
+    id: "coin",
+    accessorKey: "coin",
+    header: "Asset",
+    enableSorting: true,
+  },
+  {
+    id: "price",
+    accessorFn: (row: MonitoredPairWithTrends) =>
+      getPrice(props.allMids, row.coin),
+    header: "Price",
+    enableSorting: true,
+  },
+  {
+    id: "daily",
+    accessorKey: "last_trend_flip_daily",
+    header: "Daily (D1)",
+    enableSorting: true,
+  },
+  {
+    id: "weekly",
+    accessorKey: "last_trend_flip_weekly",
+    header: "Weekly (W1)",
+    enableSorting: true,
+  },
+  {
+    id: "last_analyzed",
+    accessorKey: "last_analyzed",
+    header: "Last Analyzed",
+    enableSorting: true,
+  },
+  {
+    id: "actions",
+    accessorFn: () => "",
+    header: "Action",
+    meta: {
+      class: {
+        th: "text-right",
+        td: "text-right",
+      },
+    },
+  },
+];
+
+const getPrice = (allMids: Record<string, string> | null, coin: string) => {
+  return allMids?.[coin] || "0.00";
+};
+
+const sortedPairs = computed(() => {
+  const sort = sorting.value[0];
+  if (!sort) return props.pairs;
+
+  const { id: sortId, desc } = sort;
+  const sortDirection = desc ? "desc" : "asc";
+
+  const sorted = [...props.pairs].sort((a, b) => {
+    let valA: string | number = 0;
+    let valB: string | number = 0;
+
+    switch (sortId) {
+      case "coin":
+        valA = a.coin;
+        valB = b.coin;
+        break;
+      case "price":
+        valA = Number(getPrice(props.allMids, a.coin));
+        valB = Number(getPrice(props.allMids, b.coin));
+        break;
+      case "daily":
+        valA = dayjs(a.last_trend_flip_daily?.since || 0).valueOf();
+        valB = dayjs(b.last_trend_flip_daily?.since || 0).valueOf();
+        break;
+      case "weekly":
+        valA = dayjs(a.last_trend_flip_weekly?.since || 0).valueOf();
+        valB = dayjs(b.last_trend_flip_weekly?.since || 0).valueOf();
+        break;
+      case "last_analyzed":
+        valA = dayjs(a.last_analyzed || 0).valueOf();
+        valB = dayjs(b.last_analyzed || 0).valueOf();
+        break;
+      default:
+        return 0;
+    }
+
+    if (valA < valB) return sortDirection === "asc" ? -1 : 1;
+    if (valA > valB) return sortDirection === "asc" ? 1 : -1;
+    return 0;
+  });
+
+  return sorted;
+});
+
+const pagedPairs = computed(() => {
+  const start = (page.value - 1) * itemsPerPage;
+  const end = start + itemsPerPage;
+  return sortedPairs.value.slice(start, end);
+});
+
+// Reset to page 1 when sorting changes
+watch(sorting, () => {
+  page.value = 1;
+});
+
+// Ensure current page is valid when pairs change
+watch(
+  () => props.pairs.length,
+  (newCount) => {
+    const maxPage = Math.max(1, Math.ceil(newCount / itemsPerPage));
+    if (page.value > maxPage) {
+      page.value = maxPage;
+    }
+  }
+);
+
+const handleSubscribeAll = async () => {
+  if (!userId.value) return;
+
+  isSubscribingAll.value = true;
+  try {
+    const subscriptionsToUpsert = props.pairs.flatMap((pair) => [
+      {
+        user_id: userId.value as string,
+        coin: pair.coin,
+        timeframe: "D1" as const,
+      },
+      {
+        user_id: userId.value as string,
+        coin: pair.coin,
+        timeframe: "W1" as const,
+      },
+    ]);
+
+    await supabase.from("user_subscriptions").upsert(subscriptionsToUpsert, {
+      onConflict: "user_id,coin,timeframe",
+    });
+
+    emit("refreshSubscriptions");
+  } finally {
+    isSubscribingAll.value = false;
+  }
+};
+
+const handleUnsubscribeAll = async () => {
+  if (!userId.value) return;
+
+  isUnsubscribingAll.value = true;
+  try {
+    await supabase
+      .from("user_subscriptions")
+      .delete()
+      .eq("user_id", userId.value);
+
+    emit("refreshSubscriptions");
+  } finally {
+    isUnsubscribingAll.value = false;
+  }
+};
+</script>
+
+<template>
+  <UCard class="shadow-sm">
+    <template #header>
+      <TableHeader
+        :last-updated="lastUpdated"
+        :user-id="userId"
+        :is-admin="isAdmin"
+        :is-subscribing-all="isSubscribingAll"
+        :is-unsubscribing-all="isUnsubscribingAll"
+        @subscribe-all="handleSubscribeAll"
+        @unsubscribe-all="handleUnsubscribeAll"
+      />
+    </template>
+
+    <div class="overflow-x-auto">
+      <TableBody
+        v-if="!loading"
+        v-model:sorting="sorting"
+        v-model:page="page"
+        :data="pagedPairs"
+        :columns="columns"
+        :all-mids="allMids"
+        :subscriptions="subscriptions"
+        :total-items="pairs.length"
+        :items-per-page="itemsPerPage"
+        @refresh-subscriptions="emit('refreshSubscriptions')"
+      />
+
+      <TableSkeleton v-else :columns="columns" />
+    </div>
+  </UCard>
+</template>

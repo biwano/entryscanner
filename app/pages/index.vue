@@ -7,7 +7,7 @@ import { useUser } from "~/composables/useUser.js";
 import { useUserId } from "~/composables/useUserId.js";
 import type { Database } from "~/types/database.types.js";
 import type { UserSubscription, MonitoredPairWithTrends } from "~/types/database.friendly.types.js";
-import MonitoredPairsTable from "~/features/monitored-pairs/MonitoredPairsTable.vue";
+import MonitoredPairsTable from "~/features/monitored-pairs/MonitoredPairsTable/index.vue";
 
 const { useAllMids } = useHyperliquid();
 const { isAdmin } = useUser();
