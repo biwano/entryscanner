@@ -20,6 +20,7 @@ Always refer to `SPECS.md` in the root directory to understand the application s
 
 - Add the .js extension to imports when appropriate
 - Remove unused imports
+- NEver use the any type
 
 ## Type Safety
 

@@ -129,10 +129,13 @@ const getStatus = (
     </UTable>
 
     <div
-      v-if="totalItems > itemsPerPage"
-      class="flex justify-center border-t border-gray-200 dark:border-gray-800 py-3"
+      class="flex items-center justify-between border-t border-gray-200 dark:border-gray-800 py-3 px-4"
     >
+      <div class="text-sm text-gray-400">
+        {{ totalItems }} pairs monitored
+      </div>
       <UPagination
+        v-if="totalItems > itemsPerPage"
         v-model:page="localPage"
         :total="totalItems"
         :items-per-page="itemsPerPage"
