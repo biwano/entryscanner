@@ -34,6 +34,7 @@ Entry scanner is a web-based application that monitors real-time market data on 
   - **Last Analyzed**: Relative time since the pair was last processed by the trend worker.
   - **Action**: Options to toggle subscriptions and navigate to detailed analysis.
 - **Subscription Management**: Users can subscribe/unsubscribe to specific pair/timeframe combinations (e.g., BTC/Daily, ETH/Weekly) to receive personalized notifications.
+  - **Bulk Subscription**: Dedicated buttons on the dashboard to "Subscribe to All" or "Unsubscribe from All" alerts for all currently monitored pairs and timeframes.
 - **Trend Indicators**:
   - **Bullish/Bearish Status**: Visual indicator of the current trend based on SMA 50 crossover on **Daily (D1) and Weekly (W1)** timeframes.
   - **Trend Duration**: Show since when the pair turned bullish or bearish (using the `since` column from the `events` table).

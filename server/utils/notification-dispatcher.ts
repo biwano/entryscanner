@@ -20,24 +20,33 @@ export async function runNotificationDispatcher() {
       // Find all active users with a subscription to this coin/timeframe
       const { data: subscriptions, error: subError } = await supabase
         .from("user_subscriptions")
-        .select(`
+        .select(
+          `
           user_id,
           coin,
           timeframe,
           monitored_pairs!inner(active)
-        `)
+        `
+        )
         .eq("coin", event.coin)
         .eq("timeframe", event.timeframe)
         .eq("monitored_pairs.active", true);
 
       if (subError) {
-        console.error(`Error fetching subscriptions for event ${event.id}:`, subError);
+        console.error(
+          `Error fetching subscriptions for event ${event.id}:`,
+          subError
+        );
         continue;
       }
 
       if (subscriptions && subscriptions.length > 0) {
-        const message = `${event.coin} ${event.timeframe} trend flipped to **${event.status.toUpperCase()}**!`;
-        const notificationsToInsert = (subscriptions as unknown as { user_id: string }[]).map((sub) => ({
+        const message = `${event.coin} ${
+          event.timeframe
+        } trend flipped to **${event.status.toUpperCase()}**!`;
+        const notificationsToInsert = (
+          subscriptions as unknown as { user_id: string }[]
+        ).map((sub) => ({
           user_id: sub.user_id,
           event_id: event.id,
           message,
@@ -49,7 +58,10 @@ export async function runNotificationDispatcher() {
           .insert(notificationsToInsert);
 
         if (insertError) {
-          console.error(`Error creating notification history for event ${event.id}:`, insertError);
+          console.error(
+            `Error creating notification history for event ${event.id}:`,
+            insertError
+          );
           continue;
         }
       }
@@ -66,11 +78,13 @@ export async function runNotificationDispatcher() {
   // Select all not sent elements of notification history
   const { data: pendingNotifications, error: pendingError } = await supabase
     .from("notification_history")
-    .select(`
+    .select(
+      `
       *,
       profiles:user_id (discord_webhook_url),
       events:event_id (*)
-    `)
+    `
+    )
     .is("sent_at", null)
     .returns<NotificationWithDetails[]>();
 
@@ -89,10 +103,10 @@ export async function runNotificationDispatcher() {
         // Mark as sent anyway if we can't send it (e.g. no webhook) to avoid retry loops
         // but log it if event is missing
         if (!event) console.error(`Missing event for notification ${notif.id}`);
-        
+
         await supabase
           .from("notification_history")
-          .update({ 
+          .update({
             sent_at: new Date().toISOString(),
           })
           .eq("id", notif.id);
@@ -125,7 +139,10 @@ export async function runNotificationDispatcher() {
         sent.push({ user_id: notif.user_id, event_id: notif.event_id });
       } catch (err: unknown) {
         const errorMsg = err instanceof Error ? err.message : String(err);
-        console.error(`Dispatcher error for notification ${notif.id}:`, errorMsg);
+        console.error(
+          `Dispatcher error for notification ${notif.id}:`,
+          errorMsg
+        );
         // We don't mark as sent here, it will be retried next time
       }
     }

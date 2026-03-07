@@ -1,11 +1,14 @@
 <script setup lang="ts">
+import { ref } from "vue";
+import { useSupabaseClient } from "#imports";
+import type { Database } from "~/types/database.types";
 import type {
   MonitoredPairWithTrends,
   UserSubscription,
 } from "~/types/database.friendly.types";
 import SubscriptionToggle from "../subscriptions/SubscriptionToggle.vue";
 
-defineProps<{
+const props = defineProps<{
   pairs: MonitoredPairWithTrends[];
   allMids: Record<string, string> | null;
   isAdmin: boolean;
@@ -16,8 +19,65 @@ const emit = defineEmits<{
   (e: "refreshSubscriptions"): void;
 }>();
 
+const supabase = useSupabaseClient<Database>();
+const userId = useUserId();
+
+const isSubscribingAll = ref(false);
+const isUnsubscribingAll = ref(false);
+
 const getPrice = (allMids: Record<string, string> | null, coin: string) => {
   return allMids?.[coin] || "0.00";
+};
+
+const handleSubscribeAll = async () => {
+  if (!userId.value) return;
+
+  isSubscribingAll.value = true;
+  try {
+    const subscriptionsToUpsert = props.pairs.flatMap((pair) => [
+      {
+        user_id: userId.value as string,
+        coin: pair.coin,
+        timeframe: "D1" as const,
+      },
+      {
+        user_id: userId.value as string,
+        coin: pair.coin,
+        timeframe: "W1" as const,
+      },
+    ]);
+
+    await supabase.from("user_subscriptions").upsert(subscriptionsToUpsert, {
+      onConflict: "user_id,coin,timeframe",
+    });
+
+    emit("refreshSubscriptions");
+  } finally {
+    isSubscribingAll.value = false;
+  }
+};
+
+const handleUnsubscribeAll = async () => {
+  if (!userId.value) return;
+
+  isUnsubscribingAll.value = true;
+  try {
+    await supabase
+      .from("user_subscriptions")
+      .delete()
+      .eq("user_id", userId.value);
+
+    emit("refreshSubscriptions");
+  } finally {
+    isUnsubscribingAll.value = false;
+  }
+};
+
+const getStatus = (
+  event: MonitoredPairWithTrends["last_trend_flip_daily"]
+): "bullish" | "bearish" | undefined => {
+  if (!event) return undefined;
+  return event.status as "bullish" | "bearish";
 };
 </script>
 
@@ -26,15 +86,37 @@ const getPrice = (allMids: Record<string, string> | null, coin: string) => {
     <template #header>
       <div class="flex items-center justify-between">
         <h2 class="text-xl font-bold">Monitored Pairs</h2>
-        <UButton
-          v-if="isAdmin"
-          to="/settings"
-          icon="i-lucide-plus"
-          size="sm"
-          color="neutral"
-          variant="ghost"
-          >Manage Pairs</UButton
-        >
+        <div class="flex items-center gap-2">
+          <UButton
+            v-if="userId"
+            icon="i-lucide-bell"
+            size="sm"
+            color="primary"
+            variant="ghost"
+            :loading="isSubscribingAll"
+            @click="handleSubscribeAll"
+            >Subscribe All</UButton
+          >
+          <UButton
+            v-if="userId"
+            icon="i-lucide-bell-off"
+            size="sm"
+            color="error"
+            variant="ghost"
+            :loading="isUnsubscribingAll"
+            @click="handleUnsubscribeAll"
+            >Unsubscribe All</UButton
+          >
+          <UButton
+            v-if="isAdmin"
+            to="/settings"
+            icon="i-lucide-plus"
+            size="sm"
+            color="neutral"
+            variant="ghost"
+            >Manage Pairs</UButton
+          >
+        </div>
       </div>
     </template>
 
@@ -75,13 +157,13 @@ const getPrice = (allMids: Record<string, string> | null, coin: string) => {
             </td>
             <td class="px-6 py-4">
               <TrendIndicator
-                :status="(pair.last_trend_flip_daily?.status || undefined) as 'bullish' | 'bearish' | undefined"
+                :status="getStatus(pair.last_trend_flip_daily)"
                 :since="pair.last_trend_flip_daily?.since || undefined"
               />
             </td>
             <td class="px-6 py-4">
               <TrendIndicator
-                :status="(pair.last_trend_flip_weekly?.status || undefined) as 'bullish' | 'bearish' | undefined"
+                :status="getStatus(pair.last_trend_flip_weekly)"
                 :since="pair.last_trend_flip_weekly?.since || undefined"
               />
             </td>
