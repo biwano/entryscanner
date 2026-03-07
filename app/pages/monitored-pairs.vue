@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/vue-query";
 import { useHyperliquid } from "~/composables/useHyperliquid.js";
 import { useUser } from "~/composables/useUser.js";
 import { useUserId } from "~/composables/useUserId.js";
+import { REFRESH_INTERVAL } from "~~/shared/constants.js";
 import type { Database } from "~/types/database.types.js";
 import type { UserSubscription, MonitoredPairWithTrends } from "~/types/database.friendly.types.js";
 import MonitoredPairsTable from "~/features/monitored-pairs/MonitoredPairsTable/index.vue";
@@ -15,8 +16,6 @@ const { data: allMids } = useAllMids();
 
 const supabase = useSupabaseClient<Database>();
 const userId = useUserId();
-
-const DASHBOARD_REFRESH_INTERVAL = 60000;
 
 const { data: monitoredPairs, dataUpdatedAt: monitoredPairsUpdatedAt, isLoading } = useQuery({
   queryKey: ["monitored_pairs"],
@@ -36,7 +35,7 @@ const { data: monitoredPairs, dataUpdatedAt: monitoredPairsUpdatedAt, isLoading 
     if (error) throw error;
     return data as MonitoredPairWithTrends[];
   },
-  refetchInterval: DASHBOARD_REFRESH_INTERVAL,
+  refetchInterval: REFRESH_INTERVAL,
 });
 
 const { data: userSubscriptions, refetch: refreshSubscriptions } = useQuery({

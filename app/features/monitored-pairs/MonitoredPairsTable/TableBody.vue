@@ -8,24 +8,32 @@ import SubscriptionToggle from "../../subscriptions/SubscriptionToggle.vue";
 
 const props = defineProps<{
   data: MonitoredPairWithTrends[];
-  columns: any[];
+  columns: {
+    id: string;
+    accessorKey?: string;
+    accessorFn?: (row: MonitoredPairWithTrends) => string | number;
+    header: string;
+    enableSorting?: boolean;
+    meta?: Record<string, unknown>;
+  }[];
   allMids: Record<string, string> | null;
   subscriptions: UserSubscription[];
   page: number;
   totalItems: number;
   itemsPerPage: number;
-  sorting: any[];
+  sorting: { id: string; desc: boolean }[];
+  totalMonitored?: number;
 }>();
 
 const emit = defineEmits<{
-  (e: "update:sorting", value: any[]): void;
+  (e: "update:sorting", value: { id: string; desc: boolean }[]): void;
   (e: "update:page", value: number): void;
   (e: "refreshSubscriptions"): void;
 }>();
 
 const localSorting = computed({
   get: () => props.sorting,
-  set: (val) => emit("update:sorting", val),
+  set: (val: { id: string; desc: boolean }[]) => emit("update:sorting", val),
 });
 
 const localPage = computed({
@@ -132,7 +140,12 @@ const getStatus = (
       class="flex items-center justify-between border-t border-gray-200 dark:border-gray-800 py-3 px-4"
     >
       <div class="text-sm text-gray-400">
-        {{ totalItems }} pairs monitored
+        <span v-if="totalMonitored !== undefined && totalItems !== totalMonitored">
+          Found {{ totalItems }} / {{ totalMonitored }} monitored pairs
+        </span>
+        <span v-else>
+          {{ totalItems }} pairs monitored
+        </span>
       </div>
       <UPagination
         v-if="totalItems > itemsPerPage"

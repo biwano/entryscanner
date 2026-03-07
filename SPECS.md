@@ -32,6 +32,7 @@ The Dashboard provides a high-level overview of the most recent significant mark
 - **Last 5 Daily Bearish Flips**: Shows the 5 most recent pairs that flipped to a bearish trend on the Daily (D1) timeframe.
 
 **Table Columns**:
+
 - **Asset**: The name of the perpetual pair (with icon).
 - **Price**: Current live-polled price.
 - **Status**: Visual indicator of the current trend (Bullish/Bearish) and since when it flipped.
@@ -39,7 +40,7 @@ The Dashboard provides a high-level overview of the most recent significant mark
 
 #### 3.1.1. Monitored Pairs
 
-This page (previously the Dashboard) provides a comprehensive view of all active assets being tracked by the system.
+This page provides a comprehensive view of all active assets being tracked by the system.
 
 - **Monitored Pairs View**: Display all system-wide monitored pairs (where `active` is `true`) with their current trend status. The table (implemented using `UTable`) includes the following columns:
   - **Asset**: The name of the perpetual pair (e.g., BTC, ETH).
@@ -48,6 +49,7 @@ This page (previously the Dashboard) provides a comprehensive view of all active
   - **Weekly (W1)**: Bullish/Bearish status and duration for the weekly timeframe.
   - **Last Analyzed**: Relative time since the pair was last processed by the trend worker.
   - **Action**: Options to toggle subscriptions and navigate to detailed analysis.
+- **Filtering**: A search input allows users to filter the list of monitored pairs by their name (e.g., searching for "ETH" will show all pairs containing "ETH"). This filter works in conjunction with sorting and pagination.
 - **Data Refresh**: The monitored pairs table data is automatically reloaded every minute using **TanStack Query**'s polling capabilities (`refetchInterval`) to ensure users are viewing the most up-to-date market information and trend statuses. The time of the last update is displayed to the user for transparency.
 - **Subscription Management**: Users can subscribe/unsubscribe to specific pair/timeframe combinations (e.g., BTC/Daily, ETH/Weekly) to receive personalized notifications.
   - **Bulk Subscription**: Dedicated buttons on the dashboard to "Subscribe to All" or "Unsubscribe from All" alerts for all currently monitored pairs and timeframes.

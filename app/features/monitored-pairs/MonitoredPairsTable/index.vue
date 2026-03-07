@@ -29,6 +29,7 @@ const userId = useUserId();
 
 const isSubscribingAll = ref(false);
 const isUnsubscribingAll = ref(false);
+const search = ref("");
 
 const STORAGE_KEY = "monitored_pairs_sorting";
 const sorting = useLocalStorage(STORAGE_KEY, [{ id: "daily", desc: true }]);
@@ -86,13 +87,22 @@ const getPrice = (allMids: Record<string, string> | null, coin: string) => {
 };
 
 const sortedPairs = computed(() => {
+  let filtered = props.pairs;
+
+  if (search.value) {
+    const query = search.value.toLowerCase();
+    filtered = props.pairs.filter((pair) =>
+      pair.coin.toLowerCase().includes(query)
+    );
+  }
+
   const sort = sorting.value[0];
-  if (!sort) return props.pairs;
+  if (!sort) return filtered;
 
   const { id: sortId, desc } = sort;
   const sortDirection = desc ? "desc" : "asc";
 
-  const sorted = [...props.pairs].sort((a, b) => {
+  const sorted = [...filtered].sort((a, b) => {
     let valA: string | number = 0;
     let valB: string | number = 0;
 
@@ -135,14 +145,14 @@ const pagedPairs = computed(() => {
   return sortedPairs.value.slice(start, end);
 });
 
-// Reset to page 1 when sorting changes
-watch(sorting, () => {
+// Reset to page 1 when sorting or search changes
+watch([sorting, search], () => {
   page.value = 1;
 });
 
 // Ensure current page is valid when pairs change
 watch(
-  () => props.pairs.length,
+  () => sortedPairs.value.length,
   (newCount) => {
     const maxPage = Math.max(1, Math.ceil(newCount / itemsPerPage));
     if (page.value > maxPage) {
@@ -200,8 +210,9 @@ const handleUnsubscribeAll = async () => {
   <UCard class="shadow-sm">
     <template #header>
       <TableHeader
+        v-model:search="search"
         :last-updated="lastUpdated"
-        :user-id="userId"
+        :user-id="userId || undefined"
         :is-admin="isAdmin"
         :is-subscribing-all="isSubscribingAll"
         :is-unsubscribing-all="isUnsubscribingAll"
@@ -219,7 +230,8 @@ const handleUnsubscribeAll = async () => {
         :columns="columns"
         :all-mids="allMids"
         :subscriptions="subscriptions"
-        :total-items="pairs.length"
+        :total-items="sortedPairs.length"
+        :total-monitored="pairs.length"
         :items-per-page="itemsPerPage"
         @refresh-subscriptions="emit('refreshSubscriptions')"
       />

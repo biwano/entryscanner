@@ -2,14 +2,13 @@
 import { useSupabaseClient } from "#imports";
 import { useQuery } from "@tanstack/vue-query";
 import { useHyperliquid } from "~/composables/useHyperliquid.js";
+import { REFRESH_INTERVAL } from "~~/shared/constants.js";
 import type { Database, Tables } from "~/types/database.types.js";
 import RecentBearishFlipsTable from "~/features/dashboard/RecentBearishFlipsTable.vue";
 
 const { useAllMids } = useHyperliquid();
 const { data: allMids } = useAllMids();
 const supabase = useSupabaseClient<Database>();
-
-const REFRESH_INTERVAL = 60000;
 
 const fetchRecentBearishFlips = async (timeframe: "D1" | "W1") => {
   const { data, error } = await supabase

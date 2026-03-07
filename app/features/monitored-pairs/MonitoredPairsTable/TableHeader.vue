@@ -7,10 +7,12 @@ defineProps<{
   isAdmin: boolean;
   isSubscribingAll: boolean;
   isUnsubscribingAll: boolean;
+  search: string;
 }>();
 
 const emit = defineEmits<{
   (e: "subscribeAll" | "unsubscribeAll"): void;
+  (e: "update:search", value: string): void;
 }>();
 </script>
 
@@ -22,36 +24,46 @@ const emit = defineEmits<{
         LAST UPDATE: {{ dayjs(lastUpdated).format("HH:mm:ss") }}
       </span>
     </div>
-    <div class="flex items-center gap-2">
-      <UButton
-        v-if="userId"
-        icon="i-lucide-bell"
+    <div class="flex items-center gap-4">
+      <UInput
+        :model-value="search"
+        placeholder="Filter by pair..."
+        icon="i-lucide-search"
         size="sm"
-        color="primary"
-        variant="ghost"
-        :loading="isSubscribingAll"
-        @click="emit('subscribeAll')"
-        >Subscribe All</UButton
-      >
-      <UButton
-        v-if="userId"
-        icon="i-lucide-bell-off"
-        size="sm"
-        color="error"
-        variant="ghost"
-        :loading="isUnsubscribingAll"
-        @click="emit('unsubscribeAll')"
-        >Unsubscribe All</UButton
-      >
-      <UButton
-        v-if="isAdmin"
-        to="/settings"
-        icon="i-lucide-plus"
-        size="sm"
-        color="neutral"
-        variant="ghost"
-        >Manage Pairs</UButton
-      >
+        class="w-48"
+        @update:model-value="emit('update:search', $event)"
+      />
+      <div class="flex items-center gap-2">
+        <UButton
+          v-if="userId"
+          icon="i-lucide-bell"
+          size="sm"
+          color="primary"
+          variant="ghost"
+          :loading="isSubscribingAll"
+          @click="emit('subscribeAll')"
+          >Subscribe All</UButton
+        >
+        <UButton
+          v-if="userId"
+          icon="i-lucide-bell-off"
+          size="sm"
+          color="error"
+          variant="ghost"
+          :loading="isUnsubscribingAll"
+          @click="emit('unsubscribeAll')"
+          >Unsubscribe All</UButton
+        >
+        <UButton
+          v-if="isAdmin"
+          to="/settings"
+          icon="i-lucide-plus"
+          size="sm"
+          color="neutral"
+          variant="ghost"
+          >Manage Pairs</UButton
+        >
+      </div>
     </div>
   </div>
 </template>
