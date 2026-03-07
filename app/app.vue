@@ -10,6 +10,10 @@ const menuItems = computed(() => {
     label: 'Dashboard',
     icon: 'i-lucide-layout-dashboard',
     to: '/'
+  }, {
+    label: 'Monitored Pairs',
+    icon: 'i-lucide-activity',
+    to: '/monitored-pairs'
   }];
 
   if (isAdmin.value) {

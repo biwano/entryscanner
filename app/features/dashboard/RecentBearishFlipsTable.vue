@@ -1,0 +1,117 @@
+<script setup lang="ts">
+import type { Tables } from "~/types/database.types.js";
+import { formatPrice } from "~/utils/format.js";
+
+const props = defineProps<{
+  title: string;
+  events: Tables<"events">[];
+  allMids: Record<string, string> | null;
+  loading?: boolean;
+}>();
+
+const columns = [
+  {
+    id: "coin",
+    accessorKey: "coin",
+    header: "Asset",
+  },
+  {
+    id: "price",
+    accessorFn: (row: Tables<"events">) => props.allMids?.[row.coin] || "0.00",
+    header: "Price",
+  },
+  {
+    id: "status",
+    accessorKey: "status",
+    header: "Status",
+  },
+  {
+    id: "actions",
+    header: "Action",
+    meta: {
+      class: {
+        th: "text-right",
+        td: "text-right",
+      },
+    },
+  },
+];
+
+const getStatus = (event: Tables<"events">): "bullish" | "bearish" => {
+  return event.status as "bullish" | "bearish";
+};
+</script>
+
+<template>
+  <UCard class="shadow-sm">
+    <template #header>
+      <h3 class="text-lg font-bold">{{ title }}</h3>
+    </template>
+
+    <div class="overflow-x-auto">
+      <UTable
+        v-if="!loading"
+        :data="events"
+        :columns="columns"
+        class="w-full"
+      >
+        <template #coin-cell="{ row }">
+          <CoinDisplay :coin="row.original.coin" />
+        </template>
+
+        <template #price-cell="{ row }">
+          <span class="font-mono text-sm">
+            {{ formatPrice(allMids?.[row.original.coin] || "0.00") }}
+          </span>
+        </template>
+
+        <template #status-cell="{ row }">
+          <TrendIndicator
+            :status="getStatus(row.original)"
+            :since="row.original.since"
+          />
+        </template>
+
+        <template #actions-cell="{ row }">
+          <div class="flex justify-end">
+            <UButton
+              :to="`/pair/${row.original.coin}`"
+              icon="i-lucide-chevron-right"
+              size="xs"
+              variant="ghost"
+              color="neutral"
+            >
+              Details
+            </UButton>
+          </div>
+        </template>
+      </UTable>
+
+      <div v-else class="divide-y divide-gray-100 dark:divide-gray-800">
+        <div v-for="i in 5" :key="i" class="flex items-center gap-4 px-4 py-4">
+          <div class="flex items-center gap-3 flex-1">
+            <USkeleton class="h-8 w-8 rounded-full" />
+            <USkeleton class="h-4 w-20" />
+          </div>
+          <div class="flex-1">
+            <USkeleton class="h-4 w-16" />
+          </div>
+          <div class="flex-1">
+            <USkeleton class="h-6 w-24 rounded-full" />
+          </div>
+          <div class="flex justify-end">
+            <USkeleton class="h-8 w-16" />
+          </div>
+        </div>
+      </div>
+
+      <div
+        v-if="!loading && events.length === 0"
+        class="flex flex-col items-center justify-center py-8 text-gray-500"
+      >
+        <UIcon name="i-lucide-info" class="w-8 h-8 mb-2 opacity-50" />
+        <p>No recent bearish flips found.</p>
+      </div>
+    </div>
+  </UCard>
+</template>

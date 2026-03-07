@@ -1,70 +1,77 @@
 <script setup lang="ts">
-import { computed } from "vue";
 import { useSupabaseClient } from "#imports";
 import { useQuery } from "@tanstack/vue-query";
 import { useHyperliquid } from "~/composables/useHyperliquid.js";
-import { useUser } from "~/composables/useUser.js";
-import { useUserId } from "~/composables/useUserId.js";
-import type { Database } from "~/types/database.types.js";
-import type { UserSubscription, MonitoredPairWithTrends } from "~/types/database.friendly.types.js";
-import MonitoredPairsTable from "~/features/monitored-pairs/MonitoredPairsTable/index.vue";
+import type { Database, Tables } from "~/types/database.types.js";
+import RecentBearishFlipsTable from "~/features/dashboard/RecentBearishFlipsTable.vue";
 
 const { useAllMids } = useHyperliquid();
-const { isAdmin } = useUser();
 const { data: allMids } = useAllMids();
-
 const supabase = useSupabaseClient<Database>();
-const userId = useUserId();
 
-const DASHBOARD_REFRESH_INTERVAL = 60000;
+const REFRESH_INTERVAL = 60000;
 
-const { data: monitoredPairs, dataUpdatedAt: monitoredPairsUpdatedAt, isLoading } = useQuery({
-  queryKey: ["monitored_pairs"],
-  queryFn: async () => {
-    const { data, error } = await supabase
-      .from("monitored_pairs")
-      .select(
-        `
-      *,
-      last_trend_flip_daily:events!last_trend_flip_daily_id (*),
-      last_trend_flip_weekly:events!last_trend_flip_weekly_id (*)
-    `
-      )
-      .eq("active", true)
-      .order("last_updated", { ascending: false });
+const fetchRecentBearishFlips = async (timeframe: "D1" | "W1") => {
+  const { data, error } = await supabase
+    .from("events")
+    .select("*")
+    .eq("timeframe", timeframe)
+    .eq("status", "bearish")
+    .order("since", { ascending: false })
+    .limit(5);
 
-    if (error) throw error;
-    return data as MonitoredPairWithTrends[];
-  },
-  refetchInterval: DASHBOARD_REFRESH_INTERVAL,
+  if (error) throw error;
+  return data as Tables<"events">[];
+};
+
+const { data: weeklyBearish, isLoading: isLoadingWeekly } = useQuery({
+  queryKey: ["recent_bearish_flips", "W1"],
+  queryFn: () => fetchRecentBearishFlips("W1"),
+  refetchInterval: REFRESH_INTERVAL,
 });
 
-const { data: userSubscriptions, refetch: refreshSubscriptions } = useQuery({
-  queryKey: ["user_subscriptions", userId],
-  queryFn: async () => {
-    if (!userId.value) return [];
-    const { data, error } = await supabase
-      .from("user_subscriptions")
-      .select("*")
-      .eq("user_id", userId.value);
-
-    if (error) throw error;
-    return (data || []) as UserSubscription[];
-  },
-  enabled: computed(() => !!userId.value),
+const { data: dailyBearish, isLoading: isLoadingDaily } = useQuery({
+  queryKey: ["recent_bearish_flips", "D1"],
+  queryFn: () => fetchRecentBearishFlips("D1"),
+  refetchInterval: REFRESH_INTERVAL,
 });
 </script>
 
 <template>
-  <div class="space-y-8">
-    <MonitoredPairsTable
-      :pairs="monitoredPairs || []"
-      :all-mids="allMids || null"
-      :is-admin="isAdmin"
-      :subscriptions="userSubscriptions || []"
-      :last-updated="monitoredPairsUpdatedAt"
-      :loading="isLoading"
-      @refresh-subscriptions="refreshSubscriptions"
-    />
+  <div class="space-y-12">
+    <section>
+      <div class="mb-6">
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Recent Market Shifts</h2>
+        <p class="text-gray-500 dark:text-gray-400">The latest 5 pairs that flipped to a bearish trend.</p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <RecentBearishFlipsTable
+          title="Last 5 Weekly Bearish Flips"
+          :events="weeklyBearish || []"
+          :all-mids="allMids || null"
+          :loading="isLoadingWeekly"
+        />
+
+        <RecentBearishFlipsTable
+          title="Last 5 Daily Bearish Flips"
+          :events="dailyBearish || []"
+          :all-mids="allMids || null"
+          :loading="isLoadingDaily"
+        />
+      </div>
+    </section>
+
+    <div class="flex justify-center">
+      <UButton
+        to="/monitored-pairs"
+        color="primary"
+        variant="solid"
+        icon="i-lucide-activity"
+        size="lg"
+      >
+        View All Monitored Pairs
+      </UButton>
+    </div>
   </div>
 </template>

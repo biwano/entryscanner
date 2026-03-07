@@ -24,23 +24,38 @@ Entry scanner is a web-based application that monitors real-time market data on 
 
 ### 3.1. UI Pages
 
-#### 3.1.1. Dashboard
+#### 3.1.0. Dashboard
 
-  - **Monitored Pairs View**: Display all system-wide monitored pairs (where `active` is `true`) with their current trend status. The dashboard table (implemented using `UTable`) includes the following columns:
+The Dashboard provides a high-level overview of the most recent significant market shifts. It contains two primary tables:
+
+- **Last 5 Weekly Bearish Flips**: Shows the 5 most recent pairs that flipped to a bearish trend on the Weekly (W1) timeframe.
+- **Last 5 Daily Bearish Flips**: Shows the 5 most recent pairs that flipped to a bearish trend on the Daily (D1) timeframe.
+
+**Table Columns**:
+- **Asset**: The name of the perpetual pair (with icon).
+- **Price**: Current live-polled price.
+- **Status**: Visual indicator of the current trend (Bullish/Bearish) and since when it flipped.
+- **Action**: Button to navigate to the detailed **Pair Analysis** view.
+
+#### 3.1.1. Monitored Pairs
+
+This page (previously the Dashboard) provides a comprehensive view of all active assets being tracked by the system.
+
+- **Monitored Pairs View**: Display all system-wide monitored pairs (where `active` is `true`) with their current trend status. The table (implemented using `UTable`) includes the following columns:
   - **Asset**: The name of the perpetual pair (e.g., BTC, ETH).
   - **Price**: Current live-polled price for the asset.
   - **Daily (D1)**: Bullish/Bearish status and duration for the daily timeframe.
   - **Weekly (W1)**: Bullish/Bearish status and duration for the weekly timeframe.
   - **Last Analyzed**: Relative time since the pair was last processed by the trend worker.
   - **Action**: Options to toggle subscriptions and navigate to detailed analysis.
-- **Data Refresh**: The dashboard table data is automatically reloaded every minute using **TanStack Query**'s polling capabilities (`refetchInterval`) to ensure users are viewing the most up-to-date market information and trend statuses. The time of the last update is displayed to the user for transparency.
+- **Data Refresh**: The monitored pairs table data is automatically reloaded every minute using **TanStack Query**'s polling capabilities (`refetchInterval`) to ensure users are viewing the most up-to-date market information and trend statuses. The time of the last update is displayed to the user for transparency.
 - **Subscription Management**: Users can subscribe/unsubscribe to specific pair/timeframe combinations (e.g., BTC/Daily, ETH/Weekly) to receive personalized notifications.
   - **Bulk Subscription**: Dedicated buttons on the dashboard to "Subscribe to All" or "Unsubscribe from All" alerts for all currently monitored pairs and timeframes.
 - **Trend Indicators**:
   - **Bullish/Bearish Status**: Visual indicator of the current trend based on SMA 50 crossover on **Daily (D1) and Weekly (W1)** timeframes.
   - **Trend Duration**: Show since when the pair turned bullish or bearish (using the `since` column from the `events` table).
-  - **Sorting**: Users can change the dashboard table sort order by clicking on the column headers. The table supports sorting by any column in both ascending and descending order. By default, pairs are sorted by how long they have been in their current trend (most recent changes first, based on `events.since`). **The user's preferred sort configuration is saved in the browser's local storage and persists across page reloads.**
-- **Pagination & Stats**: The dashboard includes pagination (10 items per page). The total number of monitored pairs is displayed near the pagination controls for quick reference.
+  - **Sorting**: Users can change the table sort order by clicking on the column headers. The table supports sorting by any column in both ascending and descending order. By default, pairs are sorted by how long they have been in their current trend (most recent changes first, based on `events.since`). The user's preferred sort configuration is saved in the browser's local storage and persists across page reloads.
+- **Pagination & Stats**: The table includes pagination (10 items per page). The total number of monitored pairs is displayed near the pagination controls for quick reference.
 - **Navigation**: Click on any pair to open the **Pair Analysis** view.
 - **Price Ticker**: Display live-polled prices for all active perpetual assets on Hyperliquid.
 - **Manage Assets**: Link to the **Asset Management** settings to add or remove monitored pairs.
