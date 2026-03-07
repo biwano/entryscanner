@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { computed } from "vue";
 import { useSupabaseClient } from "#imports";
 import { useAsyncData } from "#app";
 import { useHyperliquid } from "~/composables/useHyperliquid.js";
@@ -8,7 +7,6 @@ import { useUserId } from "~/composables/useUserId.js";
 import type { Database } from "~/types/database.types.js";
 import type { UserSubscription, MonitoredPairWithTrends } from "~/types/database.friendly.types.js";
 import MonitoredPairsTable from "~/features/monitored-pairs/MonitoredPairsTable.vue";
-import dayjs from "dayjs";
 
 const { useAllMids } = useHyperliquid();
 const { isAdmin } = useUser();
@@ -44,23 +42,12 @@ const { data: userSubscriptions, refresh: refreshSubscriptions } =
       .eq("user_id", userId.value);
     return data || [];
   });
-
-const sortedPairs = computed(() => {
-  if (!monitoredPairs.value) return [];
-
-  // Sort by how long they have been in their current trend (descending order of since - most recent first)
-  return [...monitoredPairs.value].sort((a, b) => {
-    const timeA = dayjs(a.last_trend_flip_daily?.since || 0).valueOf();
-    const timeB = dayjs(b.last_trend_flip_daily?.since || 0).valueOf();
-    return timeB - timeA;
-  });
-});
 </script>
 
 <template>
   <div class="space-y-8">
     <MonitoredPairsTable
-      :pairs="sortedPairs"
+      :pairs="monitoredPairs || []"
       :all-mids="allMids || null"
       :is-admin="isAdmin"
       :subscriptions="userSubscriptions || []"

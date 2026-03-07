@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { useSupabaseClient } from "#imports";
 import type { Database } from "~/types/database.types.js";
 import type {
@@ -7,6 +7,7 @@ import type {
   UserSubscription,
 } from "~/types/database.friendly.types.js";
 import SubscriptionToggle from "../subscriptions/SubscriptionToggle.vue";
+import dayjs from "dayjs";
 
 const props = defineProps<{
   pairs: MonitoredPairWithTrends[];
@@ -25,9 +26,59 @@ const userId = useUserId();
 const isSubscribingAll = ref(false);
 const isUnsubscribingAll = ref(false);
 
+const sortColumn = ref<string>("daily");
+const sortDirection = ref<"asc" | "desc">("desc");
+
+const sortBy = (column: string) => {
+  if (sortColumn.value === column) {
+    sortDirection.value = sortDirection.value === "asc" ? "desc" : "asc";
+  } else {
+    sortColumn.value = column;
+    sortDirection.value = "desc";
+  }
+};
+
 const getPrice = (allMids: Record<string, string> | null, coin: string) => {
   return allMids?.[coin] || "0.00";
 };
+
+const sortedPairs = computed(() => {
+  const sorted = [...props.pairs].sort((a, b) => {
+    let valA: string | number = 0;
+    let valB: string | number = 0;
+
+    switch (sortColumn.value) {
+      case "coin":
+        valA = a.coin;
+        valB = b.coin;
+        break;
+      case "price":
+        valA = Number(getPrice(props.allMids, a.coin));
+        valB = Number(getPrice(props.allMids, b.coin));
+        break;
+      case "daily":
+        valA = dayjs(a.last_trend_flip_daily?.since || 0).valueOf();
+        valB = dayjs(b.last_trend_flip_daily?.since || 0).valueOf();
+        break;
+      case "weekly":
+        valA = dayjs(a.last_trend_flip_weekly?.since || 0).valueOf();
+        valB = dayjs(b.last_trend_flip_weekly?.since || 0).valueOf();
+        break;
+      case "last_analyzed":
+        valA = dayjs(a.last_analyzed || 0).valueOf();
+        valB = dayjs(b.last_analyzed || 0).valueOf();
+        break;
+      default:
+        return 0;
+    }
+
+    if (valA < valB) return sortDirection.value === "asc" ? -1 : 1;
+    if (valA > valB) return sortDirection.value === "asc" ? 1 : -1;
+    return 0;
+  });
+
+  return sorted;
+});
 
 const handleSubscribeAll = async () => {
   if (!userId.value) return;
@@ -126,17 +177,97 @@ const getStatus = (
           class="bg-gray-50 dark:bg-gray-800 text-xs text-gray-500 uppercase font-semibold"
         >
           <tr>
-            <th class="px-6 py-3">Asset</th>
-            <th class="px-6 py-3">Price</th>
-            <th class="px-6 py-3">Daily (D1)</th>
-            <th class="px-6 py-3">Weekly (W1)</th>
-            <th class="px-6 py-3">Last Analyzed</th>
+            <th
+              class="px-6 py-3 cursor-pointer hover:text-primary transition-colors"
+              @click="sortBy('coin')"
+            >
+              <div class="flex items-center gap-1">
+                Asset
+                <UIcon
+                  v-if="sortColumn === 'coin'"
+                  :name="
+                    sortDirection === 'asc'
+                      ? 'i-lucide-arrow-up'
+                      : 'i-lucide-arrow-down'
+                  "
+                  class="w-3 h-3"
+                />
+              </div>
+            </th>
+            <th
+              class="px-6 py-3 cursor-pointer hover:text-primary transition-colors"
+              @click="sortBy('price')"
+            >
+              <div class="flex items-center gap-1">
+                Price
+                <UIcon
+                  v-if="sortColumn === 'price'"
+                  :name="
+                    sortDirection === 'asc'
+                      ? 'i-lucide-arrow-up'
+                      : 'i-lucide-arrow-down'
+                  "
+                  class="w-3 h-3"
+                />
+              </div>
+            </th>
+            <th
+              class="px-6 py-3 cursor-pointer hover:text-primary transition-colors"
+              @click="sortBy('daily')"
+            >
+              <div class="flex items-center gap-1">
+                Daily (D1)
+                <UIcon
+                  v-if="sortColumn === 'daily'"
+                  :name="
+                    sortDirection === 'asc'
+                      ? 'i-lucide-arrow-up'
+                      : 'i-lucide-arrow-down'
+                  "
+                  class="w-3 h-3"
+                />
+              </div>
+            </th>
+            <th
+              class="px-6 py-3 cursor-pointer hover:text-primary transition-colors"
+              @click="sortBy('weekly')"
+            >
+              <div class="flex items-center gap-1">
+                Weekly (W1)
+                <UIcon
+                  v-if="sortColumn === 'weekly'"
+                  :name="
+                    sortDirection === 'asc'
+                      ? 'i-lucide-arrow-up'
+                      : 'i-lucide-arrow-down'
+                  "
+                  class="w-3 h-3"
+                />
+              </div>
+            </th>
+            <th
+              class="px-6 py-3 cursor-pointer hover:text-primary transition-colors"
+              @click="sortBy('last_analyzed')"
+            >
+              <div class="flex items-center gap-1">
+                Last Analyzed
+                <UIcon
+                  v-if="sortColumn === 'last_analyzed'"
+                  :name="
+                    sortDirection === 'asc'
+                      ? 'i-lucide-arrow-up'
+                      : 'i-lucide-arrow-down'
+                  "
+                  class="w-3 h-3"
+                />
+              </div>
+            </th>
             <th class="px-6 py-3 text-right">Action</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
           <tr
-            v-for="pair in pairs"
+            v-for="pair in sortedPairs"
             :key="pair.coin"
             class="hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors"
           >
