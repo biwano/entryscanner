@@ -44,6 +44,7 @@ export type Database = {
           coin: string
           created_at: string
           id: string
+          notifications_created: boolean
           since: string | null
           status: string
           timeframe: string
@@ -53,6 +54,7 @@ export type Database = {
           coin: string
           created_at?: string
           id?: string
+          notifications_created?: boolean
           since?: string | null
           status: string
           timeframe: string
@@ -62,6 +64,7 @@ export type Database = {
           coin?: string
           created_at?: string
           id?: string
+          notifications_created?: boolean
           since?: string | null
           status?: string
           timeframe?: string
@@ -119,21 +122,21 @@ export type Database = {
           event_id: string
           id: string
           message: string | null
-          triggered_at: string | null
+          sent_at: string | null
           user_id: string
         }
         Insert: {
           event_id: string
           id?: string
           message?: string | null
-          triggered_at?: string | null
+          sent_at?: string | null
           user_id: string
         }
         Update: {
           event_id?: string
           id?: string
           message?: string | null
-          triggered_at?: string | null
+          sent_at?: string | null
           user_id?: string
         }
         Relationships: [

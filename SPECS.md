@@ -96,10 +96,17 @@ All server-side workers (Trend Worker, Notification Dispatcher) can be triggered
 
 #### 3.2.3. Alert & Notification Engine (Server-Side)
 
-- **Notification Dispatcher Worker**: The primary background process responsible for sending alerts. It ensures reliability by:
-  - **Event Gap Analysis**: For each user's `user_subscriptions`, it identifies all `events` for which the user hasn't received a notification yet.
-  - **Selection Logic**: It selects events where the `event.created_at` is greater than the `created_at` value of the event referenced by the user's last notification for that specific coin/timeframe.
-  - **Execution**: Sending the Discord notifications to the users' configured webhooks and logging the successful delivery to `notification_history` (referencing the `event_id`).
+- **Notification Dispatcher Worker**: The primary background process responsible for generating and sending alerts. It operates in two sequential phases:
+  1.  **Notification Generation**:
+      - It selects all **events** from the `events` table where `notifications_created` is `false`.
+      - For each selected event:
+        - It identifies all users with an active `user_subscriptions` for that specific coin and timeframe.
+      - It creates new rows in `notification_history` for each of these users, referencing the `event_id`. By default, these rows have `sent_at` set to `null`.
+      - Once processing is complete for the event, it marks `notifications_created` as `true` in the `events` table.
+  2.  **Notification Dispatching**:
+      - It selects all rows in `notification_history` where `sent_at` is `null`.
+      - For each row, it sends the notification to the user's configured Discord webhook.
+      - Upon successful (or attempted) delivery, it updates `sent_at` to the current timestamp.
 
 ### 3.3. Shared Features
 
@@ -177,6 +184,7 @@ Tables use **Row Level Security (RLS)** to ensure appropriate data access. User-
 - `status`: enum ("bullish", "bearish")
 - `timestamp`: timestamp (the opening time of the latest closed candle at detection)
 - `since`: timestamp (the opening time of the candle where the trend flipped)
+- `notifications_created`: boolean (default: false, indicates if notification history rows have been generated)
 - `created_at`: timestamp
 - **RLS Policy**: Publicly readable. Only system-level processes can insert.
 - **Note**: This table stores the history of trend flips. The `since` column is used to show the trend duration in the UI.
@@ -187,7 +195,7 @@ Tables use **Row Level Security (RLS)** to ensure appropriate data access. User-
 - `user_id`: uuid (foreign key to profiles.id)
 - `event_id`: uuid (foreign key to `events.id`, nullable, **ON DELETE SET NULL**)
 - `message`: text (e.g., "BTC Daily Trend flipped to bullish")
-- `triggered_at`: timestamp
+- `sent_at`: timestamp (null if not yet sent)
 - **RLS Policy**: Users can only view notifications triggered for their own account. Only system-level processes can insert.
 - **Note**: This table tracks which events were successfully sent to which users. Metadata like coin and timeframe are found in the referenced `events` table.
 

@@ -26,7 +26,7 @@ defineProps<{
       >
         <div class="flex justify-between items-start">
           <span class="text-xs text-gray-500">
-            <RelativeTime :timestamp="notif.triggered_at" />
+            <RelativeTime :timestamp="notif.sent_at" />
           </span>
           <UBadge
             :color="

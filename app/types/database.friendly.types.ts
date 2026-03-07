@@ -54,8 +54,19 @@ export type UserSubscriptionWithDetails = UserSubscription & {
 };
 
 /**
+ * NotificationHistory with joined event and profile data for dispatching.
+ */
+/**
  * Trend with the related monitored pair metadata.
  */
 export type TrendWithPair = Trend & {
   monitored_pairs: MonitoredPair | null;
+};
+
+/**
+ * NotificationHistory with joined event and profile data for dispatching.
+ */
+export type NotificationWithDetails = NotificationHistory & {
+  profiles: Pick<Profile, "discord_webhook_url"> | null;
+  events: Event | null;
 };

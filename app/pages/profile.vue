@@ -60,7 +60,8 @@ const { data: notifications } = await useAsyncData<NotificationWithEvent[]>(
     `
       )
       .eq("user_id", userId.value)
-      .order("triggered_at", { ascending: false })
+      .not("sent_at", "is", null)
+      .order("sent_at", { ascending: false })
       .returns<NotificationWithEvent[]>();
     return data || [];
   }

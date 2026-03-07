@@ -1,68 +1,113 @@
-import type { UserSubscriptionWithDetails } from "~/types/database.friendly.types";
+import type { NotificationWithDetails } from "~/types/database.friendly.types";
 import { getSupabaseServiceClient } from "./supabase-service";
 import dayjs from "dayjs";
 
 export async function runNotificationDispatcher() {
   const supabase = getSupabaseServiceClient();
-  const { data: subscriptions, error: subError } = await supabase
-    .from("user_subscriptions")
-    .select(
-      `
+
+  // 1. Notification Generation
+  // Select all events where notifications_created is false
+  const { data: unprocessedEvents, error: eventsError } = await supabase
+    .from("events")
+    .select("*")
+    .eq("notifications_created", false)
+    .order("created_at", { ascending: true });
+
+  if (eventsError) {
+    console.error("Error fetching unprocessed events:", eventsError);
+  } else if (unprocessedEvents && unprocessedEvents.length > 0) {
+    for (const event of unprocessedEvents) {
+      // Find all active users with a subscription to this coin/timeframe
+      const { data: subscriptions, error: subError } = await supabase
+        .from("user_subscriptions")
+        .select(`
+          user_id,
+          coin,
+          timeframe,
+          monitored_pairs!inner(active)
+        `)
+        .eq("coin", event.coin)
+        .eq("timeframe", event.timeframe)
+        .eq("monitored_pairs.active", true);
+
+      if (subError) {
+        console.error(`Error fetching subscriptions for event ${event.id}:`, subError);
+        continue;
+      }
+
+      if (subscriptions && subscriptions.length > 0) {
+        const message = `${event.coin} ${event.timeframe} trend flipped to **${event.status.toUpperCase()}**!`;
+        const notificationsToInsert = (subscriptions as unknown as { user_id: string }[]).map((sub) => ({
+          user_id: sub.user_id,
+          event_id: event.id,
+          message,
+          sent_at: null,
+        }));
+
+        const { error: insertError } = await supabase
+          .from("notification_history")
+          .insert(notificationsToInsert);
+
+        if (insertError) {
+          console.error(`Error creating notification history for event ${event.id}:`, insertError);
+          continue;
+        }
+      }
+
+      // Mark event as processed
+      await supabase
+        .from("events")
+        .update({ notifications_created: true })
+        .eq("id", event.id);
+    }
+  }
+
+  // 2. Notification Dispatching
+  // Select all not sent elements of notification history
+  const { data: pendingNotifications, error: pendingError } = await supabase
+    .from("notification_history")
+    .select(`
       *,
       profiles:user_id (discord_webhook_url),
-      monitored_pairs!coin (active, last_trend_flip_daily_id, last_trend_flip_weekly_id, coin)
-    `
-    )
-    .returns<UserSubscriptionWithDetails[]>();
+      events:event_id (*)
+    `)
+    .is("sent_at", null)
+    .returns<NotificationWithDetails[]>();
 
-  if (subError || !subscriptions)
-    return { status: "no_subscriptions", error: subError };
+  if (pendingError) {
+    return { status: "error", error: pendingError };
+  }
 
   const sent = [];
-  for (const sub of subscriptions) {
-    if (!sub.monitored_pairs?.active) continue;
+  if (pendingNotifications && pendingNotifications.length > 0) {
+    for (const notif of pendingNotifications) {
+      const profile = notif.profiles;
+      const event = notif.events;
+      const webhookUrl = profile?.discord_webhook_url;
 
-    if (!sub.profiles?.discord_webhook_url) continue;
+      if (!webhookUrl || !event) {
+        // Mark as sent anyway if we can't send it (e.g. no webhook) to avoid retry loops
+        // but log it if event is missing
+        if (!event) console.error(`Missing event for notification ${notif.id}`);
+        
+        await supabase
+          .from("notification_history")
+          .update({ 
+            sent_at: new Date().toISOString(),
+          })
+          .eq("id", notif.id);
+        continue;
+      }
 
-    // Get the last notification for this subscription (user_id, coin, timeframe)
-    // We join with events to filter by coin and timeframe
-    const { data: lastNotif } = await supabase
-      .from("notification_history")
-      .select("id, event_id, events!inner(created_at, coin, timeframe)")
-      .eq("user_id", sub.user_id)
-      .eq("events.coin", sub.coin)
-      .eq("events.timeframe", sub.timeframe)
-      .order("events(created_at)", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    const lastCreatedAt =
-      lastNotif?.events?.created_at || "1970-01-01T00:00:00Z";
-
-    // Get all events since the last notification
-    const { data: pendingEvents } = await supabase
-      .from("events")
-      .select("*")
-      .eq("coin", sub.coin)
-      .eq("timeframe", sub.timeframe)
-      .gt("created_at", lastCreatedAt)
-      .order("created_at", { ascending: true });
-
-    if (!pendingEvents || pendingEvents.length === 0) continue;
-
-    for (const event of pendingEvents) {
-      const message = `${sub.coin} ${
-        sub.timeframe
-      } trend flipped to **${event.status.toUpperCase()}**!`;
       try {
-        await $fetch(sub.profiles.discord_webhook_url, {
+        await $fetch(webhookUrl, {
           method: "POST",
           body: {
-            content: message,
+            content: notif.message,
             embeds: [
               {
-                title: `Trend Flip Alert: ${sub.coin}`,
-                description: message,
+                title: `Trend Flip Alert: ${event.coin}`,
+                description: notif.message,
                 color: event.status === "bullish" ? 0x00ff00 : 0xff0000,
                 timestamp: dayjs(event.since).toISOString(),
               },
@@ -70,18 +115,21 @@ export async function runNotificationDispatcher() {
           },
         });
 
-        await supabase.from("notification_history").insert({
-          user_id: sub.user_id,
-          event_id: event.id,
-          message,
-        });
+        await supabase
+          .from("notification_history")
+          .update({
+            sent_at: new Date().toISOString(),
+          })
+          .eq("id", notif.id);
 
-        sent.push({ user_id: sub.user_id, coin: sub.coin });
+        sent.push({ user_id: notif.user_id, event_id: notif.event_id });
       } catch (err: unknown) {
         const errorMsg = err instanceof Error ? err.message : String(err);
-        console.error("Dispatcher error:", errorMsg);
+        console.error(`Dispatcher error for notification ${notif.id}:`, errorMsg);
+        // We don't mark as sent here, it will be retried next time
       }
     }
   }
+
   return { status: "ok", sent: sent.length };
 }
