@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useSupabaseClient } from "#imports";
-import type { Database } from "~/types/database.types";
-import type { UserSubscription } from "~/types/database.friendly.types";
+import type { Database } from "~/types/database.types.js";
+import type { UserSubscription } from "~/types/database.friendly.types.js";
 
 const props = defineProps<{
   subscriptions: UserSubscription[];

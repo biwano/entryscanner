@@ -2,17 +2,18 @@
 import { computed, watchEffect } from "vue";
 import { useAsyncData, navigateTo } from "#app";
 import { useSupabaseClient } from "#imports";
-import { useHyperliquid } from "~/composables/useHyperliquid";
-import { useUser } from "~/composables/useUser";
-import type { Database } from "~/types/database.types";
-import type { MonitoredPair } from "~/types/database.friendly.types";
-import type { AssetMeta } from "#shared/types";
+import { useHyperliquid } from "~/composables/useHyperliquid.js";
+import { useUser } from "~/composables/useUser.js";
+import type { Database } from "~/types/database.types.js";
+import type { MonitoredPair } from "~/types/database.friendly.types.js";
+import type { AssetMeta } from "#shared/types.js";
 import AssetManager from "~/features/asset-management/AssetManager.vue";
 
 const supabase = useSupabaseClient<Database>();
 const { isAdmin, userSystem } = useUser();
 const { useMetaAndAssetCtxs } = useHyperliquid();
-const { data: metaAndAssetCtxs } = useMetaAndAssetCtxs();
+const { data: metaAndAssetCtxs, isLoading: isMetaLoading } =
+  useMetaAndAssetCtxs();
 
 // Simple redirect if not admin
 watchEffect(() => {
@@ -21,12 +22,17 @@ watchEffect(() => {
   }
 });
 
-const { data: monitoredPairs, refresh: refreshMonitored } = await useAsyncData<MonitoredPair[]>(
-  "monitored_pairs_mgmt",
-  async () => {
-    const { data } = await supabase.from("monitored_pairs").select("*");
-    return data || [];
-  }
+const {
+  data: monitoredPairs,
+  refresh: refreshMonitored,
+  status,
+} = await useAsyncData<MonitoredPair[]>("monitored_pairs_mgmt", async () => {
+  const { data } = await supabase.from("monitored_pairs").select("*");
+  return data || [];
+});
+
+const isLoading = computed(
+  () => isMetaLoading.value || status.value === "pending"
 );
 
 const allAvailableCoins = computed<string[]>(() => {
@@ -42,6 +48,7 @@ const allAvailableCoins = computed<string[]>(() => {
       :monitored-pairs="monitoredPairs || []"
       :all-available-coins="allAvailableCoins"
       :is-admin="isAdmin"
+      :loading="isLoading"
       @refresh="refreshMonitored"
     />
   </div>

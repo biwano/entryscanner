@@ -1,4 +1,4 @@
-import { runTrendWorker } from "../utils/trend-worker";
+import { runTrendWorker } from "../utils/trend-worker.js";
 
 export default defineTask({
   async run({ payload, context }) {

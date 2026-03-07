@@ -1,7 +1,7 @@
 import { SMA } from "technicalindicators";
-import type { Timeframe, HyperliquidCandle } from "./types";
-import type { Trend } from "~/types/database.friendly.types";
-import { CANDLE_COUNT, SMA_PERIOD_FAST } from "./constants";
+import type { Timeframe, HyperliquidCandle } from "./types.js";
+import type { Trend } from "~/types/database.friendly.types.js";
+import { CANDLE_COUNT, SMA_PERIOD_FAST } from "./constants.js";
 import dayjs from "dayjs";
 
 export function calculateStartTime(

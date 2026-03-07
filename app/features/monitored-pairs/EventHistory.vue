@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Event } from "~/types/database.friendly.types";
+import type { Event } from "~/types/database.friendly.types.js";
 
 defineProps<{
   events: Event[] | null | undefined;

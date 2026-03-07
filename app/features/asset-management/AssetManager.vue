@@ -1,14 +1,15 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
 import { useSupabaseClient } from "#imports";
-import type { Database } from "~/types/database.types";
-import type { MonitoredPair } from "~/types/database.friendly.types";
+import type { Database } from "~/types/database.types.js";
+import type { MonitoredPair } from "~/types/database.friendly.types.js";
 import dayjs from "dayjs";
 
 const props = defineProps<{
   monitoredPairs: MonitoredPair[];
   allAvailableCoins: string[];
   isAdmin: boolean;
+  loading?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -123,31 +124,43 @@ const bulkRemoveVisible = async () => {
       <div
         class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 py-4"
       >
-        <UButton
-          v-for="coin in filteredCoins"
-          :key="coin"
-          :color="isMonitored(coin) ? 'primary' : 'neutral'"
-          :variant="isMonitored(coin) ? 'solid' : 'outline'"
-          size="sm"
-          class="justify-start truncate"
-          @click="toggleMonitored(coin)"
-        >
-          <template #leading>
-            <UIcon
-              :name="
-                isMonitored(coin)
-                  ? 'i-lucide-check-circle'
-                  : 'i-lucide-circle-plus'
-              "
-              class="w-4 h-4"
-            />
-          </template>
-          {{ coin }}
-        </UButton>
+        <template v-if="loading">
+          <div
+            v-for="n in 24"
+            :key="n"
+            class="h-8 bg-gray-100 dark:bg-gray-800 animate-pulse rounded flex items-center px-3 gap-2"
+          >
+            <div class="w-4 h-4 bg-gray-200 dark:bg-gray-700 rounded-full" />
+            <div class="w-12 h-4 bg-gray-200 dark:bg-gray-700 rounded" />
+          </div>
+        </template>
+        <template v-else>
+          <UButton
+            v-for="coin in filteredCoins"
+            :key="coin"
+            :color="isMonitored(coin) ? 'primary' : 'neutral'"
+            :variant="isMonitored(coin) ? 'solid' : 'outline'"
+            size="sm"
+            class="justify-start truncate"
+            @click="toggleMonitored(coin)"
+          >
+            <template #leading>
+              <UIcon
+                :name="
+                  isMonitored(coin)
+                    ? 'i-lucide-check-circle'
+                    : 'i-lucide-circle-plus'
+                "
+                class="w-4 h-4"
+              />
+            </template>
+            {{ coin }}
+          </UButton>
+        </template>
       </div>
 
       <div
-        v-if="filteredCoins.length === 0"
+        v-if="!loading && filteredCoins.length === 0"
         class="text-center py-10 text-gray-500 italic"
       >
         No assets found matching your search.

@@ -16,6 +16,11 @@ Always refer to `SPECS.md` in the root directory to understand the application s
 - **Database Schema**: Details for `profiles`, `user_system`, `user_subscriptions`, `monitored_pairs`, `trends`, and `notification_history` tables.
 - **System Architecture**: Market data layer, trend engine, server-side workers, and persistence layer.
 
+## Code rules
+
+- Add the .js extension to imports when appropriate
+- Remove unused imports
+
 ## Type Safety
 
 Always rely on types defined in `database.types.ts` and `database.friendly.types.ts` files whenever possible to ensure consistency with the Supabase schema.

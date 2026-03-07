@@ -3,11 +3,11 @@ import { computed, ref } from "vue";
 import { useRoute } from "vue-router";
 import { useAsyncData } from "#app";
 import { useSupabaseClient } from "#imports";
-import { useHyperliquid } from "~/composables/useHyperliquid";
-import type { MonitoredPairWithTrends } from "~/types/database.friendly.types";
-import type { AssetCtx, AssetMeta } from "#shared/types";
-import { calculateStartTime } from "#shared/trends";
-import { CANDLE_COUNT } from "#shared/constants";
+import { useHyperliquid } from "~/composables/useHyperliquid.js";
+import type { MonitoredPairWithTrends } from "~/types/database.friendly.types.js";
+import type { AssetMeta } from "#shared/types.js";
+import { calculateStartTime } from "#shared/trends.js";
+import { CANDLE_COUNT } from "#shared/constants.js";
 import PriceChart from "~/features/charts/PriceChart.vue";
 import AssetStats from "~/features/monitored-pairs/AssetStats.vue";
 import EventHistory from "~/features/monitored-pairs/EventHistory.vue";
@@ -26,23 +26,28 @@ const { data: candlesD1 } = useCandles(coin, "1d", startTimeD1);
 const { data: candlesW1 } = useCandles(coin, "1w", startTimeW1);
 
 const timeframe = ref<"1d" | "1w">("1d");
-const selectedCandles = computed(() => (timeframe.value === "1d" ? candlesD1.value : candlesW1.value) || []);
+const selectedCandles = computed(
+  () => (timeframe.value === "1d" ? candlesD1.value : candlesW1.value) || []
+);
 
 const supabase = useSupabaseClient();
-const { data: pair } = await useAsyncData<MonitoredPairWithTrends | null>(`pair_${coin}`, async () => {
-  const { data } = await supabase
-    .from("monitored_pairs")
-    .select(
-      `
+const { data: pair } = await useAsyncData<MonitoredPairWithTrends | null>(
+  `pair_${coin}`,
+  async () => {
+    const { data } = await supabase
+      .from("monitored_pairs")
+      .select(
+        `
       *,
       last_trend_flip_daily:events!last_trend_flip_daily_id (*),
       last_trend_flip_weekly:events!last_trend_flip_weekly_id (*)
     `
-    )
-    .eq("coin", coin)
-    .single();
-  return data;
-});
+      )
+      .eq("coin", coin)
+      .single();
+    return data;
+  }
+);
 
 const { data: events } = await useAsyncData(`events_${coin}`, async () => {
   const { data } = await supabase
@@ -91,8 +96,13 @@ const currentPrice = computed(() => allMids.value?.[coin] ?? "0.00");
             :variant="timeframe === '1d' ? 'solid' : 'subtle'"
             @click="timeframe = '1d'"
             >D1: {{ pair.last_trend_flip_daily?.status?.toUpperCase() }}
-            <span v-if="pair.last_trend_flip_daily?.since" class="ml-1 opacity-80 text-[10px]"
-              >(<RelativeTime :timestamp="pair.last_trend_flip_daily.since" :show-ago="false" />)</span
+            <span
+              v-if="pair.last_trend_flip_daily?.since"
+              class="ml-1 opacity-80 text-[10px]"
+              >(<RelativeTime
+                :timestamp="pair.last_trend_flip_daily.since"
+                :show-ago="false"
+              />)</span
             ></UBadge
           >
           <UBadge
@@ -105,8 +115,13 @@ const currentPrice = computed(() => allMids.value?.[coin] ?? "0.00");
             :variant="timeframe === '1w' ? 'solid' : 'subtle'"
             @click="timeframe = '1w'"
             >W1: {{ pair.last_trend_flip_weekly?.status?.toUpperCase() }}
-            <span v-if="pair.last_trend_flip_weekly?.since" class="ml-1 opacity-80 text-[10px]"
-              >(<RelativeTime :timestamp="pair.last_trend_flip_weekly.since" :show-ago="false" />)</span
+            <span
+              v-if="pair.last_trend_flip_weekly?.since"
+              class="ml-1 opacity-80 text-[10px]"
+              >(<RelativeTime
+                :timestamp="pair.last_trend_flip_weekly.since"
+                :show-ago="false"
+              />)</span
             ></UBadge
           >
         </div>

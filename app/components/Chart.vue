@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { use } from "echarts/core";
-import { CanvasRenderer } from "echarts/renderers";
-import { CandlestickChart, BarChart, LineChart } from "echarts/charts";
+import { use } from "echarts/core.js";
+import { CanvasRenderer } from "echarts/renderers.js";
+import { CandlestickChart, BarChart, LineChart } from "echarts/charts.js";
 import {
   GridComponent,
   TooltipComponent,
@@ -9,11 +9,11 @@ import {
   DataZoomComponent,
   MarkLineComponent,
   VisualMapComponent,
-} from "echarts/components";
+} from "echarts/components.js";
 import VChart from "vue-echarts";
 import dayjs from "dayjs";
 
-import type { HyperliquidCandle } from "#shared/types";
+import type { HyperliquidCandle } from "#shared/types.js";
 
 use([
   CanvasRenderer,

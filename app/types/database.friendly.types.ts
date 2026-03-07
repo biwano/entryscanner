@@ -1,4 +1,4 @@
-import type { Tables, TablesInsert, TablesUpdate } from "./database.types";
+import type { Tables, TablesInsert, TablesUpdate } from "./database.types.js";
 
 // Base Row Types
 export type Profile = Tables<"profiles">;

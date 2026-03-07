@@ -1,5 +1,5 @@
-import type { NotificationWithDetails } from "~/types/database.friendly.types";
-import { getSupabaseServiceClient } from "./supabase-service";
+import type { NotificationWithDetails } from "~/types/database.friendly.types.js";
+import { getSupabaseServiceClient } from "./supabase-service.js";
 import dayjs from "dayjs";
 
 export async function runNotificationDispatcher() {

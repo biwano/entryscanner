@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { NotificationHistory } from "~/types/database.friendly.types";
+import type { NotificationHistory } from "~/types/database.friendly.types.js";
 
 // Local type for notifications with joined event
 type NotificationWithEvent = NotificationHistory & {

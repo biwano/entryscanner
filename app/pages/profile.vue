@@ -3,12 +3,12 @@ import { useAsyncData } from "#app";
 import { useSupabaseClient, useSupabaseUser } from "#imports";
 import { Auth } from "@supa-kit/auth-ui-vue";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
-import type { Database } from "~/types/database.types";
+import type { Database } from "~/types/database.types.js";
 import type { 
   Profile, 
   UserSubscription, 
   NotificationHistory 
-} from "~/types/database.friendly.types";
+} from "~/types/database.friendly.types.js";
 import ProfileSettings from "~/features/user-profile/ProfileSettings.vue";
 import SubscriptionList from "~/features/subscriptions/SubscriptionList.vue";
 import NotificationHistoryComponent from "~/features/user-profile/NotificationHistory.vue";

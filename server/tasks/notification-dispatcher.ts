@@ -1,4 +1,4 @@
-import { runNotificationDispatcher } from "../utils/notification-dispatcher";
+import { runNotificationDispatcher } from "../utils/notification-dispatcher.js";
 
 export default defineTask({
   async run({ payload, context }) {

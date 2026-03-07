@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/vue-query";
-import { HyperliquidClient, type CandleInterval } from "#shared/hyperliquid";
-import type { HyperliquidCandle } from "#shared/types";
+import { HyperliquidClient, type CandleInterval } from "#shared/hyperliquid.js";
+import type { HyperliquidCandle } from "#shared/types.js";
 
 export const useHyperliquid = () => {
   const client = new HyperliquidClient();

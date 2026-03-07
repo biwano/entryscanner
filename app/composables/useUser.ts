@@ -1,8 +1,8 @@
 import { useSupabaseClient, useSupabaseUser } from "#imports";
 import { useAsyncData } from "#app";
 import { computed } from "vue";
-import type { Database } from "~/types/database.types";
-import type { UserSystem } from "~/types/database.friendly.types";
+import type { Database } from "~/types/database.types.js";
+import type { UserSystem } from "~/types/database.friendly.types.js";
 
 export const useUser = () => {
   const supabase = useSupabaseClient<Database>();

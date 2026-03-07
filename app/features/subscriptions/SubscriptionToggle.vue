@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { useSupabaseClient } from "#imports";
-import { useUserId } from "~/composables/useUserId";
-import type { Database } from "~/types/database.types";
-import type { UserSubscription } from "~/types/database.friendly.types";
+import { useUserId } from "~/composables/useUserId.js";
+import type { Database } from "~/types/database.types.js";
+import type { UserSubscription } from "~/types/database.friendly.types.js";
 
 const props = defineProps<{
   coin: string;

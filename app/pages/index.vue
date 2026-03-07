@@ -2,11 +2,11 @@
 import { computed } from "vue";
 import { useSupabaseClient } from "#imports";
 import { useAsyncData } from "#app";
-import { useHyperliquid } from "~/composables/useHyperliquid";
-import { useUser } from "~/composables/useUser";
-import { useUserId } from "~/composables/useUserId";
-import type { Database } from "~/types/database.types";
-import type { UserSubscription, MonitoredPairWithTrends } from "~/types/database.friendly.types";
+import { useHyperliquid } from "~/composables/useHyperliquid.js";
+import { useUser } from "~/composables/useUser.js";
+import { useUserId } from "~/composables/useUserId.js";
+import type { Database } from "~/types/database.types.js";
+import type { UserSubscription, MonitoredPairWithTrends } from "~/types/database.friendly.types.js";
 import MonitoredPairsTable from "~/features/monitored-pairs/MonitoredPairsTable.vue";
 import dayjs from "dayjs";
 

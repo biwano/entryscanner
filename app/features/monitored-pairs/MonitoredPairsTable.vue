@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useSupabaseClient } from "#imports";
-import type { Database } from "~/types/database.types";
+import type { Database } from "~/types/database.types.js";
 import type {
   MonitoredPairWithTrends,
   UserSubscription,
-} from "~/types/database.friendly.types";
+} from "~/types/database.friendly.types.js";
 import SubscriptionToggle from "../subscriptions/SubscriptionToggle.vue";
 
 const props = defineProps<{
