@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import type { MonitoredPairWithTrends, UserSubscription } from "~/types/database.friendly.types";
+import type {
+  MonitoredPairWithTrends,
+  UserSubscription,
+} from "~/types/database.friendly.types";
 import SubscriptionToggle from "../subscriptions/SubscriptionToggle.vue";
 
 defineProps<{
@@ -45,7 +48,7 @@ const getPrice = (allMids: Record<string, string> | null, coin: string) => {
             <th class="px-6 py-3">Price</th>
             <th class="px-6 py-3">Daily (D1)</th>
             <th class="px-6 py-3">Weekly (W1)</th>
-            <th class="px-6 py-3">Last Updated</th>
+            <th class="px-6 py-3">Last Analyzed</th>
             <th class="px-6 py-3 text-right">Action</th>
           </tr>
         </thead>
@@ -83,7 +86,7 @@ const getPrice = (allMids: Record<string, string> | null, coin: string) => {
               />
             </td>
             <td class="px-6 py-4 text-xs text-gray-500">
-              <RelativeTime :timestamp="pair.last_updated" />
+              <RelativeTime :timestamp="pair.last_analyzed" />
             </td>
             <td class="px-6 py-4 text-right">
               <div class="flex items-center justify-end gap-2">

@@ -26,7 +26,13 @@ Entry scanner is a web-based application that monitors real-time market data on 
 
 #### 3.1.1. Dashboard
 
-- **Monitored Pairs View**: Display all system-wide monitored pairs (where `active` is `true`) with their current trend status.
+- **Monitored Pairs View**: Display all system-wide monitored pairs (where `active` is `true`) with their current trend status. The dashboard table includes the following columns:
+  - **Asset**: The name of the perpetual pair (e.g., BTC, ETH).
+  - **Price**: Current live-polled price for the asset.
+  - **Daily (D1)**: Bullish/Bearish status and duration for the daily timeframe.
+  - **Weekly (W1)**: Bullish/Bearish status and duration for the weekly timeframe.
+  - **Last Analyzed**: Relative time since the pair was last processed by the trend worker.
+  - **Action**: Options to toggle subscriptions and navigate to detailed analysis.
 - **Subscription Management**: Users can subscribe/unsubscribe to specific pair/timeframe combinations (e.g., BTC/Daily, ETH/Weekly) to receive personalized notifications.
 - **Trend Indicators**:
   - **Bullish/Bearish Status**: Visual indicator of the current trend based on SMA 50 crossover on **Daily (D1) and Weekly (W1)** timeframes.
@@ -82,9 +88,9 @@ All server-side workers (Trend Worker, Notification Dispatcher) can be triggered
       b. **Trend Calculation**: Run the `determineTrend` logic using the fetched candles (SMA 50 crossover). This returns both the current trend and the `since` timestamp (start of the trend).
       c. **Trend Update**: Update the single row in the `trends` table for the coin/timeframe (upsert with uniqueness on `coin` and `timeframe`). Set `timestamp` to the latest closed candle.
       d. **Event Creation**: If the calculated trend status represents a flip from the previous state (or if it's the first record), create a new record in the `events` table.
-         - `since`: The opening time of the candle where the trend flipped (from `determineTrend`).
-         - `timestamp`: The opening time of the latest closed candle at the time of detection.
-      e. **Database Synchronization**: Update the corresponding `last_trend_flip_[timeframe]_id` in `monitored_pairs` with the new `event_id`.
+      - `since`: The opening time of the candle where the trend flipped (from `determineTrend`).
+      - `timestamp`: The opening time of the latest closed candle at the time of detection.
+        e. **Database Synchronization**: Update the corresponding `last_trend_flip_[timeframe]_id` in `monitored_pairs` with the new `event_id`.
   3.  **Activity Tracking**: Update `last_analyzed` and `last_updated` (if any flip occurred) timestamps in `monitored_pairs` after all timeframes are processed.
 - **Reliability**: Ensures that all tracked pairs are systematically updated across all timeframes, preventing data staleness in any specific interval.
 
