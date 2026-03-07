@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import { useSupabaseClient } from "#imports";
 import type { Database } from "~/types/database.types.js";
 import type {
@@ -30,6 +30,9 @@ const isUnsubscribingAll = ref(false);
 
 const STORAGE_KEY = "monitored_pairs_sorting";
 const sorting = useLocalStorage(STORAGE_KEY, [{ id: "daily", desc: true }]);
+
+const page = ref(1);
+const itemsPerPage = 10;
 
 const columns = [
   {
@@ -123,6 +126,28 @@ const sortedPairs = computed(() => {
 
   return sorted;
 });
+
+const pagedPairs = computed(() => {
+  const start = (page.value - 1) * itemsPerPage;
+  const end = start + itemsPerPage;
+  return sortedPairs.value.slice(start, end);
+});
+
+// Reset to page 1 when sorting changes
+watch(sorting, () => {
+  page.value = 1;
+});
+
+// Ensure current page is valid when pairs change
+watch(
+  () => props.pairs.length,
+  (newCount) => {
+    const maxPage = Math.max(1, Math.ceil(newCount / itemsPerPage));
+    if (page.value > maxPage) {
+      page.value = maxPage;
+    }
+  }
+);
 
 const handleSubscribeAll = async () => {
   if (!userId.value) return;
@@ -224,7 +249,7 @@ const getStatus = (
       <UTable
         v-if="!loading"
         v-model:sorting="sorting"
-        :data="sortedPairs"
+        :data="pagedPairs"
         :columns="columns"
         class="w-full"
       >
@@ -303,7 +328,19 @@ const getStatus = (
         </template>
       </UTable>
 
-      <div v-else class="divide-y divide-gray-100 dark:divide-gray-800">
+      <div
+        v-if="!loading && pairs.length > itemsPerPage"
+        class="flex justify-center border-t border-gray-200 dark:border-gray-800 py-3"
+      >
+        <UPagination
+          v-model:page="page"
+          :total="pairs.length"
+          :items-per-page="itemsPerPage"
+          size="sm"
+        />
+      </div>
+
+      <div v-if="loading" class="divide-y divide-gray-100 dark:divide-gray-800">
         <!-- Header skeleton -->
         <div
           class="flex items-center gap-4 px-4 py-3 bg-gray-50/50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-800"
