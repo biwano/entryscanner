@@ -36,8 +36,8 @@ export interface TrendAnalysis {
   coin: string;
   timeframe: Timeframe;
   status: TrendStatus;
-  timestamp: string; // The closing time of the candle where the current trend flipped
-  price_at_flip: number;
+  latestFlipTimestamp: string; // The closing time of the candle where the current trend flipped
+  priceAtFlip: number;
   flips: TrendFlip[];
 }
 

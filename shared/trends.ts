@@ -1,6 +1,17 @@
 import { SMA } from "technicalindicators";
-import type { Timeframe, HyperliquidCandle, TrendAnalysis, TrendFlip, TrendStatus } from "./types.js";
-import { CANDLE_COUNT, SMA_PERIOD_FAST, TREND_BULLISH, TREND_BEARISH } from "./constants.js";
+import type {
+  Timeframe,
+  HyperliquidCandle,
+  TrendAnalysis,
+  TrendFlip,
+  TrendStatus,
+} from "./types.js";
+import {
+  CANDLE_COUNT,
+  SMA_PERIOD_FAST,
+  TREND_BULLISH,
+  TREND_BEARISH,
+} from "./constants.js";
 import dayjs from "dayjs";
 
 export function calculateStartTime(
@@ -18,7 +29,10 @@ export function calculateStartTime(
   return now.valueOf();
 }
 
-export function calculateSMA(prices: number[], period: number = SMA_PERIOD_FAST): number[] {
+export function calculateSMA(
+  prices: number[],
+  period: number = SMA_PERIOD_FAST
+): number[] {
   if (prices.length === 0) return [];
   // Pad the input prices with the first price to ensure the output has the same length as the input
   const padding = Array(period - 1).fill(prices[0]);
@@ -43,8 +57,8 @@ export function determineTrend(
       coin,
       timeframe,
       status: TREND_BEARISH,
-      timestamp: dayjs(candles[0]!.t).toISOString(),
-      price_at_flip: closePrices[0] || 0,
+      latestFlipTimestamp: dayjs(candles[0]!.t).toISOString(),
+      priceAtFlip: closePrices[0] || 0,
       flips: [],
     };
   }
@@ -84,7 +98,9 @@ export function determineTrend(
   const finalStatus = lastClose > lastSma ? TREND_BULLISH : TREND_BEARISH;
 
   // Find the latest flip timestamp for backwards compatibility
-  let latestFlipTimestamp = candles[0] ? dayjs(candles[0].t).toISOString() : dayjs().toISOString();
+  let latestFlipTimestamp = candles[0]
+    ? dayjs(candles[0].t).toISOString()
+    : dayjs().toISOString();
   let latestFlipPrice = closePrices[0] || 0;
 
   if (flips.length > 0) {
@@ -101,8 +117,8 @@ export function determineTrend(
     coin,
     timeframe,
     status: finalStatus,
-    timestamp: latestFlipTimestamp,
-    price_at_flip: latestFlipPrice,
+    latestFlipTimestamp: latestFlipTimestamp,
+    priceAtFlip: latestFlipPrice,
     flips,
   };
 }
@@ -115,9 +131,15 @@ export function isCandleClosed(
   const candleStart = dayjs(candleTimestamp);
 
   if (timeframe === "D1") {
-    return now.isAfter(candleStart.add(1, "day")) || now.isSame(candleStart.add(1, "day"));
+    return (
+      now.isAfter(candleStart.add(1, "day")) ||
+      now.isSame(candleStart.add(1, "day"))
+    );
   } else if (timeframe === "W1") {
-    return now.isAfter(candleStart.add(1, "week")) || now.isSame(candleStart.add(1, "week"));
+    return (
+      now.isAfter(candleStart.add(1, "week")) ||
+      now.isSame(candleStart.add(1, "week"))
+    );
   }
   return false;
 }

@@ -74,8 +74,8 @@ export async function processTimeframe(
       coin,
       timeframe,
       status: currentTrend.status,
-      timestamp: lastCandleTime,
-      price_at_flip: currentTrend.price_at_flip,
+      timestamp: currentTrend.latestFlipTimestamp,
+      price_at_flip: currentTrend.priceAtFlip,
     });
 
     if (trendUpsertError) {
@@ -96,8 +96,8 @@ export async function processTimeframe(
           timeframe,
           status: currentTrend.status,
           timestamp: lastCandleTime,
-          since: currentTrend.timestamp,
-          price_at_flip: currentTrend.price_at_flip,
+          since: currentTrend.latestFlipTimestamp,
+          price_at_flip: currentTrend.priceAtFlip,
         })
         .select()
         .single();
