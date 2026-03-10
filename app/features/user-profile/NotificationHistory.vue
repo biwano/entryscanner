@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { NotificationHistory } from "~/types/database.friendly.types.js";
-import { TREND_BULLISH } from "#shared/constants.js";
+import { TREND_BULLISH } from "~~shared/constants.js";
 
 // Local type for notifications with joined event
 type NotificationWithEvent = NotificationHistory & {

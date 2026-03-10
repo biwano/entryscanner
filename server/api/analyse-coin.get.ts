@@ -1,7 +1,7 @@
 import { getSupabaseServiceClient } from "../utils/supabase-service.js";
-import { HyperliquidClient } from "#shared/hyperliquid.js";
+import { HyperliquidClient } from "~~shared/hyperliquid.js";
 import { processTimeframe } from "../utils/trend-worker.js";
-import type { Timeframe } from "#shared/types.js";
+import type { Timeframe } from "~~shared/types.js";
 import type { TablesInsert } from "~/types/database.types.js";
 import dayjs from "dayjs";
 

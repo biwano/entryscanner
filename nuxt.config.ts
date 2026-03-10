@@ -7,7 +7,7 @@ export default defineNuxtConfig({
     compatibilityVersion: 4,
   },
   alias: {
-    "#shared": fileURLToPath(new URL("./shared", import.meta.url)),
+    "~~shared": fileURLToPath(new URL("./shared", import.meta.url)),
   },
   css: ["~/assets/css/main.css"],
   modules: ["@nuxt/ui", "@nuxtjs/supabase", "@nuxt/eslint"],

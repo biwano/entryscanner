@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Tables } from "~/types/database.types.js";
 import { formatPrice } from "~/utils/format.js";
-import type { TrendStatus } from "#shared/types.js";
+import type { TrendStatus } from "~~shared/types.js";
 
 const props = defineProps<{
   title: string;

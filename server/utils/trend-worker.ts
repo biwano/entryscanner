@@ -1,11 +1,11 @@
-import { HyperliquidClient } from "#shared/hyperliquid.js";
+import { HyperliquidClient } from "~~shared/hyperliquid.js";
 import {
   determineTrend,
   isCandleClosed,
   calculateStartTime,
-} from "#shared/trends.js";
-import { CANDLE_COUNT } from "#shared/constants.js";
-import type { Timeframe, HyperliquidCandle } from "#shared/types.js";
+} from "~~shared/trends.js";
+import { CANDLE_COUNT } from "~~shared/constants.js";
+import type { Timeframe, HyperliquidCandle } from "~~shared/types.js";
 import type { TablesInsert } from "~/types/database.types.js";
 import { getSupabaseServiceClient } from "./supabase-service.js";
 import dayjs from "dayjs";

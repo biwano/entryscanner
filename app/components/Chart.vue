@@ -14,8 +14,8 @@ import {
 import VChart from "vue-echarts";
 import dayjs from "dayjs";
 
-import type { HyperliquidCandle, TrendFlip, TrendStatus } from "#shared/types.js";
-import { TREND_BULLISH, TREND_BEARISH } from "#shared/constants.js";
+import type { HyperliquidCandle, TrendFlip, TrendStatus } from "~~shared/types.js";
+import { TREND_BULLISH, TREND_BEARISH } from "~~shared/constants.js";
 
 use([
   CanvasRenderer,

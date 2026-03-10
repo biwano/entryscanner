@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { TREND_BULLISH } from "#shared/constants.js";
+import { TREND_BULLISH } from "~~shared/constants.js";
 import type { Event } from "~/types/database.friendly.types.js";
 
 defineProps<{

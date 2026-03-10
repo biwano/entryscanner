@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { formatRelativeTime, formatDate } from '#shared/time.js'
+import { formatRelativeTime, formatDate } from '~~shared/time.js'
 
 const props = withDefaults(defineProps<{
   timestamp?: string | number | null
