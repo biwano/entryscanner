@@ -41,7 +41,8 @@ async function processTimeframe(
     }
 
     const lastClosedCandle = candles[lastClosedCandleIdx]!;
-    const lastCandleTime = dayjs(lastClosedCandle.t).toISOString();
+    const duration = timeframe === "D1" ? "day" : "week";
+    const lastCandleTime = dayjs(lastClosedCandle.t).add(1, duration).toISOString();
 
     // Run determineTrend (using candles up to the last closed one)
     const candlesToAnalyze = candles.slice(0, lastClosedCandleIdx + 1);

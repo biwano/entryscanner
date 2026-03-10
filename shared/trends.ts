@@ -55,7 +55,7 @@ export function determineTrend(
 
   // Find when the trend flipped
   // With padding, smas[i] corresponds directly to candles[i]
-  let timestamp = candles[candles.length - 1]!.t;
+  let flipCandleTime = candles[candles.length - 1]!.t;
   for (let i = closePrices.length - 1; i >= 0; i--) {
     const currentPrice = closePrices[i]!;
     const currentSma = smas[i]!;
@@ -63,17 +63,21 @@ export function determineTrend(
     const currentStatus = currentPrice > currentSma ? "bullish" : "bearish";
 
     if (currentStatus === status) {
-      timestamp = candles[i]!.t;
+      flipCandleTime = candles[i]!.t;
     } else {
       break;
     }
   }
 
+  // Use the close time of the flip candle as the trend start timestamp
+  const duration = timeframe === "D1" ? "day" : "week";
+  const timestamp = dayjs(flipCandleTime).add(1, duration).toISOString();
+
   return {
     coin,
     timeframe,
     status,
-    timestamp: dayjs(timestamp).toISOString(),
+    timestamp,
   };
 }
 

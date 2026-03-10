@@ -100,16 +100,16 @@ All server-side workers (Trend Worker, Notification Dispatcher) can be triggered
 
 #### 3.2.2. Automated Trend Worker
 
-- **Systematic Update Logic**: The worker runs frequently (e.g., every minute) to ensure data is up-to-date. For each run, it identifies the coin in `monitored_pairs` that has the oldest `last_analyzed` timestamp (or no record). It then processes ALL supported timeframes (Daily "D1" and Weekly "W1") for that specific coin in a single execution. This ensures that a coin's trend status is kept consistent across all timeframes.
+- **Systematic Update Logic**: The worker runs frequently (e.g., every minute) to ensure data is up-to-date. For each run, it identifies the coin in `monitored_pairs` that has the oldest `last_analyzed` timestamp (or no record). It then processes ALL supported timeframes (Daily "D1" and Weekly "W1") for that specific coin in a single execution. This ensures that a coin's trend status is kept consistent across all timeframes. All trend-related timestamps (`trends.timestamp`, `events.timestamp`, `events.since`) represent the **closing time** of the relevant candle.
 - **Simplified Processing Flow**:
   1.  **Select Coin**: Pick the least recently analyzed active coin from `monitored_pairs`.
   2.  **Iterate Timeframes**: For each timeframe (D1, W1):
       a. **Get Candles**: Fetch the last 400 candles for the coin and timeframe.
-      b. **Trend Calculation**: Run the `determineTrend` logic using the fetched candles (SMA 50 crossover). This returns both the current trend and the `since` timestamp (start of the trend).
-      c. **Trend Update**: Update the single row in the `trends` table for the coin/timeframe (upsert with uniqueness on `coin` and `timeframe`). Set `timestamp` to the latest closed candle.
+      b. **Trend Calculation**: Run the `determineTrend` logic using the fetched candles (SMA 50 crossover). This returns both the current trend and the `since` timestamp (close time of the candle where the trend flipped).
+      c. **Trend Update**: Update the single row in the `trends` table for the coin/timeframe (upsert with uniqueness on `coin` and `timeframe`). Set `timestamp` to the closing time of the latest analyzed closed candle.
       d. **Event Creation**: If the calculated trend status represents a flip from the previous state (or if it's the first record), create a new record in the `events` table.
-      - `since`: The opening time of the candle where the trend flipped (from `determineTrend`).
-      - `timestamp`: The opening time of the latest closed candle at the time of detection.
+      - `since`: The closing time of the candle where the trend flipped (from `determineTrend`).
+      - `timestamp`: The closing time of the latest closed candle at the time of detection.
         e. **Database Synchronization**: Update the corresponding `last_trend_flip_[timeframe]_id` in `monitored_pairs` with the new `event_id`.
   3.  **Activity Tracking**: Update `last_analyzed` and `last_updated` (if any flip occurred) timestamps in `monitored_pairs` after all timeframes are processed.
 - **Reliability**: Ensures that all tracked pairs are systematically updated across all timeframes, preventing data staleness in any specific interval.
@@ -191,7 +191,7 @@ Tables use **Row Level Security (RLS)** to ensure appropriate data access. User-
 - `coin`: string (primary key component)
 - `timeframe`: string (primary key component, e.g., "D1", "W1")
 - `status`: enum ("bullish", "bearish")
-- `timestamp`: timestamp (the opening time of the last closed candle analyzed)
+- `timestamp`: timestamp (the closing time of the last closed candle analyzed)
 - **Primary Key**: `(coin, timeframe)`
 - **RLS Policy**: Publicly readable. Only system-level processes can insert/update.
 - **Note**: This table stores the _current_ trend for each pair and timeframe. There is only one row per coin/timeframe couple. Uniqueness is ensured by the composite primary key.
@@ -202,8 +202,8 @@ Tables use **Row Level Security (RLS)** to ensure appropriate data access. User-
 - `coin`: string
 - `timeframe`: string
 - `status`: enum ("bullish", "bearish")
-- `timestamp`: timestamp (the opening time of the latest closed candle at detection)
-- `since`: timestamp (the opening time of the candle where the trend flipped)
+- `timestamp`: timestamp (the closing time of the latest closed candle at detection)
+- `since`: timestamp (the closing time of the candle where the trend flipped)
 - `notifications_created`: boolean (default: false, indicates if notification history rows have been generated)
 - `created_at`: timestamp
 - **RLS Policy**: Publicly readable. Only system-level processes can insert.
