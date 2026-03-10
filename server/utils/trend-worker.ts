@@ -45,10 +45,6 @@ export async function processTimeframe(
     }
 
     const lastClosedCandle = candles[lastClosedCandleIdx]!;
-    const duration = timeframe === "D1" ? "day" : "week";
-    const lastCandleTime = dayjs(lastClosedCandle.t)
-      .add(1, duration)
-      .toISOString();
 
     // Run determineTrend (using candles up to the last closed one)
     const candlesToAnalyze = candles.slice(0, lastClosedCandleIdx + 1);
@@ -95,7 +91,7 @@ export async function processTimeframe(
           coin,
           timeframe,
           status: currentTrend.status,
-          timestamp: lastCandleTime,
+          timestamp: currentTrend.latestFlipTimestamp,
           since: currentTrend.latestFlipTimestamp,
           price_at_flip: currentTrend.priceAtFlip,
         })
