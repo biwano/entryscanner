@@ -12,7 +12,7 @@ import dayjs from "dayjs";
 
 type SupabaseClient = ReturnType<typeof getSupabaseServiceClient>;
 
-async function processTimeframe(
+export async function processTimeframe(
   supabase: SupabaseClient,
   client: HyperliquidClient,
   coin: string,
@@ -115,6 +115,7 @@ async function processTimeframe(
         timeframe,
         newStatus: currentTrend.status,
         isFlip: true,
+        lastClosedCandle,
       };
     } else {
       return {
@@ -122,6 +123,7 @@ async function processTimeframe(
         timeframe,
         newStatus: currentTrend.status,
         isFlip: false,
+        lastClosedCandle,
       };
     }
   } catch (err: unknown) {
