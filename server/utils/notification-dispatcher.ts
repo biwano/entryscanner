@@ -1,5 +1,6 @@
 import type { NotificationWithDetails } from "~/types/database.friendly.types.js";
 import { getSupabaseServiceClient } from "./supabase-service.js";
+import { TREND_BULLISH } from "../../shared/constants.js";
 import dayjs from "dayjs";
 
 export async function runNotificationDispatcher() {
@@ -122,7 +123,7 @@ export async function runNotificationDispatcher() {
               {
                 title: `Trend Flip Alert: ${event.coin}`,
                 description: notif.message,
-                color: event.status === "bullish" ? 0x00ff00 : 0xff0000,
+                color: event.status === TREND_BULLISH ? 0x00ff00 : 0xff0000,
                 timestamp: dayjs(event.since).toISOString(),
               },
             ],

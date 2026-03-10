@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Tables } from "~/types/database.types.js";
 import { formatPrice } from "~/utils/format.js";
+import type { TrendStatus } from "#shared/types.js";
 
 const props = defineProps<{
   title: string;
@@ -37,8 +38,8 @@ const columns = [
   },
 ];
 
-const getStatus = (event: Tables<"events">): "bullish" | "bearish" => {
-  return event.status as "bullish" | "bearish";
+const getStatus = (event: Tables<"events">): TrendStatus => {
+  return event.status as TrendStatus;
 };
 </script>
 

@@ -7,7 +7,7 @@ import { useHyperliquid } from "~/composables/useHyperliquid.js";
 import type { MonitoredPairWithTrends } from "~/types/database.friendly.types.js";
 import type { AssetMeta } from "#shared/types.js";
 import { calculateStartTime } from "#shared/trends.js";
-import { CANDLE_COUNT } from "#shared/constants.js";
+import { CANDLE_COUNT, TREND_BULLISH } from "#shared/constants.js";
 import PriceChart from "~/features/charts/PriceChart.vue";
 import AssetStats from "~/features/monitored-pairs/AssetStats.vue";
 import EventHistory from "~/features/monitored-pairs/EventHistory.vue";
@@ -90,7 +90,7 @@ const currentPrice = computed(() => allMids.value?.[coin] ?? "0.00");
           <UBadge
             class="cursor-pointer"
             :color="
-              pair.last_trend_flip_daily?.status === 'bullish'
+              pair.last_trend_flip_daily?.status === TREND_BULLISH
                 ? 'success'
                 : 'error'
             "
@@ -109,7 +109,7 @@ const currentPrice = computed(() => allMids.value?.[coin] ?? "0.00");
           <UBadge
             class="cursor-pointer"
             :color="
-              pair.last_trend_flip_weekly?.status === 'bullish'
+              pair.last_trend_flip_weekly?.status === TREND_BULLISH
                 ? 'success'
                 : 'error'
             "

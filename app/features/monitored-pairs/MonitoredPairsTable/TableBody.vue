@@ -4,6 +4,7 @@ import type {
   MonitoredPairWithTrends,
   UserSubscription,
 } from "~/types/database.friendly.types.js";
+import type { TrendStatus } from "#shared/types.js";
 import SubscriptionToggle from "../../subscriptions/SubscriptionToggle.vue";
 
 const props = defineProps<{
@@ -47,9 +48,9 @@ const getPrice = (allMids: Record<string, string> | null, coin: string) => {
 
 const getStatus = (
   event: MonitoredPairWithTrends["last_trend_flip_daily"]
-): "bullish" | "bearish" | undefined => {
+): TrendStatus | undefined => {
   if (!event) return undefined;
-  return event.status as "bullish" | "bearish";
+  return event.status as TrendStatus;
 };
 </script>
 

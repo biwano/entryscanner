@@ -1,6 +1,9 @@
 <script setup lang="ts">
-const props = defineProps<{
-  status?: "bullish" | "bearish";
+import type { TrendStatus } from "#shared/types.js";
+import { TREND_BULLISH, TREND_BEARISH } from "#shared/constants.js";
+
+defineProps<{
+  status?: TrendStatus;
   since?: string | null;
 }>();
 </script>
@@ -9,11 +12,11 @@ const props = defineProps<{
   <div class="flex items-center gap-2">
     <div class="flex items-center gap-1">
       <div
-        v-if="status === 'bullish'"
+        v-if="status === TREND_BULLISH"
         class="w-2 h-2 rounded-full bg-green-500 animate-pulse"
       />
       <div
-        v-else-if="status === 'bearish'"
+        v-else-if="status === TREND_BEARISH"
         class="w-2 h-2 rounded-full bg-red-500 animate-pulse"
       />
       <div v-else class="w-2 h-2 rounded-full bg-gray-400" />
@@ -21,7 +24,7 @@ const props = defineProps<{
       <span
         v-if="status"
         :class="
-          status === 'bullish'
+          status === TREND_BULLISH
             ? 'text-green-600 dark:text-green-400'
             : 'text-red-600 dark:text-red-400'
         "

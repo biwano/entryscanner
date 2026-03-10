@@ -2,7 +2,7 @@
 import { useSupabaseClient } from "#imports";
 import { useQuery } from "@tanstack/vue-query";
 import { useHyperliquid } from "~/composables/useHyperliquid.js";
-import { REFRESH_INTERVAL } from "~~/shared/constants.js";
+import { REFRESH_INTERVAL, TREND_BEARISH } from "~~/shared/constants.js";
 import type { Database, Tables } from "~/types/database.types.js";
 import RecentBearishFlipsTable from "~/features/dashboard/RecentBearishFlipsTable.vue";
 
@@ -15,7 +15,7 @@ const fetchRecentBearishFlips = async (timeframe: "D1" | "W1") => {
     .from("events")
     .select("*")
     .eq("timeframe", timeframe)
-    .eq("status", "bearish")
+    .eq("status", TREND_BEARISH)
     .order("since", { ascending: false })
     .limit(5);
 

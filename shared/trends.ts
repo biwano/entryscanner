@@ -1,6 +1,6 @@
 import { SMA } from "technicalindicators";
-import type { Timeframe, HyperliquidCandle, TrendAnalysis, TrendFlip } from "./types.js";
-import { CANDLE_COUNT, SMA_PERIOD_FAST } from "./constants.js";
+import type { Timeframe, HyperliquidCandle, TrendAnalysis, TrendFlip, TrendStatus } from "./types.js";
+import { CANDLE_COUNT, SMA_PERIOD_FAST, TREND_BULLISH, TREND_BEARISH } from "./constants.js";
 import dayjs from "dayjs";
 
 export function calculateStartTime(
@@ -42,21 +42,21 @@ export function determineTrend(
     return {
       coin,
       timeframe,
-      status: "bearish",
+      status: TREND_BEARISH,
       timestamp: dayjs(candles[0]!.t).toISOString(),
       flips: [],
     };
   }
 
   const flips: TrendFlip[] = [];
-  let currentStatus: "bullish" | "bearish" | null = null;
+  let currentStatus: TrendStatus | null = null;
   const duration = timeframe === "D1" ? "day" : "week";
 
   // Traverse from earliest to latest to find all flips
   for (let i = 0; i < closePrices.length; i++) {
     const price = closePrices[i]!;
     const sma = smas[i]!;
-    const status = price > sma ? "bullish" : "bearish";
+    const status = price > sma ? TREND_BULLISH : TREND_BEARISH;
 
     if (currentStatus === null) {
       currentStatus = status;
@@ -78,7 +78,7 @@ export function determineTrend(
 
   const lastClose = closePrices[closePrices.length - 1]!;
   const lastSma = smas[smas.length - 1]!;
-  const finalStatus = lastClose > lastSma ? "bullish" : "bearish";
+  const finalStatus = lastClose > lastSma ? TREND_BULLISH : TREND_BEARISH;
 
   // Find the latest flip timestamp for backwards compatibility
   let latestFlipTimestamp = candles[0] ? dayjs(candles[0].t).toISOString() : dayjs().toISOString();

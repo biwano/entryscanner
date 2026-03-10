@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { NotificationHistory } from "~/types/database.friendly.types.js";
+import { TREND_BULLISH } from "#shared/constants.js";
 
 // Local type for notifications with joined event
 type NotificationWithEvent = NotificationHistory & {
@@ -30,7 +31,7 @@ defineProps<{
           </span>
           <UBadge
             :color="
-              notif.event?.status === 'bullish' ? 'success' : 'error'
+              notif.event?.status === TREND_BULLISH ? 'success' : 'error'
             "
             size="xs"
             variant="subtle"

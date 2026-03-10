@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { TREND_BULLISH } from "#shared/constants.js";
 import type { Event } from "~/types/database.friendly.types.js";
 
 defineProps<{
@@ -28,18 +29,18 @@ defineProps<{
           <div class="flex items-center gap-1">
             <UIcon
               :name="
-                event.status === 'bullish'
+                event.status === TREND_BULLISH
                   ? 'i-lucide-trending-up'
                   : 'i-lucide-trending-down'
               "
               :class="
-                event.status === 'bullish' ? 'text-green-500' : 'text-red-500'
+                event.status === TREND_BULLISH ? 'text-green-500' : 'text-red-500'
               "
             />
             <span
               class="text-xs font-semibold uppercase tracking-wider"
               :class="
-                event.status === 'bullish'
+                event.status === TREND_BULLISH
                   ? 'text-green-600 dark:text-green-400'
                   : 'text-red-600 dark:text-red-400'
               "

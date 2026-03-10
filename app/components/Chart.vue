@@ -14,7 +14,8 @@ import {
 import VChart from "vue-echarts";
 import dayjs from "dayjs";
 
-import type { HyperliquidCandle, TrendFlip } from "#shared/types.js";
+import type { HyperliquidCandle, TrendFlip, TrendStatus } from "#shared/types.js";
+import { TREND_BULLISH, TREND_BEARISH } from "#shared/constants.js";
 
 use([
   CanvasRenderer,
@@ -36,7 +37,7 @@ const props = defineProps<{
   sma50?: number[];
   sma200?: number[];
   flips?: TrendFlip[];
-  currentStatus?: "bullish" | "bearish";
+  currentStatus?: TrendStatus;
 }>();
 
 const option = computed(() => {
@@ -57,7 +58,7 @@ const option = computed(() => {
   if (props.flips && props.flips.length > 0) {
     // Initial trend before the first flip
     const firstFlip = props.flips[0]!;
-    const initialStatus = firstFlip.status === "bullish" ? "bearish" : "bullish";
+    const initialStatus = firstFlip.status === TREND_BULLISH ? TREND_BEARISH : TREND_BULLISH;
     const firstFlipDate = dayjs(firstFlip.timestamp)
       .subtract(1, duration)
       .format("YYYY-MM-DD");
@@ -67,7 +68,7 @@ const option = computed(() => {
         xAxis: dates[0],
         itemStyle: {
           color:
-            initialStatus === "bullish"
+            initialStatus === TREND_BULLISH
               ? "rgba(16, 185, 129, 0.2)"
               : "rgba(239, 68, 68, 0.2)",
         },
@@ -91,7 +92,7 @@ const option = computed(() => {
           xAxis: startDate,
           itemStyle: {
             color:
-              currentFlip.status === "bullish"
+              currentFlip.status === TREND_BULLISH
                 ? "rgba(16, 185, 129, 0.2)"
                 : "rgba(239, 68, 68, 0.2)",
           },
@@ -111,7 +112,7 @@ const option = computed(() => {
         xAxis: lastFlipDate,
         itemStyle: {
           color:
-            lastFlip.status === "bullish"
+            lastFlip.status === TREND_BULLISH
               ? "rgba(16, 185, 129, 0.2)"
               : "rgba(239, 68, 68, 0.2)",
         },
@@ -125,7 +126,7 @@ const option = computed(() => {
         xAxis: dates[0],
         itemStyle: {
           color:
-            props.currentStatus === "bullish"
+            props.currentStatus === TREND_BULLISH
               ? "rgba(16, 185, 129, 0.2)"
               : "rgba(239, 68, 68, 0.2)",
         },
@@ -145,7 +146,7 @@ const option = computed(() => {
     const candleIdx = dates.findIndex((d) => d === candleDate);
     const candle = props.candles[candleIdx];
 
-    const isBullish = flip.status === "bullish";
+    const isBullish = flip.status === TREND_BULLISH;
 
     if (!candle) {
       return {

@@ -1,3 +1,7 @@
+import type { TREND_BULLISH, TREND_BEARISH } from "./constants.js";
+
+export type TrendStatus = typeof TREND_BULLISH | typeof TREND_BEARISH;
+
 export interface Candle {
   time: number;
   open: number;
@@ -23,14 +27,14 @@ export interface HyperliquidCandle {
 export type Timeframe = "D1" | "W1";
 
 export interface TrendFlip {
-  status: "bullish" | "bearish";
+  status: TrendStatus;
   timestamp: string;
 }
 
 export interface TrendAnalysis {
   coin: string;
   timeframe: Timeframe;
-  status: "bullish" | "bearish";
+  status: TrendStatus;
   timestamp: string; // The closing time of the candle where the current trend flipped
   flips: TrendFlip[];
 }
