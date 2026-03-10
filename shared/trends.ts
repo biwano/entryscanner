@@ -44,6 +44,7 @@ export function determineTrend(
       timeframe,
       status: TREND_BEARISH,
       timestamp: dayjs(candles[0]!.t).toISOString(),
+      price_at_flip: closePrices[0] || 0,
       flips: [],
     };
   }
@@ -69,9 +70,11 @@ export function determineTrend(
       // Trend flipped!
       currentStatus = status;
       const flipTimestamp = dayjs(candles[i]!.t).add(1, duration).toISOString();
+      const flipPrice = price; // The closing price of the candle that triggered the flip
       flips.push({
         status,
         timestamp: flipTimestamp,
+        price: flipPrice,
       });
     }
   }
@@ -82,11 +85,16 @@ export function determineTrend(
 
   // Find the latest flip timestamp for backwards compatibility
   let latestFlipTimestamp = candles[0] ? dayjs(candles[0].t).toISOString() : dayjs().toISOString();
+  let latestFlipPrice = closePrices[0] || 0;
+
   if (flips.length > 0) {
-    latestFlipTimestamp = flips[flips.length - 1]!.timestamp;
+    const lastFlip = flips[flips.length - 1]!;
+    latestFlipTimestamp = lastFlip.timestamp;
+    latestFlipPrice = lastFlip.price;
   } else {
     // If no flips found, the trend started at the beginning of the candles
     latestFlipTimestamp = dayjs(candles[0]!.t).add(1, duration).toISOString();
+    latestFlipPrice = closePrices[0] || 0;
   }
 
   return {
@@ -94,6 +102,7 @@ export function determineTrend(
     timeframe,
     status: finalStatus,
     timestamp: latestFlipTimestamp,
+    price_at_flip: latestFlipPrice,
     flips,
   };
 }

@@ -49,6 +49,7 @@ export type Database = {
           status: string
           timeframe: string
           timestamp: string
+          price_at_flip: number
         }
         Insert: {
           coin: string
@@ -59,6 +60,7 @@ export type Database = {
           status: string
           timeframe: string
           timestamp: string
+          price_at_flip: number
         }
         Update: {
           coin?: string
@@ -69,6 +71,7 @@ export type Database = {
           status?: string
           timeframe?: string
           timestamp?: string
+          price_at_flip?: number
         }
         Relationships: []
       }
@@ -181,6 +184,7 @@ export type Database = {
           status: string
           timeframe: string
           timestamp: string
+          price_at_flip: number
         }
         Insert: {
           coin: string
@@ -188,6 +192,7 @@ export type Database = {
           status: string
           timeframe: string
           timestamp: string
+          price_at_flip: number
         }
         Update: {
           coin?: string
@@ -195,6 +200,7 @@ export type Database = {
           status?: string
           timeframe?: string
           timestamp?: string
+          price_at_flip?: number
         }
         Relationships: []
       }

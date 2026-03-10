@@ -8,6 +8,7 @@ import type { MonitoredPairWithTrends } from "~/types/database.friendly.types.js
 import type { AssetMeta } from "#shared/types.js";
 import { calculateStartTime } from "#shared/trends.js";
 import { CANDLE_COUNT, TREND_BULLISH } from "#shared/constants.js";
+import { formatPrice, formatPercentChange } from "~/utils/format.js";
 import PriceChart from "~/features/charts/PriceChart.vue";
 import AssetStats from "~/features/monitored-pairs/AssetStats.vue";
 import EventHistory from "~/features/monitored-pairs/EventHistory.vue";
@@ -69,6 +70,17 @@ const assetCtx = computed(() => {
 });
 
 const currentPrice = computed(() => allMids.value?.[coin] ?? "0.00");
+
+const percentChangeSinceTrendStart = computed(() => {
+  if (!pair.value) return null;
+  const flipEvent =
+    timeframe.value === "1d"
+      ? pair.value.last_trend_flip_daily
+      : pair.value.last_trend_flip_weekly;
+
+  if (!flipEvent?.price_at_flip) return null;
+  return formatPercentChange(currentPrice.value, flipEvent.price_at_flip);
+});
 </script>
 
 <template>
@@ -81,8 +93,20 @@ const currentPrice = computed(() => allMids.value?.[coin] ?? "0.00");
           variant="ghost"
           color="neutral"
         />
-        <CoinDisplay :coin="coin" size="xl" />
-        <h1 class="text-3xl font-bold text-gray-500">Analysis</h1>
+        <h1 class="text-3xl font-bold flex items-center gap-2">
+          <span>{{ coin }} Analysis</span>
+          <span
+            v-if="percentChangeSinceTrendStart"
+            :class="
+              percentChangeSinceTrendStart.startsWith('+')
+                ? 'text-green-500'
+                : 'text-red-500'
+            "
+            class="text-2xl font-normal font-mono"
+          >
+            ({{ percentChangeSinceTrendStart }})
+          </span>
+        </h1>
         <div class="flex gap-2">
           <UBadge v-if="!pair.active" color="neutral" variant="solid"
             >INACTIVE</UBadge

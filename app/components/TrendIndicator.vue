@@ -1,11 +1,20 @@
 <script setup lang="ts">
+import { computed } from "vue";
 import type { TrendStatus } from "#shared/types.js";
 import { TREND_BULLISH, TREND_BEARISH } from "#shared/constants.js";
+import { formatPercentChange } from "~/utils/format.js";
 
-defineProps<{
+const props = defineProps<{
   status?: TrendStatus;
   since?: string | null;
+  priceAtFlip?: number | null;
+  currentPrice?: string | number | null;
 }>();
+
+const percentChange = computed(() => {
+  if (!props.priceAtFlip || !props.currentPrice) return null;
+  return formatPercentChange(props.currentPrice, props.priceAtFlip);
+});
 </script>
 
 <template>
@@ -37,11 +46,24 @@ defineProps<{
       </span>
     </div>
 
-    <span
-      v-if="since"
-      class="text-[10px] text-gray-500 font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded border border-gray-200 dark:border-gray-700"
-    >
-      <RelativeTime :timestamp="since" />
-    </span>
+    <div v-if="since || percentChange" class="flex items-center gap-1">
+      <span
+        v-if="since"
+        class="text-[10px] text-gray-500 font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded border border-gray-200 dark:border-gray-700"
+      >
+        <RelativeTime :timestamp="since" />
+      </span>
+      <span
+        v-if="percentChange"
+        :class="
+          percentChange.startsWith('+')
+            ? 'text-green-600 dark:text-green-400'
+            : 'text-red-600 dark:text-red-400'
+        "
+        class="text-[10px] font-mono bg-gray-50 dark:bg-gray-900 px-1 rounded border border-gray-100 dark:border-gray-800"
+      >
+        {{ percentChange }}
+      </span>
+    </div>
   </div>
 </template>

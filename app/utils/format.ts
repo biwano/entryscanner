@@ -11,3 +11,16 @@ export const formatVolume = (vol: string | number) => {
     maximumFractionDigits: 1,
   }).format(Number(vol));
 };
+
+export const formatPercentChange = (
+  current: string | number,
+  base: string | number
+) => {
+  const cur = Number(current);
+  const b = Number(base);
+  if (!b || isNaN(cur) || isNaN(b)) return "0.00%";
+
+  const change = ((cur - b) / b) * 100;
+  const sign = change >= 0 ? "+" : "";
+  return `${sign}${change.toFixed(2)}%`;
+};

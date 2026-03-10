@@ -45,8 +45,8 @@ This page provides a comprehensive view of all active assets being tracked by th
 - **Monitored Pairs View**: Display all system-wide monitored pairs (where `active` is `true`) with their current trend status. The table (implemented using `UTable`) includes the following columns:
   - **Asset**: The name of the perpetual pair (e.g., BTC, ETH).
   - **Price**: Current live-polled price for the asset.
-  - **Daily (D1)**: Bullish/Bearish status and duration for the daily timeframe.
-  - **Weekly (W1)**: Bullish/Bearish status and duration for the weekly timeframe.
+  - **Daily (D1)**: Bullish/Bearish status, duration for the daily timeframe, and the **% price change since the trend started**.
+  - **Weekly (W1)**: Bullish/Bearish status, duration for the weekly timeframe, and the **% price change since the trend started**.
   - **Last Analyzed**: Relative time since the pair was last processed by the trend worker.
   - **Action**: Options to toggle subscriptions and navigate to detailed analysis.
 - **Filtering**: A search input allows users to filter the list of monitored pairs by their name (e.g., searching for "ETH" will show all pairs containing "ETH"). This filter works in conjunction with sorting and pagination.
@@ -64,6 +64,7 @@ This page provides a comprehensive view of all active assets being tracked by th
 
 #### 3.1.2. Pair Analysis
 
+- **Header Section**: Displays the asset name (with icon), current live price, and a title that includes the **% price change since the current trend started** for daily and weekly timeframes.
 - **Historical Price Chart**: Interactive price chart showing historical data (using candles from `info.candles`). The system displays exactly **400 candles** regardless of the timeframe (Daily or Weekly) to ensure a consistent view. Users can switch between **Daily (D1)** and **Weekly (W1)** timeframes by clicking the corresponding trend status badges. The chart displays two simple moving averages:
   - **SMA 50**: Used for trend flip triggers and primary visualization.
   - **SMA 200**: Provided for additional technical context.
@@ -200,6 +201,7 @@ Tables use **Row Level Security (RLS)** to ensure appropriate data access. User-
 - `timeframe`: string (primary key component, e.g., "D1", "W1")
 - `status`: enum ("bullish", "bearish")
 - `timestamp`: timestamp (the closing time of the last closed candle analyzed)
+- `price_at_flip`: decimal (the closing price of the candle where the current trend flipped)
 - **Primary Key**: `(coin, timeframe)`
 - **RLS Policy**: Publicly readable. Only system-level processes can insert/update.
 - **Note**: This table stores the _current_ trend for each pair and timeframe. There is only one row per coin/timeframe couple. Uniqueness is ensured by the composite primary key.
@@ -212,6 +214,7 @@ Tables use **Row Level Security (RLS)** to ensure appropriate data access. User-
 - `status`: enum ("bullish", "bearish")
 - `timestamp`: timestamp (the closing time of the latest closed candle at detection)
 - `since`: timestamp (the closing time of the candle where the trend flipped)
+- `price_at_flip`: decimal (the closing price of the candle where the trend flipped)
 - `notifications_created`: boolean (default: false, indicates if notification history rows have been generated)
 - `created_at`: timestamp
 - **RLS Policy**: Publicly readable. Only system-level processes can insert.

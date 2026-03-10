@@ -29,6 +29,7 @@ export type Timeframe = "D1" | "W1";
 export interface TrendFlip {
   status: TrendStatus;
   timestamp: string;
+  price: number;
 }
 
 export interface TrendAnalysis {
@@ -36,6 +37,7 @@ export interface TrendAnalysis {
   timeframe: Timeframe;
   status: TrendStatus;
   timestamp: string; // The closing time of the candle where the current trend flipped
+  price_at_flip: number;
   flips: TrendFlip[];
 }
 

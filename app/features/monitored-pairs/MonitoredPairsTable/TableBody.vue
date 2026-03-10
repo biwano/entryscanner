@@ -96,6 +96,8 @@ const getStatus = (
         <TrendIndicator
           :status="getStatus(row.original.last_trend_flip_daily)"
           :since="row.original.last_trend_flip_daily?.since || undefined"
+          :price-at-flip="row.original.last_trend_flip_daily?.price_at_flip"
+          :current-price="getPrice(allMids, row.original.coin)"
         />
       </template>
 
@@ -103,6 +105,8 @@ const getStatus = (
         <TrendIndicator
           :status="getStatus(row.original.last_trend_flip_weekly)"
           :since="row.original.last_trend_flip_weekly?.since || undefined"
+          :price-at-flip="row.original.last_trend_flip_weekly?.price_at_flip"
+          :current-price="getPrice(allMids, row.original.coin)"
         />
       </template>
 
