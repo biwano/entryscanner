@@ -49,8 +49,11 @@ useHead({
       <header class="border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div class="flex items-center gap-4">
-            <h1 class="text-xl font-bold text-primary">Entry scanner</h1>
+            <h1 class="text-xl font-bold text-primary shrink-0">Entry scanner</h1>
             <UNavigationMenu :items="menuItems[0]" orientation="horizontal" class="hidden md:flex" />
+            <div class="ml-2 flex-grow max-w-xs">
+              <GlobalSearch />
+            </div>
           </div>
           <div class="flex items-center gap-4">
             <UColorModeButton />

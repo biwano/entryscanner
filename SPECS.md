@@ -90,6 +90,13 @@ This page provides a comprehensive view of all active assets being tracked by th
 - **Notification History**: View a personal log of past automated alerts triggered by trend flips for subscribed pairs.
 - **Profile Settings**: Configure and test the Discord Webhook URL for personal notifications.
 
+#### 3.1.5. Global Navigation & Search
+
+- **Coin Search Bar**: A global search input is available in the top menu, allowing users to quickly search for any perpetual pair by its name (e.g., BTC, ETH).
+- **Direct Navigation**: Upon selecting a coin from the search results, the user is navigated directly to that asset's **Pair Analysis** page.
+- **Available Pairs**: The search bar pulls its list from all currently active perpetual pairs available on Hyperliquid.
+- **Mobile Access**: The search bar is accessible on both desktop and mobile devices.
+
 ### 3.2. Server Scripts (Workers)
 
 #### 3.2.1. Common Triggering Mechanisms
