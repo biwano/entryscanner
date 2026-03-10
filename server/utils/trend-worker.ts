@@ -23,7 +23,11 @@ export async function processTimeframe(
   const startTime = calculateStartTime(timeframe, CANDLE_COUNT);
 
   try {
-    const candlesResponse = await client.fetchCandles(coin, interval, startTime);
+    const candlesResponse = await client.fetchCandles(
+      coin,
+      interval,
+      startTime
+    );
     const candles: HyperliquidCandle[] = candlesResponse;
 
     if (!candles || candles.length === 0) {
@@ -42,7 +46,9 @@ export async function processTimeframe(
 
     const lastClosedCandle = candles[lastClosedCandleIdx]!;
     const duration = timeframe === "D1" ? "day" : "week";
-    const lastCandleTime = dayjs(lastClosedCandle.t).add(1, duration).toISOString();
+    const lastCandleTime = dayjs(lastClosedCandle.t)
+      .add(1, duration)
+      .toISOString();
 
     // Run determineTrend (using candles up to the last closed one)
     const candlesToAnalyze = candles.slice(0, lastClosedCandleIdx + 1);

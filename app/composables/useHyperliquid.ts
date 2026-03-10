@@ -30,9 +30,14 @@ export const useHyperliquid = () => {
     return useQuery({
       queryKey: ["candles", coin, interval, startTime, endTime],
       queryFn: async (): Promise<HyperliquidCandle[]> => {
-        const response = await client.fetchCandles(coin, interval, startTime, endTime);
+        const response = await client.fetchCandles(
+          coin,
+          interval,
+          startTime,
+          endTime
+        );
         return response;
-      }
+      },
     });
   };
 
