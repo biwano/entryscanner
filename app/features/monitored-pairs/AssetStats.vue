@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 
-import type { AssetCtx } from "~~shared/types.js";
+import type { AssetCtx } from "~~shared/types";
 
 const props = defineProps<{
   coin: string;

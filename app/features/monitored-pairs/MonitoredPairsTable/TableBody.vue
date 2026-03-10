@@ -4,7 +4,7 @@ import type {
   MonitoredPairWithTrends,
   UserSubscription,
 } from "~/types/database.friendly.types.js";
-import type { TrendStatus } from "~~shared/types.js";
+import type { TrendStatus } from "~~shared/types";
 import SubscriptionToggle from "../../subscriptions/SubscriptionToggle.vue";
 
 const props = defineProps<{

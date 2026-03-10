@@ -15,4 +15,5 @@ export default withNuxt({
       },
     ],
   },
+  ignorePatterns: ["/app/**/*.vue"],
 });

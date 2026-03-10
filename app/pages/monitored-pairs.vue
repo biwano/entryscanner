@@ -2,12 +2,12 @@
 import { computed } from "vue";
 import { useSupabaseClient } from "#imports";
 import { useQuery } from "@tanstack/vue-query";
-import { useHyperliquid } from "~/composables/useHyperliquid.js";
-import { useUser } from "~/composables/useUser.js";
-import { useUserId } from "~/composables/useUserId.js";
-import { REFRESH_INTERVAL } from "~~/shared/constants.js";
-import type { Database } from "~/types/database.types.js";
-import type { UserSubscription, MonitoredPairWithTrends } from "~/types/database.friendly.types.js";
+import { useHyperliquid } from "~/composables/useHyperliquid";
+import { useUser } from "~/composables/useUser";
+import { useUserId } from "~/composables/useUserId";
+import { REFRESH_INTERVAL } from "~~/shared/constants";
+import type { Database } from "~/types/database.types";
+import type { UserSubscription, MonitoredPairWithTrends } from "~/types/database.friendly.types";
 import MonitoredPairsTable from "~/features/monitored-pairs/MonitoredPairsTable/index.vue";
 
 const { useAllMids } = useHyperliquid();

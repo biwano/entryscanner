@@ -3,7 +3,7 @@ import { ref, computed } from "vue";
 import { useRouter } from "vue-router";
 import { useSupabaseClient } from "#imports";
 import { useQuery } from "@tanstack/vue-query";
-import type { Database } from "~/types/database.types.js";
+import type { Database } from "~/types/database.types";
 import type { SelectMenuItem } from "@nuxt/ui";
 
 const supabase = useSupabaseClient<Database>();

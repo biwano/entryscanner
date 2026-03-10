@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useSupabaseClient } from "#imports";
-import { useUserId } from "~/composables/useUserId.js";
-import type { Database } from "~/types/database.types.js";
-import type { Profile } from "~/types/database.friendly.types.js";
+import { useUserId } from "~/composables/useUserId";
+import type { Database } from "~/types/database.types";
+import type { Profile } from "~/types/database.friendly.types";
 
 const props = defineProps<{
   profile: Profile | null;

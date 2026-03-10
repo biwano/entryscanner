@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
 import { useSupabaseClient } from "#imports";
-import type { Database } from "~/types/database.types.js";
-import type { MonitoredPair } from "~/types/database.friendly.types.js";
+import type { Database } from "~/types/database.types";
+import type { MonitoredPair } from "~/types/database.friendly.types";
 import dayjs from "dayjs";
 
 const props = defineProps<{

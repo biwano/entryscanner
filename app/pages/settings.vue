@@ -2,11 +2,11 @@
 import { computed, watchEffect } from "vue";
 import { useAsyncData, navigateTo } from "#app";
 import { useSupabaseClient } from "#imports";
-import { useHyperliquid } from "~/composables/useHyperliquid.js";
-import { useUser } from "~/composables/useUser.js";
-import type { Database } from "~/types/database.types.js";
-import type { MonitoredPair } from "~/types/database.friendly.types.js";
-import type { AssetMeta } from "~~shared/types.js";
+import { useHyperliquid } from "~/composables/useHyperliquid";
+import { useUser } from "~/composables/useUser";
+import type { Database } from "~/types/database.types";
+import type { MonitoredPair } from "~/types/database.friendly.types";
+import type { AssetMeta } from "~~shared/types";
 import AssetManager from "~/features/asset-management/AssetManager.vue";
 
 const supabase = useSupabaseClient<Database>();

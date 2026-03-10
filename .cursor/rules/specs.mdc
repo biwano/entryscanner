@@ -18,7 +18,7 @@ Always refer to `SPECS.md` in the root directory to understand the application s
 
 ## Code rules
 
-- Add the .js extension to imports when appropriate
+- Add the .js extension to imports when appropriate except in vue files
 - Remove unused imports
 - Never use the any type
 - Use `~~shared` alias for imports from the shared directory instead of `#shared`

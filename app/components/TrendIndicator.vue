@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import type { TrendStatus } from "~~shared/types.js";
-import { TREND_BULLISH, TREND_BEARISH } from "~~shared/constants.js";
-import { formatPercentChange } from "~/utils/format.js";
+import type { TrendStatus } from "~~shared/types";
+import { TREND_BULLISH, TREND_BEARISH } from "~~shared/constants";
+import { formatPercentChange } from "~/utils/format";
 
 const props = defineProps<{
   status?: TrendStatus;

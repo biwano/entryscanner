@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
 import { useSupabaseClient } from "#imports";
-import type { Database } from "~/types/database.types.js";
+import type { Database } from "~/types/database.types";
 import type {
   MonitoredPairWithTrends,
   UserSubscription,

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { calculateSMA, determineTrend } from "~~shared/trends.js";
-import { SMA_PERIOD_FAST, SMA_PERIOD_SLOW } from "~~shared/constants.js";
-import type { HyperliquidCandle } from "~~shared/types.js";
+import { calculateSMA, determineTrend } from "~~shared/trends";
+import { SMA_PERIOD_FAST, SMA_PERIOD_SLOW } from "~~shared/constants";
+import type { HyperliquidCandle } from "~~shared/types";
 
 const props = withDefaults(
   defineProps<{

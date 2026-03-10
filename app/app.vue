@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useUser } from '~/composables/useUser.js';
+import { useUser } from '~/composables/useUser';
 
 
 const { isAdmin } = useUser();
