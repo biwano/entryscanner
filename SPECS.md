@@ -67,6 +67,7 @@ This page provides a comprehensive view of all active assets being tracked by th
 - **Historical Price Chart**: Interactive price chart showing historical data (using candles from `info.candles`). The system displays exactly **400 candles** regardless of the timeframe (Daily or Weekly) to ensure a consistent view. Users can switch between **Daily (D1)** and **Weekly (W1)** timeframes by clicking the corresponding trend status badges. The chart displays two simple moving averages:
   - **SMA 50**: Used for trend flip triggers and primary visualization.
   - **SMA 200**: Provided for additional technical context.
+- **Trend Visual Markers**: The price chart displays vertical markers for all trend flips (SMA 50 crossover) that occurred within the displayed 400 candles. Bullish flips are marked with a success color (green), and bearish flips with an error color (red).
 - **Trend Details**: Detailed breakdown of the current trend status and duration (using the `since` column from the `events` table).
 - **Asset Statistics**: Display key metrics such as 24h volume, open interest, and funding rate (from `info.metaAndAssetCtxs`).
 

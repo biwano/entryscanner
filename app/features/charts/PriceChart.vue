@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { calculateSMA } from "#shared/trends.js";
+import { calculateSMA, determineTrend } from "#shared/trends.js";
 import { SMA_PERIOD_FAST, SMA_PERIOD_SLOW } from "#shared/constants.js";
 import type { HyperliquidCandle } from "#shared/types.js";
 
@@ -8,7 +8,7 @@ const props = withDefaults(
   defineProps<{
     coin: string;
     candles: HyperliquidCandle[];
-    timeframe?: string;
+    timeframe: "D1" | "W1";
   }>(),
   {
     timeframe: "D1",
@@ -26,6 +26,13 @@ const sma200 = computed(() => {
   const closePrices = props.candles.map((c) => parseFloat(c.c));
   return calculateSMA(closePrices, SMA_PERIOD_SLOW);
 });
+
+const trendAnalysis = computed(() => {
+  if (!props.candles || props.candles.length === 0) return null;
+  return determineTrend(props.coin, props.timeframe, props.candles);
+});
+
+const flips = computed(() => trendAnalysis.value?.flips || []);
 </script>
 
 <template>
@@ -51,6 +58,8 @@ const sma200 = computed(() => {
       :coin="coin"
       :sma50="sma50"
       :sma200="sma200"
+      :flips="flips"
+      :current-status="trendAnalysis?.status"
     />
   </UCard>
 </template>

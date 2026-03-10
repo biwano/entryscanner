@@ -7,13 +7,14 @@ import {
   TooltipComponent,
   LegendComponent,
   DataZoomComponent,
-  MarkLineComponent,
+  MarkPointComponent,
+  MarkAreaComponent,
   VisualMapComponent,
 } from "echarts/components.js";
 import VChart from "vue-echarts";
 import dayjs from "dayjs";
 
-import type { HyperliquidCandle } from "#shared/types.js";
+import type { HyperliquidCandle, TrendFlip } from "#shared/types.js";
 
 use([
   CanvasRenderer,
@@ -24,7 +25,8 @@ use([
   TooltipComponent,
   LegendComponent,
   DataZoomComponent,
-  MarkLineComponent,
+  MarkPointComponent,
+  MarkAreaComponent,
   VisualMapComponent,
 ]);
 
@@ -33,6 +35,8 @@ const props = defineProps<{
   coin: string;
   sma50?: number[];
   sma200?: number[];
+  flips?: TrendFlip[];
+  currentStatus?: "bullish" | "bearish";
 }>();
 
 const option = computed(() => {
@@ -46,6 +50,137 @@ const option = computed(() => {
     parseFloat(c.h),
   ]);
   const volumes = props.candles.map((c) => parseFloat(c.v));
+
+  const duration = props.candles[0]?.i === "1w" ? "week" : "day";
+
+  const markAreaData: any[] = [];
+  if (props.flips && props.flips.length > 0) {
+    // Initial trend before the first flip
+    const firstFlip = props.flips[0]!;
+    const initialStatus = firstFlip.status === "bullish" ? "bearish" : "bullish";
+    const firstFlipDate = dayjs(firstFlip.timestamp)
+      .subtract(1, duration)
+      .format("YYYY-MM-DD");
+
+    markAreaData.push([
+      {
+        xAxis: dates[0],
+        itemStyle: {
+          color:
+            initialStatus === "bullish"
+              ? "rgba(16, 185, 129, 0.2)"
+              : "rgba(239, 68, 68, 0.2)",
+        },
+      },
+      { xAxis: firstFlipDate },
+    ]);
+
+    // Trend between flips
+    for (let i = 0; i < props.flips.length - 1; i++) {
+      const currentFlip = props.flips[i]!;
+      const nextFlip = props.flips[i + 1]!;
+      const startDate = dayjs(currentFlip.timestamp)
+        .subtract(1, duration)
+        .format("YYYY-MM-DD");
+      const endDate = dayjs(nextFlip.timestamp)
+        .subtract(1, duration)
+        .format("YYYY-MM-DD");
+
+      markAreaData.push([
+        {
+          xAxis: startDate,
+          itemStyle: {
+            color:
+              currentFlip.status === "bullish"
+                ? "rgba(16, 185, 129, 0.2)"
+                : "rgba(239, 68, 68, 0.2)",
+          },
+        },
+        { xAxis: endDate },
+      ]);
+    }
+
+    // Final trend from last flip to today
+    const lastFlip = props.flips[props.flips.length - 1]!;
+    const lastFlipDate = dayjs(lastFlip.timestamp)
+      .subtract(1, duration)
+      .format("YYYY-MM-DD");
+
+    markAreaData.push([
+      {
+        xAxis: lastFlipDate,
+        itemStyle: {
+          color:
+            lastFlip.status === "bullish"
+              ? "rgba(16, 185, 129, 0.2)"
+              : "rgba(239, 68, 68, 0.2)",
+        },
+      },
+      { xAxis: dates[dates.length - 1] },
+    ]);
+  } else if (props.currentStatus) {
+    // No flips in the period, just color the whole background
+    markAreaData.push([
+      {
+        xAxis: dates[0],
+        itemStyle: {
+          color:
+            props.currentStatus === "bullish"
+              ? "rgba(16, 185, 129, 0.2)"
+              : "rgba(239, 68, 68, 0.2)",
+        },
+      },
+      { xAxis: dates[dates.length - 1] },
+    ]);
+  }
+
+  const markPointData = props.flips?.map((flip) => {
+    // The flip timestamp is the start of the next candle after the flip.
+    // To mark the candle that triggered the flip, we subtract one timeframe period.
+    const candleDate = dayjs(flip.timestamp)
+      .subtract(1, duration)
+      .format("YYYY-MM-DD");
+
+    // Find the candle corresponding to this date to position the tag
+    const candleIdx = dates.findIndex((d) => d === candleDate);
+    const candle = props.candles[candleIdx];
+
+    const isBullish = flip.status === "bullish";
+
+    if (!candle) {
+      return {
+        coord: [candleDate, 0],
+        symbol: "none",
+      };
+    }
+
+    const price = isBullish ? parseFloat(candle.l) : parseFloat(candle.h);
+
+    return {
+      name: flip.status,
+      coord: [candleDate, price],
+      value: isBullish ? "BULL" : "BEAR",
+      symbol: "circle",
+      symbolSize: 6,
+      itemStyle: {
+        color: isBullish ? "#10b981" : "#ef4444",
+      },
+      label: {
+        show: true,
+        position: isBullish ? "bottom" : "top",
+        color: isBullish ? "#10b981" : "#ef4444",
+        fontSize: 10,
+        fontWeight: "bold",
+        formatter: isBullish ? "BULL" : "BEAR",
+        backgroundColor: "rgba(0, 0, 0, 0.7)",
+        padding: [2, 4],
+        borderRadius: 4,
+        borderColor: isBullish ? "#10b981" : "#ef4444",
+        borderWidth: 1,
+        distance: 10,
+      },
+    };
+  });
 
   return {
     tooltip: {
@@ -110,6 +245,13 @@ const option = computed(() => {
           color0: "#ef4444",
           borderColor: "#10b981",
           borderColor0: "#ef4444",
+        },
+        markPoint: {
+          data: (markPointData as any) || [],
+        },
+        markArea: {
+          data: markAreaData,
+          silent: true,
         },
       },
       {

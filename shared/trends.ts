@@ -1,6 +1,5 @@
 import { SMA } from "technicalindicators";
-import type { Timeframe, HyperliquidCandle } from "./types.js";
-import type { Trend } from "~/types/database.friendly.types.js";
+import type { Timeframe, HyperliquidCandle, TrendAnalysis, TrendFlip } from "./types.js";
 import { CANDLE_COUNT, SMA_PERIOD_FAST } from "./constants.js";
 import dayjs from "dayjs";
 
@@ -31,7 +30,7 @@ export function determineTrend(
   coin: string,
   timeframe: Timeframe,
   candles: HyperliquidCandle[] // From InfoClient.candleSnapshot
-): Pick<Trend, "coin" | "timeframe" | "status" | "timestamp"> | null {
+): TrendAnalysis | null {
   if (candles.length === 0) {
     return null;
   }
@@ -45,39 +44,57 @@ export function determineTrend(
       timeframe,
       status: "bearish",
       timestamp: dayjs(candles[0]!.t).toISOString(),
+      flips: [],
     };
+  }
+
+  const flips: TrendFlip[] = [];
+  let currentStatus: "bullish" | "bearish" | null = null;
+  const duration = timeframe === "D1" ? "day" : "week";
+
+  // Traverse from earliest to latest to find all flips
+  for (let i = 0; i < closePrices.length; i++) {
+    const price = closePrices[i]!;
+    const sma = smas[i]!;
+    const status = price > sma ? "bullish" : "bearish";
+
+    if (currentStatus === null) {
+      currentStatus = status;
+      // We don't necessarily count the first candle as a "flip"
+      // but we need to know where the initial trend starts
+      continue;
+    }
+
+    if (status !== currentStatus) {
+      // Trend flipped!
+      currentStatus = status;
+      const flipTimestamp = dayjs(candles[i]!.t).add(1, duration).toISOString();
+      flips.push({
+        status,
+        timestamp: flipTimestamp,
+      });
+    }
   }
 
   const lastClose = closePrices[closePrices.length - 1]!;
   const lastSma = smas[smas.length - 1]!;
+  const finalStatus = lastClose > lastSma ? "bullish" : "bearish";
 
-  const status = lastClose > lastSma ? "bullish" : "bearish";
-
-  // Find when the trend flipped
-  // With padding, smas[i] corresponds directly to candles[i]
-  let flipCandleTime = candles[candles.length - 1]!.t;
-  for (let i = closePrices.length - 1; i >= 0; i--) {
-    const currentPrice = closePrices[i]!;
-    const currentSma = smas[i]!;
-
-    const currentStatus = currentPrice > currentSma ? "bullish" : "bearish";
-
-    if (currentStatus === status) {
-      flipCandleTime = candles[i]!.t;
-    } else {
-      break;
-    }
+  // Find the latest flip timestamp for backwards compatibility
+  let latestFlipTimestamp = candles[0] ? dayjs(candles[0].t).toISOString() : dayjs().toISOString();
+  if (flips.length > 0) {
+    latestFlipTimestamp = flips[flips.length - 1]!.timestamp;
+  } else {
+    // If no flips found, the trend started at the beginning of the candles
+    latestFlipTimestamp = dayjs(candles[0]!.t).add(1, duration).toISOString();
   }
-
-  // Use the close time of the flip candle as the trend start timestamp
-  const duration = timeframe === "D1" ? "day" : "week";
-  const timestamp = dayjs(flipCandleTime).add(1, duration).toISOString();
 
   return {
     coin,
     timeframe,
-    status,
-    timestamp,
+    status: finalStatus,
+    timestamp: latestFlipTimestamp,
+    flips,
   };
 }
 

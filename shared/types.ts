@@ -22,6 +22,19 @@ export interface HyperliquidCandle {
 
 export type Timeframe = "D1" | "W1";
 
+export interface TrendFlip {
+  status: "bullish" | "bearish";
+  timestamp: string;
+}
+
+export interface TrendAnalysis {
+  coin: string;
+  timeframe: Timeframe;
+  status: "bullish" | "bearish";
+  timestamp: string; // The closing time of the candle where the current trend flipped
+  flips: TrendFlip[];
+}
+
 export interface AssetMeta {
   name: string;
   szDecimals: number;
