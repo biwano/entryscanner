@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "nuxt build",
-    "dev": "nuxt dev --host",
+    "dev": "nuxt dev --port 3100 --host",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "db:codegen": "supabase gen types --linked > app/types/database.types.ts",

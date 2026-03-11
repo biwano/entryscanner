@@ -4,12 +4,18 @@ import type { TrendStatus } from "~~shared/types";
 import { TREND_BULLISH, TREND_BEARISH } from "~~shared/constants";
 import { formatPercentChange } from "~/utils/format";
 
-const props = defineProps<{
-  status?: TrendStatus;
-  since?: string | null;
-  priceAtFlip?: number | null;
-  currentPrice?: string | number | null;
-}>();
+const props = withDefaults(
+  defineProps<{
+    status?: TrendStatus;
+    since?: string | null;
+    priceAtFlip?: number | null;
+    currentPrice?: string | number | null;
+    showPercentChange?: boolean;
+  }>(),
+  {
+    showPercentChange: true,
+  }
+);
 
 const percentChange = computed(() => {
   if (!props.priceAtFlip || !props.currentPrice) return null;
@@ -46,7 +52,10 @@ const percentChange = computed(() => {
       </span>
     </div>
 
-    <div v-if="since || percentChange" class="flex items-center gap-1">
+    <div
+      v-if="since || (percentChange && showPercentChange)"
+      class="flex items-center gap-1"
+    >
       <span
         v-if="since"
         class="text-[10px] text-gray-500 font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded border border-gray-200 dark:border-gray-700"
@@ -54,7 +63,7 @@ const percentChange = computed(() => {
         <RelativeTime :timestamp="since" />
       </span>
       <span
-        v-if="percentChange"
+        v-if="percentChange && showPercentChange"
         :class="
           percentChange.startsWith('+')
             ? 'text-green-600 dark:text-green-400'

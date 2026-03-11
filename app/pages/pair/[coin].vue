@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import { useRoute } from "vue-router";
-import { useAsyncData } from "#app";
+import { useAsyncData, navigateTo } from "#app";
 import { useSupabaseClient } from "#imports";
 import { useHyperliquid } from "~/composables/useHyperliquid";
 import type { MonitoredPairWithTrends } from "~/types/database.friendly.types";
@@ -26,7 +26,17 @@ const startTimeW1 = calculateStartTime("W1", CANDLE_COUNT);
 const { data: candlesD1 } = useCandles(coin, "1d", startTimeD1);
 const { data: candlesW1 } = useCandles(coin, "1w", startTimeW1);
 
-const timeframe = ref<"1d" | "1w">("1d");
+const queryTimeframe = route.query.timeframe as string;
+const timeframe = ref<"1d" | "1w">(queryTimeframe === "1w" ? "1w" : "1d");
+
+// Watch for timeframe changes to update the URL
+watch(timeframe, (newVal) => {
+  navigateTo({
+    path: route.path,
+    query: { ...route.query, timeframe: newVal },
+  }, { replace: true });
+});
+
 const selectedCandles = computed(
   () => (timeframe.value === "1d" ? candlesD1.value : candlesW1.value) || []
 );

@@ -5,8 +5,9 @@ import type { Database } from "~/types/database.types";
 import type {
   MonitoredPairWithTrends,
   UserSubscription,
-} from "~/types/database.friendly.types.js";
+} from "~/types/database.friendly.types";
 import dayjs from "dayjs";
+import { calculatePercentChange } from "~/utils/format";
 import TableHeader from "./TableHeader.vue";
 import TableBody from "./TableBody.vue";
 import TableSkeleton from "./TableSkeleton.vue";
@@ -58,9 +59,33 @@ const columns = [
     enableSorting: true,
   },
   {
+    id: "daily_change",
+    accessorFn: (row: MonitoredPairWithTrends) =>
+      row.last_trend_flip_daily
+        ? calculatePercentChange(
+            getPrice(props.allMids, row.coin),
+            row.last_trend_flip_daily.price_at_flip || 0
+          )
+        : 0,
+    header: "Daily Change %",
+    enableSorting: true,
+  },
+  {
     id: "weekly",
     accessorKey: "last_trend_flip_weekly",
     header: "Weekly (W1)",
+    enableSorting: true,
+  },
+  {
+    id: "weekly_change",
+    accessorFn: (row: MonitoredPairWithTrends) =>
+      row.last_trend_flip_weekly
+        ? calculatePercentChange(
+            getPrice(props.allMids, row.coin),
+            row.last_trend_flip_weekly.price_at_flip || 0
+          )
+        : 0,
+    header: "Weekly Change %",
     enableSorting: true,
   },
   {
@@ -119,9 +144,37 @@ const sortedPairs = computed(() => {
         valA = dayjs(a.last_trend_flip_daily?.since || 0).valueOf();
         valB = dayjs(b.last_trend_flip_daily?.since || 0).valueOf();
         break;
+      case "daily_change":
+        valA = a.last_trend_flip_daily
+          ? calculatePercentChange(
+              getPrice(props.allMids, a.coin),
+              a.last_trend_flip_daily.price_at_flip || 0
+            )
+          : 0;
+        valB = b.last_trend_flip_daily
+          ? calculatePercentChange(
+              getPrice(props.allMids, b.coin),
+              b.last_trend_flip_daily.price_at_flip || 0
+            )
+          : 0;
+        break;
       case "weekly":
         valA = dayjs(a.last_trend_flip_weekly?.since || 0).valueOf();
         valB = dayjs(b.last_trend_flip_weekly?.since || 0).valueOf();
+        break;
+      case "weekly_change":
+        valA = a.last_trend_flip_weekly
+          ? calculatePercentChange(
+              getPrice(props.allMids, a.coin),
+              a.last_trend_flip_weekly.price_at_flip || 0
+            )
+          : 0;
+        valB = b.last_trend_flip_weekly
+          ? calculatePercentChange(
+              getPrice(props.allMids, b.coin),
+              b.last_trend_flip_weekly.price_at_flip || 0
+            )
+          : 0;
         break;
       case "last_analyzed":
         valA = dayjs(a.last_analyzed || 0).valueOf();

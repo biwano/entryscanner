@@ -45,8 +45,10 @@ This page provides a comprehensive view of all active assets being tracked by th
 - **Monitored Pairs View**: Display all system-wide monitored pairs (where `active` is `true`) with their current trend status. The table (implemented using `UTable`) includes the following columns:
   - **Asset**: The name of the perpetual pair (e.g., BTC, ETH).
   - **Price**: Current live-polled price for the asset.
-  - **Daily (D1)**: Bullish/Bearish status, duration for the daily timeframe, and the **% price change since the trend started**.
-  - **Weekly (W1)**: Bullish/Bearish status, duration for the weekly timeframe, and the **% price change since the trend started**.
+  - **Daily (D1)**: Bullish/Bearish status and duration for the daily timeframe.
+  - **Daily Change %**: The **% price change since the daily trend started**. This column is sortable.
+  - **Weekly (W1)**: Bullish/Bearish status and duration for the weekly timeframe.
+  - **Weekly Change %**: The **% price change since the weekly trend started**. This column is sortable.
   - **Last Analyzed**: Relative time since the pair was last processed by the trend worker.
   - **Action**: Options to toggle subscriptions and navigate to detailed analysis.
 - **Filtering**: A search input allows users to filter the list of monitored pairs by their name (e.g., searching for "ETH" will show all pairs containing "ETH"). This filter works in conjunction with sorting and pagination.
@@ -58,12 +60,13 @@ This page provides a comprehensive view of all active assets being tracked by th
   - **Trend Duration**: Show since when the pair turned bullish or bearish (using the `since` column from the `events` table).
   - **Sorting**: Users can change the table sort order by clicking on the column headers. The table supports sorting by any column in both ascending and descending order. By default, pairs are sorted by how long they have been in their current trend (most recent changes first, based on `events.since`). The user's preferred sort configuration is saved in the browser's local storage and persists across page reloads.
 - **Pagination & Stats**: The table includes pagination (10 items per page). The total number of monitored pairs is displayed near the pagination controls for quick reference.
-- **Navigation**: Click on any pair to open the **Pair Analysis** view.
+- **Navigation**: Click on any pair to open the **Pair Analysis** view. Clicking on **Daily (D1)** or **Daily Change %** columns navigates to the pair analysis with the **Daily** timeframe selected. Clicking on **Weekly (W1)** or **Weekly Change %** columns navigates to the pair analysis with the **Weekly** timeframe selected.
 - **Price Ticker**: Display live-polled prices for all active perpetual assets on Hyperliquid.
 - **Manage Assets**: Link to the **Asset Management** settings to add or remove monitored pairs.
 
 #### 3.1.2. Pair Analysis
 
+- **Navigation**: Supports deep linking via a `timeframe` query parameter (e.g., `?timeframe=1d` or `?timeframe=1w`) to set the initial view.
 - **Header Section**: Displays the asset name (with icon), current live price, and a title that includes the **% price change since the current trend started** for daily and weekly timeframes.
 - **Historical Price Chart**: Interactive price chart showing historical data (using candles from `info.candles`). The system displays exactly **400 candles** regardless of the timeframe (Daily or Weekly) to ensure a consistent view. Users can switch between **Daily (D1)** and **Weekly (W1)** timeframes by clicking the corresponding trend status badges. The chart displays two simple moving averages:
   - **SMA 50**: Used for trend flip triggers and primary visualization.

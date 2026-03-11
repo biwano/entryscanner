@@ -3,8 +3,13 @@ import { computed } from "vue";
 import type {
   MonitoredPairWithTrends,
   UserSubscription,
-} from "~/types/database.friendly.types.js";
+} from "~/types/database.friendly.types";
 import type { TrendStatus } from "~~shared/types";
+import {
+  formatPrice,
+  formatPercentChange,
+  calculatePercentChange,
+} from "~/utils/format";
 import SubscriptionToggle from "../../subscriptions/SubscriptionToggle.vue";
 
 const props = defineProps<{
@@ -52,6 +57,31 @@ const getStatus = (
   if (!event) return undefined;
   return event.status as TrendStatus;
 };
+
+const formatChangeValue = (
+  coin: string,
+  event?: MonitoredPairWithTrends["last_trend_flip_daily"]
+) => {
+  if (!event || !event.price_at_flip) return "0.00%";
+  return formatPercentChange(
+    getPrice(props.allMids, coin),
+    event.price_at_flip
+  );
+};
+
+const getChangeColorClass = (
+  coin: string,
+  event?: MonitoredPairWithTrends["last_trend_flip_daily"]
+) => {
+  if (!event || !event.price_at_flip) return "text-gray-400";
+  const change = calculatePercentChange(
+    getPrice(props.allMids, coin),
+    event.price_at_flip
+  );
+  return change >= 0
+    ? "text-green-600 dark:text-green-400"
+    : "text-red-600 dark:text-red-400";
+};
 </script>
 
 <template>
@@ -74,8 +104,16 @@ const getStatus = (
         <TableSortButton :column="column" label="Daily (D1)" />
       </template>
 
+      <template #daily_change-header="{ column }">
+        <TableSortButton :column="column" label="" />
+      </template>
+
       <template #weekly-header="{ column }">
         <TableSortButton :column="column" label="Weekly (W1)" />
+      </template>
+
+      <template #weekly_change-header="{ column }">
+        <TableSortButton :column="column" label="" />
       </template>
 
       <template #last_analyzed-header="{ column }">
@@ -83,7 +121,9 @@ const getStatus = (
       </template>
 
       <template #coin-cell="{ row }">
-        <CoinDisplay :coin="row.original.coin" />
+        <NuxtLink :to="`/pair/${row.original.coin}`" class="block">
+          <CoinDisplay :coin="row.original.coin" class="hover:underline cursor-pointer" />
+        </NuxtLink>
       </template>
 
       <template #price-cell="{ row }">
@@ -93,21 +133,71 @@ const getStatus = (
       </template>
 
       <template #daily-cell="{ row }">
-        <TrendIndicator
-          :status="getStatus(row.original.last_trend_flip_daily)"
-          :since="row.original.last_trend_flip_daily?.since || undefined"
-          :price-at-flip="row.original.last_trend_flip_daily?.price_at_flip"
-          :current-price="getPrice(allMids, row.original.coin)"
-        />
+        <NuxtLink :to="`/pair/${row.original.coin}?timeframe=1d`" class="block">
+          <TrendIndicator
+            :status="getStatus(row.original.last_trend_flip_daily)"
+            :since="row.original.last_trend_flip_daily?.since || undefined"
+            :price-at-flip="row.original.last_trend_flip_daily?.price_at_flip"
+            :current-price="getPrice(allMids, row.original.coin)"
+            :show-percent-change="false"
+            class="hover:underline cursor-pointer"
+          />
+        </NuxtLink>
+      </template>
+
+      <template #daily_change-cell="{ row }">
+        <NuxtLink :to="`/pair/${row.original.coin}?timeframe=1d`" class="block">
+          <span
+            class="font-mono text-xs hover:underline cursor-pointer"
+            :class="
+              getChangeColorClass(
+                row.original.coin,
+                row.original.last_trend_flip_daily
+              )
+            "
+          >
+            {{
+              formatChangeValue(
+                row.original.coin,
+                row.original.last_trend_flip_daily
+              )
+            }}
+          </span>
+        </NuxtLink>
       </template>
 
       <template #weekly-cell="{ row }">
-        <TrendIndicator
-          :status="getStatus(row.original.last_trend_flip_weekly)"
-          :since="row.original.last_trend_flip_weekly?.since || undefined"
-          :price-at-flip="row.original.last_trend_flip_weekly?.price_at_flip"
-          :current-price="getPrice(allMids, row.original.coin)"
-        />
+        <NuxtLink :to="`/pair/${row.original.coin}?timeframe=1w`" class="block">
+          <TrendIndicator
+            :status="getStatus(row.original.last_trend_flip_weekly)"
+            :since="row.original.last_trend_flip_weekly?.since || undefined"
+            :price-at-flip="row.original.last_trend_flip_weekly?.price_at_flip"
+            :current-price="getPrice(allMids, row.original.coin)"
+            :show-percent-change="false"
+            class="hover:underline cursor-pointer"
+          />
+        </NuxtLink>
+      </template>
+
+      <template #weekly_change-cell="{ row }">
+        <NuxtLink :to="`/pair/${row.original.coin}?timeframe=1w`" class="block">
+          <span
+            class="font-mono text-xs hover:underline cursor-pointer"
+            :class="
+              getChangeColorClass(
+                row.original.coin,
+                row.original.last_trend_flip_weekly
+              )
+            "
+          >
+            {{
+              formatChangeValue(
+                row.original.coin,
+                row.original.last_trend_flip_weekly
+              )
+            }}
+          </span>
+        </NuxtLink>
       </template>
 
       <template #last_analyzed-cell="{ row }">
@@ -145,12 +235,12 @@ const getStatus = (
       class="flex items-center justify-between border-t border-gray-200 dark:border-gray-800 py-3 px-4"
     >
       <div class="text-sm text-gray-400">
-        <span v-if="totalMonitored !== undefined && totalItems !== totalMonitored">
+        <span
+          v-if="totalMonitored !== undefined && totalItems !== totalMonitored"
+        >
           Found {{ totalItems }} / {{ totalMonitored }} monitored pairs
         </span>
-        <span v-else>
-          {{ totalItems }} pairs monitored
-        </span>
+        <span v-else> {{ totalItems }} pairs monitored </span>
       </div>
       <UPagination
         v-if="totalItems > itemsPerPage"

@@ -24,3 +24,14 @@ export const formatPercentChange = (
   const sign = change >= 0 ? "+" : "";
   return `${sign}${change.toFixed(2)}%`;
 };
+
+export const calculatePercentChange = (
+  current: string | number,
+  base: string | number
+): number => {
+  const cur = Number(current);
+  const b = Number(base);
+  if (!b || isNaN(cur) || isNaN(b)) return 0;
+
+  return ((cur - b) / b) * 100;
+};
