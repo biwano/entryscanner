@@ -121,34 +121,36 @@ const getChangeColorClass = (
       </template>
 
       <template #coin-cell="{ row }">
-        <NuxtLink :to="`/pair/${row.original.coin}`" class="block">
-          <CoinDisplay :coin="row.original.coin" class="hover:underline cursor-pointer" />
-        </NuxtLink>
+        <TableLink :to="`/pair/${row.original.coin}`">
+          <CoinDisplay
+            :coin="row.original.coin"
+            class="group-hover:text-primary transition-colors"
+          />
+        </TableLink>
       </template>
 
       <template #price-cell="{ row }">
-        <span class="font-mono text-sm">
+        <span class="font-mono text-sm px-1">
           {{ formatPrice(getPrice(allMids, row.original.coin)) }}
         </span>
       </template>
 
       <template #daily-cell="{ row }">
-        <NuxtLink :to="`/pair/${row.original.coin}?timeframe=1d`" class="block">
+        <TableLink :to="`/pair/${row.original.coin}?timeframe=1d`" block>
           <TrendIndicator
             :status="getStatus(row.original.last_trend_flip_daily)"
             :since="row.original.last_trend_flip_daily?.since || undefined"
             :price-at-flip="row.original.last_trend_flip_daily?.price_at_flip"
             :current-price="getPrice(allMids, row.original.coin)"
             :show-percent-change="false"
-            class="hover:underline cursor-pointer"
           />
-        </NuxtLink>
+        </TableLink>
       </template>
 
       <template #daily_change-cell="{ row }">
-        <NuxtLink :to="`/pair/${row.original.coin}?timeframe=1d`" class="block">
+        <TableLink :to="`/pair/${row.original.coin}?timeframe=1d`" block>
           <span
-            class="font-mono text-xs hover:underline cursor-pointer"
+            class="font-mono text-xs group-hover:text-primary transition-colors"
             :class="
               getChangeColorClass(
                 row.original.coin,
@@ -163,26 +165,25 @@ const getChangeColorClass = (
               )
             }}
           </span>
-        </NuxtLink>
+        </TableLink>
       </template>
 
       <template #weekly-cell="{ row }">
-        <NuxtLink :to="`/pair/${row.original.coin}?timeframe=1w`" class="block">
+        <TableLink :to="`/pair/${row.original.coin}?timeframe=1w`" block>
           <TrendIndicator
             :status="getStatus(row.original.last_trend_flip_weekly)"
             :since="row.original.last_trend_flip_weekly?.since || undefined"
             :price-at-flip="row.original.last_trend_flip_weekly?.price_at_flip"
             :current-price="getPrice(allMids, row.original.coin)"
             :show-percent-change="false"
-            class="hover:underline cursor-pointer"
           />
-        </NuxtLink>
+        </TableLink>
       </template>
 
       <template #weekly_change-cell="{ row }">
-        <NuxtLink :to="`/pair/${row.original.coin}?timeframe=1w`" class="block">
+        <TableLink :to="`/pair/${row.original.coin}?timeframe=1w`" block>
           <span
-            class="font-mono text-xs hover:underline cursor-pointer"
+            class="font-mono text-xs group-hover:text-primary transition-colors"
             :class="
               getChangeColorClass(
                 row.original.coin,
@@ -197,7 +198,7 @@ const getChangeColorClass = (
               )
             }}
           </span>
-        </NuxtLink>
+        </TableLink>
       </template>
 
       <template #last_analyzed-cell="{ row }">
