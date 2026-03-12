@@ -4,6 +4,7 @@ import { usePortfolio } from "~/composables/usePortfolio";
 import { formatPrice } from "~/utils/format";
 import { useRouter } from "vue-router";
 import DashboardPortfolio from "~/features/portfolio/DashboardPortfolio.vue";
+import TraderStatus from "~/features/trading/TraderStatus.vue";
 
 const {
   address,
@@ -69,6 +70,8 @@ useHead({
             Refresh Data
           </UButton>
         </div>
+
+        <TraderStatus />
 
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
           <UCard class="bg-primary/5 border-primary/20">

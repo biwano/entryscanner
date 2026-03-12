@@ -73,6 +73,12 @@ This page provides a comprehensive view of all active assets being tracked by th
 
 - **Navigation**: Supports deep linking via a `timeframe` query parameter (e.g., `?timeframe=1d` or `?timeframe=1w`) to set the initial view.
 - **Header Section**: Displays the asset name (with icon), current live price, and a title that includes the **% price change since the current trend started** for daily and weekly timeframes.
+- **Trading Controls**: If the user has a valid Hyperliquid API key configured, and has no open position for the current coin, display trading controls:
+  - **Directional Buttons**: "Buy" or "Sell" buttons. The default recommendation (visual emphasis) is based on whether the current timeframe trend is bullish (Buy) or bearish (Sell).
+  - **Take Profit Price Input**: An optional numerical input field for the `take_profit_price`.
+  - **Take Profit % Input**: A numerical input field for the `take_profit_pct` (default: **50**).
+  - **Stop Loss % Input**: A numerical input field for the `stop_loss_pct` (default: **10**).
+  - **Action**: Clicking "Buy" or "Sell" validates the inputs, automatically calculates the **Notional Size** (Available Capital \* 10), creates or updates a record in the `user_trades` table (setting status to `requested`), and triggers the **Trader Hook**.
 - **Historical Price Chart**: Interactive price chart showing historical data (using candles from `info.candles`). The system displays exactly **400 candles** regardless of the timeframe (Daily or Weekly) to ensure a consistent view. Users can switch between **Daily (D1)** and **Weekly (W1)** timeframes by clicking the corresponding trend status badges. The chart displays two simple moving averages:
   - **SMA 50**: Used for trend flip triggers and primary visualization.
   - **SMA 200**: Provided for additional technical context.
@@ -112,6 +118,9 @@ This page provides a comprehensive view of all active assets being tracked by th
 A dedicated view for managing personal Hyperliquid assets, accessible via the main navigation only if the user has a valid Hyperliquid API key configured.
 
 - **Access Restriction**: This page is hidden in the main navigation and restricted via a redirect if the user has not entered their Hyperliquid API key in the Profile Settings. If an API key is present but a wallet address is missing, a message is displayed to the user.
+- **Trader Status & Logs**: If the user has an active trade (status is not `sleeping` in `user_trades`), display:
+  - **Current Status**: The status from the `user_trades` table.
+  - **Activity Logs**: A scrollable log of recent activities from the **Trader Hook** (persisted in `localStorage`).
 - **Account Performance**: Overview of the total account value, equity, and maintenance margin.
 - **Detailed Asset Breakdown**:
   - **Open Positions**: Comprehensive table of all active perpetual positions with real-time PnL calculation.
@@ -157,9 +166,40 @@ All server-side workers (Trend Worker, Notification Dispatcher) can be triggered
       - For each row, it sends the notification to the user's configured Discord webhook.
       - Upon successful (or attempted) delivery, it updates `sent_at` to the current timestamp.
 
-### 3.3. Shared Features
+### 3.3. Client-Side Hooks & Logic
 
-#### 3.3.1. Hyperliquid Integration Library
+#### 3.3.1. Trader Hook (Client-Side)
+
+- **Execution**: Runs every minute while the application is open, or when triggered by a UI action.
+- **State Management**: The hook provides the handlers with all necessary real-time market data (Meta, Prices) and account states (Clearinghouse, Positions) via the context. Handlers do not fetch these states independently.
+- **Modular Logic**: The logic for each trade status is decoupled into individual handler files for better maintainability and testability.
+- **Logic Strategy**: Processes records in the `user_trades` table for the authenticated user based on their `status`:
+  - **`requested`** (Handled in `requested.ts`):
+    - Sets leverage to **10x** for the specific coin.
+    - Places a limit order very close to the current market price (calculated using `allMids` from the context).
+    - Updates status to **`entry_set_up`** in Supabase and refreshes the active trade state.
+  - **`entry_set_up`** (Handled in `entrySetUp.ts`):
+    - Checks if the user has an open position for the coin via the account state provided in the context.
+    - If a position is found:
+      - Creates a **Stop Loss** order (set to user-defined `stop_loss_pct` of capital loss).
+      - Creates a **Take Profit** order using the `take_profit_price` stored in the database if available; otherwise, it is calculated based on `take_profit_pct`.
+      - Updates status to **`exit_setup`** in Supabase and refreshes the active trade state.
+  - **`exit_setup`** (Handled in `exitSetup.ts`):
+    - Checks if the position has been closed (using the account state from the context).
+    - If the position is closed, updates status to **`sleeping`** in Supabase and refreshes the active trade state.
+- **Activity Logging**: Maintains a persistent activity log (stored in **`localStorage`**) of all actions, successes, and failures. This ensures logs are preserved across page refreshes and are accessible via the Portfolio page.
+
+#### 3.3.2. Active Trade Hook (Client-Side)
+
+- **Purpose**: Provides a reactive state for the current active trade from the `user_trades` table.
+- **Features**:
+  - **Manual Refresh**: Instead of continuous polling, the hook provides a `refresh` function that should be called after any action that modifies the trade status (e.g., starting a trade or processing a trade step). This ensures the UI remains consistent with the backend state without unnecessary network traffic.
+  - **Trade Management**: Exposes an `updateTrade` function to genericly update a record in the `user_trades` table (e.g., starting a new trade, or changing target prices).
+  - **Shared State**: Uses `useAsyncData` with a consistent key to share the active trade data across multiple components (e.g., `TradingControls`, `TraderStatus`, `PortfolioPage`).
+
+### 3.4. Shared Features
+
+#### 3.4.1. Hyperliquid Integration Library
 
 - **Centralized SDK Wrapper**: A shared library used by both the UI and Server Workers to interact with Hyperliquid via `@nktkas/hyperliquid`.
 - **Class-Based Implementation**: The logic is encapsulated in a `HyperliquidClient` class within `shared/hyperliquid.ts`, providing a clean interface for data fetching and trend computation.
@@ -170,11 +210,12 @@ All server-side workers (Trend Worker, Notification Dispatcher) can be triggered
 - **Data Fetching Utilities**: Standardized methods for fetching prices and market metadata.
 - **Type Safety**: Common TypeScript interfaces and types for Hyperliquid data structures.
 
-#### 3.3.2. UI Formatting Utilities
+#### 3.4.2. UI Formatting Utilities
 
 - **Shared Formatting Logic**: Centralized formatting functions located in `app/utils/format.ts` for consistent UI representation.
 - **Price Formatting**: `formatPrice` handles USD currency formatting for asset prices.
 - **Volume Formatting**: `formatVolume` uses compact notation (e.g., "1.2M") for trading volumes and open interest.
+- **Time Formatting**: `formatTime` handles ISO string to "HH:mm:ss" conversion using `dayjs`.
 
 ## 4. Database Schema (Supabase)
 
@@ -252,6 +293,20 @@ Tables use **Row Level Security (RLS)** to ensure appropriate data access. User-
 - **RLS Policy**: Users can only view notifications triggered for their own account. Only system-level processes can insert.
 - **Note**: This table tracks which events were successfully sent to which users. Metadata like coin and timeframe are found in the referenced `events` table.
 
+### `user_trades`
+
+- `id`: uuid (references auth.users, primary key)
+- `coin`: string (nullable)
+- `take_profit_price`: decimal (nullable)
+- `take_profit_pct`: decimal (default: 50)
+- `stop_loss_pct`: decimal (default: 10)
+- `status`: enum ("requested", "entry_set_up", "exit_setup", "sleeping")
+- `direction`: string ("long", "short", nullable)
+- `created_at`: timestamp
+- `updated_at`: timestamp
+- **RLS Policy**: Users can only read/update their own trade configuration.
+- **Initialization**: Automatically initialized for every new user with status `sleeping` via the `handle_new_user` trigger.
+
 ## 5. System Architecture
 
 1.  **Market Data Layer**: The app uses a shared **Hyperliquid Integration Library** (wrapping `@nktkas/hyperliquid`) to poll for `allMids`, `l2Book`, and `candles` data.
@@ -260,6 +315,8 @@ Tables use **Row Level Security (RLS)** to ensure appropriate data access. User-
     - Calculates bullish/bearish trends on **Daily and Weekly** timeframes.
     - Updates the `trends` table (single row per coin/timeframe) and creates an entry in `events` if a trend flip occurs.
     - **Notification Dispatcher**: A background worker that identifies new `events` for which the user hasn't been notified (based on `created_at` value comparison with last notification) and sends alerts.
+    - **Trader Hook (Client-Side)**: A Nuxt composable that periodically polls for `user_trades` and executes trade actions directly from the browser using the user's API key. Activity logs are persisted in `localStorage`.
+    - **Active Trade Hook (Client-Side)**: A Nuxt composable (`useActiveTrade`) that provides real-time access to the current user's active trade status, including automated polling while a trade is in progress.
 3.  **Server-Side Workers**: Background processes (via Nitro/Server API) that cycle through monitored pairs (Trend Worker) and events (Dispatcher). These workers can be triggered through API endpoints or direct bash commands.
 4.  **Persistence Layer**: Supabase handles all system and user-specific data, ensuring monitored states and alerts remain persistent.
 5.  **Market Integration**: Uses the `InfoClient` for real-time market data retrieval.

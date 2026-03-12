@@ -8,6 +8,7 @@ export type MonitoredPair = Tables<"monitored_pairs">;
 export type Trend = Tables<"trends">;
 export type Event = Tables<"events">;
 export type NotificationHistory = Tables<"notification_history">;
+export type UserTrade = Tables<"user_trades">;
 
 // Insert Types
 export type ProfileInsert = TablesInsert<"profiles">;
@@ -17,6 +18,7 @@ export type MonitoredPairInsert = TablesInsert<"monitored_pairs">;
 export type TrendInsert = TablesInsert<"trends">;
 export type EventInsert = TablesInsert<"events">;
 export type NotificationHistoryInsert = TablesInsert<"notification_history">;
+export type UserTradeInsert = TablesInsert<"user_trades">;
 
 // Update Types
 export type ProfileUpdate = TablesUpdate<"profiles">;
@@ -26,6 +28,7 @@ export type MonitoredPairUpdate = TablesUpdate<"monitored_pairs">;
 export type TrendUpdate = TablesUpdate<"trends">;
 export type EventUpdate = TablesUpdate<"events">;
 export type NotificationHistoryUpdate = TablesUpdate<"notification_history">;
+export type UserTradeUpdate = TablesUpdate<"user_trades">;
 
 // Composite Types for Joins
 

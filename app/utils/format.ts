@@ -1,3 +1,5 @@
+import dayjs from "dayjs";
+
 export const formatPrice = (price: string | number) => {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -39,4 +41,8 @@ export const calculatePercentChange = (
 export const truncateAddress = (address: string) => {
   if (!address) return "";
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
+};
+
+export const formatTime = (isoString: string) => {
+  return dayjs(isoString).format("HH:mm:ss");
 };

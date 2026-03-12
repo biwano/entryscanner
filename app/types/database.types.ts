@@ -270,6 +270,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_trades: {
+        Row: {
+          coin: string | null
+          created_at: string | null
+          direction: string | null
+          id: string
+          status: string
+          stop_loss_pct: number
+          take_profit_pct: number
+          take_profit_price: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          coin?: string | null
+          created_at?: string | null
+          direction?: string | null
+          id: string
+          status?: string
+          stop_loss_pct?: number
+          take_profit_pct?: number
+          take_profit_price?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          coin?: string | null
+          created_at?: string | null
+          direction?: string | null
+          id?: string
+          status?: string
+          stop_loss_pct?: number
+          take_profit_pct?: number
+          take_profit_price?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

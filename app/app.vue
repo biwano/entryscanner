@@ -2,9 +2,17 @@
 import { computed } from "vue";
 import { useUser } from "~/composables/useUser";
 import { usePortfolio } from "~/composables/usePortfolio";
+import { useTraderHook } from "~/composables/useTraderHook";
 
 const { isAdmin } = useUser();
 const { address, wallet } = usePortfolio();
+
+// Initialize the trader hook globally
+const { resume, processTrade } = useTraderHook();
+onMounted(() => {
+  resume();
+  processTrade();
+});
 
 const menuItems = computed(() => {
   const baseItems = [

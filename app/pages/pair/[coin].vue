@@ -12,6 +12,7 @@ import { formatPrice, formatPercentChange } from "~/utils/format";
 import PriceChart from "~/features/charts/PriceChart.vue";
 import AssetStats from "~/features/monitored-pairs/AssetStats.vue";
 import EventHistory from "~/features/monitored-pairs/EventHistory.vue";
+import TradingControls from "~/features/trading/TradingControls.vue";
 
 const route = useRoute();
 const coinParam = route.params.coin;
@@ -28,6 +29,11 @@ const { data: candlesW1 } = useCandles(coin, "1w", startTimeW1);
 
 const queryTimeframe = route.query.timeframe as string;
 const timeframe = ref<"1d" | "1w">(queryTimeframe === "1w" ? "1w" : "1d");
+
+const isBullish = computed(() => {
+  const flip = timeframe.value === '1d' ? pair.value?.last_trend_flip_daily : pair.value?.last_trend_flip_weekly;
+  return flip?.status === TREND_BULLISH;
+});
 
 // Watch for timeframe changes to update the URL
 watch(timeframe, (newVal) => {
@@ -185,6 +191,11 @@ const percentChangeSinceTrendStart = computed(() => {
       </div>
 
       <div class="space-y-6">
+        <TradingControls 
+          :coin="coin" 
+          :is-bullish="isBullish ?? false" 
+        />
+
         <AssetStats
           :coin="coin"
           :asset-ctx="assetCtx"
