@@ -81,6 +81,11 @@ const assetCtx = computed(() => {
 
 const currentPrice = computed(() => allMids.value?.[coin] ?? "0.00");
 
+const backRoute = ref("/");
+if (import.meta.client) {
+  backRoute.value = localStorage.getItem("pair_analysis_source") || "/";
+}
+
 const percentChangeSinceTrendStart = computed(() => {
   if (!pair.value) return null;
   const flipEvent =
@@ -98,7 +103,7 @@ const percentChangeSinceTrendStart = computed(() => {
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-4">
         <UButton
-          to="/"
+          :to="backRoute"
           icon="i-lucide-arrow-left"
           variant="ghost"
           color="neutral"
