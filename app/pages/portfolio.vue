@@ -3,7 +3,7 @@ import { computed, onMounted, watch } from "vue";
 import { usePortfolio } from "~/composables/usePortfolio";
 import { formatPrice } from "~/utils/format";
 import { useRouter } from "vue-router";
-import DashboardPortfolio from "~/features/portfolio/DashboardPortfolio.vue";
+import ActiveTrade from "~/features/portfolio/ActiveTrade.vue";
 import TraderStatus from "~/features/trading/TraderStatus.vue";
 
 const {
@@ -123,7 +123,7 @@ useHead({
           </UCard>
         </div>
 
-        <DashboardPortfolio />
+        <ActiveTrade />
         <TraderStatus />
       </div>
 

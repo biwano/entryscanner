@@ -5,11 +5,6 @@ import { formatPrice } from "~/utils/format";
 
 const { address, clearinghouse, openOrders, isLoading } = usePortfolio();
 
-const accountValue = computed(() => {
-  if (!clearinghouse.value) return 0;
-  return parseFloat(clearinghouse.value.marginSummary.accountValue);
-});
-
 const positions = computed(() => {
   if (!clearinghouse.value) return [];
   return clearinghouse.value.assetPositions
@@ -63,7 +58,7 @@ const orderColumns = [
       <div>
         <h2 class="text-xl font-bold flex items-center gap-2">
           <UIcon name="i-lucide-wallet" class="text-primary" />
-          My Portfolio
+          Active trade
         </h2>
         <div class="flex items-center gap-2">
           <p class="text-sm text-gray-500">
@@ -79,20 +74,6 @@ const orderColumns = [
           >
             Full View
           </UButton>
-        </div>
-      </div>
-      <div class="flex items-center gap-8">
-        <div class="text-right">
-          <div class="text-xs text-gray-500 uppercase tracking-wider font-bold">Account Value</div>
-          <div class="text-xl font-black text-primary">
-            {{ formatPrice(accountValue) }}
-          </div>
-        </div>
-        <div class="text-right">
-          <div class="text-xs text-gray-500 uppercase tracking-wider font-bold">Withdrawable</div>
-          <div class="text-xl font-black text-gray-900 dark:text-white">
-            {{ formatPrice(withdrawable) }}
-          </div>
         </div>
       </div>
     </div>
