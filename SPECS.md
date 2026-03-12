@@ -78,7 +78,8 @@ This page provides a comprehensive view of all active assets being tracked by th
   - **Take Profit Price Input**: An optional numerical input field for the `take_profit_price`.
   - **Take Profit % Input**: A numerical input field for the `take_profit_pct` (default: **50**).
   - **Stop Loss % Input**: A numerical input field for the `stop_loss_pct` (default: **10**).
-  - **Action**: Clicking "Buy" or "Sell" validates the inputs, automatically calculates the **Notional Size** (Available Capital \* 10), creates or updates a record in the `user_trades` table (setting status to `requested`), and triggers the **Trader Hook**.
+  - **Action**: Clicking "Buy" or "Sell" validates the inputs, automatically calculates the **Notional Size** based on the account value and a target leverage (9.5x if the coin supports 10x+, otherwise 95% of the coin's maximum leverage), creates or updates a record in the `user_trades` table (setting status to `requested`), and triggers the **Trader Hook**.
+  - **Max Leverage Display**: The trade form displays the maximum leverage supported by the specific coin for user awareness.
 - **Historical Price Chart**: Interactive price chart showing historical data (using candles from `info.candles`). The system displays exactly **400 candles** regardless of the timeframe (Daily or Weekly) to ensure a consistent view. Users can switch between **Daily (D1)** and **Weekly (W1)** timeframes by clicking the corresponding trend status badges. The chart displays two simple moving averages:
   - **SMA 50**: Used for trend flip triggers and primary visualization.
   - **SMA 200**: Provided for additional technical context.
@@ -175,7 +176,7 @@ All server-side workers (Trend Worker, Notification Dispatcher) can be triggered
 - **Modular Logic**: The logic for each trade status is decoupled into individual handler files for better maintainability and testability.
 - **Logic Strategy**: Processes records in the `user_trades` table for the authenticated user based on their `status`:
   - **`requested`** (Handled in `requested.ts`):
-    - Sets leverage to **10x** for the specific coin.
+    - Sets leverage for the specific coin. If the coin supports 10x leverage, it sets it to **9.5x**. If not, it sets it to **95% of the coin's maximum leverage**.
     - Places a limit order very close to the current market price (calculated using `allMids` from the context).
     - Updates status to **`entry_set_up`** in Supabase and refreshes the active trade state.
   - **`entry_set_up`** (Handled in `entrySetUp.ts`):

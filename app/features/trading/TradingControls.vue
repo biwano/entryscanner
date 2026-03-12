@@ -4,6 +4,7 @@ import { usePortfolio } from "~/composables/usePortfolio";
 import { useSupabaseUser } from "#imports";
 import { useActiveTrade } from "~/composables/useActiveTrade";
 import { useTraderHook } from "~/composables/useTraderHook";
+import { useHyperliquid } from "~/composables/useHyperliquid";
 import { formatPrice } from "~/utils/format";
 
 const props = defineProps<{
@@ -15,13 +16,27 @@ const { wallet, address, clearinghouse } = usePortfolio();
 const { updateTrade } = useActiveTrade();
 const user = useSupabaseUser();
 const { processTrade } = useTraderHook();
+const { useMetaAndAssetCtxs } = useHyperliquid();
+
+const { data: metaAndAssetCtxs } = useMetaAndAssetCtxs();
+
+const maxLeverage = computed(() => {
+  if (!metaAndAssetCtxs.value) return 50;
+  const universe = metaAndAssetCtxs.value[0].universe;
+  const asset = universe.find((u: any) => u.name === props.coin);
+  return asset?.maxLeverage ?? 50;
+});
+
+const targetLeverage = computed(() => {
+  return maxLeverage.value >= 10 ? 9.5 : maxLeverage.value * 0.95;
+});
 
 const accountValue = computed(() => {
   if (!clearinghouse.value) return 0;
   return parseFloat(clearinghouse.value.marginSummary.accountValue);
 });
 
-const estimatedSizeUsd = computed(() => accountValue.value * 10);
+const estimatedSizeUsd = computed(() => accountValue.value * targetLeverage.value);
 
 const hasOpenPosition = computed(() => {
   if (!clearinghouse.value || !address.value) return false;
@@ -69,7 +84,12 @@ const startTrade = async (direction: "long" | "short") => {
     <div
       class="flex items-center justify-between pb-2 border-b border-gray-100 dark:border-gray-800"
     >
-      <h3 class="text-lg font-bold">Automated Trade Request</h3>
+      <div class="flex flex-col">
+        <h3 class="text-lg font-bold">Trade</h3>
+        <span class="text-[10px] text-gray-500 font-mono"
+          >Max: {{ maxLeverage }}x</span
+        >
+      </div>
       <div class="text-xs font-mono font-bold text-primary">
         Est. Size: {{ formatPrice(estimatedSizeUsd) }}
       </div>
@@ -142,9 +162,8 @@ const startTrade = async (direction: "long" | "short") => {
     </div>
 
     <p class="text-[10px] text-gray-400 text-center italic">
-      Trade uses 10x leverage based on your account value ({{
-        formatPrice(accountValue)
-      }}).
+      Trade uses {{ targetLeverage.toFixed(1) }}x leverage based on your account
+      value ({{ formatPrice(accountValue) }}).
     </p>
   </div>
 </template>

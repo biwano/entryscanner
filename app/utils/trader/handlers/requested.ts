@@ -6,7 +6,7 @@ export const handleRequested = async (ctx: TraderContext) => {
     trade,
     exchangeClient,
     supabase,
-    user,
+    userId,
     refresh,
     meta,
     allMids,
@@ -15,6 +15,15 @@ export const handleRequested = async (ctx: TraderContext) => {
 
   if (!trade.coin) {
     throw new Error("No coin specified for trade");
+  }
+
+  if (clearinghouseState.assetPositions.length) {
+    traderStore.addLog(`Position already exists. Skipping trade.`, "info");
+    await supabase
+      .from("user_trades")
+      .update({ status: "sleeping" })
+      .eq("id", userId);
+    await refresh();
   }
 
   traderStore.addLog(`Processing requested trade for ${trade.coin}`, "info");
@@ -27,12 +36,18 @@ export const handleRequested = async (ctx: TraderContext) => {
 
   const assetIndex = meta.universe.indexOf(assetInfo);
 
-  // 1. Set leverage to 10x
-  traderStore.addLog(`Setting 10x leverage for ${trade.coin}`, "info");
+  // 1. Set leverage (9.5x if supported, otherwise 95% of max)
+  const maxLeverage = assetInfo.maxLeverage || 50;
+  const targetLeverage = maxLeverage >= 10 ? 9.5 : maxLeverage * 0.95;
+
+  traderStore.addLog(
+    `Setting ${targetLeverage.toFixed(1)}x leverage for ${trade.coin}`,
+    "info"
+  );
   await exchangeClient.updateLeverage({
     asset: assetIndex,
     isCross: true,
-    leverage: 10,
+    leverage: maxLeverage,
   });
 
   // 2. Place limit order very close to current price
@@ -43,9 +58,11 @@ export const handleRequested = async (ctx: TraderContext) => {
     throw new Error(`Could not get current price for ${trade.coin}`);
   }
 
-  // Calculate size: Account Value * 10
-  const accountValue = parseFloat(clearinghouseState.marginSummary.accountValue);
-  const calculatedSizeUsd = accountValue * 10;
+  // Calculate size: Account Value * targetLeverage
+  const accountValue = parseFloat(
+    clearinghouseState.marginSummary.accountValue
+  );
+  const calculatedSizeUsd = accountValue * targetLeverage;
 
   if (calculatedSizeUsd <= 0) {
     throw new Error("Insufficient capital for trade");
@@ -87,7 +104,7 @@ export const handleRequested = async (ctx: TraderContext) => {
   await supabase
     .from("user_trades")
     .update({ status: "entry_set_up" })
-    .eq("id", user.id);
+    .eq("id", userId);
 
   await refresh();
 

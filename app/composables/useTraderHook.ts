@@ -11,7 +11,7 @@ import { handleExitSetup } from "~/utils/trader/handlers/exitSetup";
 import type { TraderContext } from "~/utils/trader/types";
 
 export const useTraderHook = () => {
-  const user = useSupabaseUser();
+  const userId = useUserId();
   const traderStore = useTraderStore();
   const { wallet, address, clearinghouse, refreshPortfolio } = usePortfolio();
   const { activeTrade, refreshActiveTrade: refresh } = useActiveTrade();
@@ -23,7 +23,7 @@ export const useTraderHook = () => {
 
   const processTrade = async () => {
     if (
-      !user.value ||
+      !userId.value ||
       !wallet.value ||
       !address.value ||
       !clearinghouse.value ||
@@ -50,7 +50,7 @@ export const useTraderHook = () => {
 
       const ctx: TraderContext = {
         supabase: useSupabaseClient(),
-        user: user.value as any,
+        userId: userId.value,
         traderStore,
         hlClient,
         exchangeClient,

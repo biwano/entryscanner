@@ -6,7 +6,7 @@ export const handleEntrySetUp = async (ctx: TraderContext) => {
     trade,
     exchangeClient,
     supabase,
-    user,
+    userId,
     refresh,
     meta,
     clearinghouseState,
@@ -87,7 +87,7 @@ export const handleEntrySetUp = async (ctx: TraderContext) => {
     await supabase
       .from("user_trades")
       .update({ status: "exit_setup" })
-      .eq("id", user.id);
+      .eq("id", userId);
 
     await refresh();
 

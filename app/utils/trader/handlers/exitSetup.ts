@@ -1,7 +1,7 @@
 import type { TraderContext } from "../types";
 
 export const handleExitSetup = async (ctx: TraderContext) => {
-  const { traderStore, trade, supabase, user, refresh, clearinghouseState } =
+  const { traderStore, trade, supabase, userId, refresh, clearinghouseState } =
     ctx;
 
   if (!trade.coin) {
@@ -21,7 +21,7 @@ export const handleExitSetup = async (ctx: TraderContext) => {
     await supabase
       .from("user_trades")
       .update({ status: "sleeping" })
-      .eq("id", user.id);
+      .eq("id", userId);
 
     await refresh();
 

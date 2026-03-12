@@ -9,7 +9,7 @@ import type {
 
 export interface TraderContext {
   supabase: any;
-  user: any;
+  userId: string;
   traderStore: ReturnType<typeof useTraderStore>;
   hlClient: HyperliquidClient;
   exchangeClient: any;

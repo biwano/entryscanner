@@ -71,8 +71,6 @@ useHead({
           </UButton>
         </div>
 
-        <TraderStatus />
-
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
           <UCard class="bg-primary/5 border-primary/20">
             <div
@@ -126,6 +124,7 @@ useHead({
         </div>
 
         <DashboardPortfolio />
+        <TraderStatus />
       </div>
 
       <div
