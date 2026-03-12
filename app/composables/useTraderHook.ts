@@ -14,7 +14,7 @@ export const useTraderHook = () => {
   const userId = useUserId();
   const traderStore = useTraderStore();
   const { wallet, address, clearinghouse, refreshPortfolio } = usePortfolio();
-  const { activeTrade, refreshActiveTrade: refresh } = useActiveTrade();
+  const { activeTrade, refreshActiveTrade } = useActiveTrade();
   const { useAllMids, useMetaAndAssetCtxs } = useHyperliquid();
   const hlClient = new HyperliquidClient();
 
@@ -30,20 +30,16 @@ export const useTraderHook = () => {
       !allMids.value ||
       !metaAndAssetCtxs.value
     ) {
-      traderStore.setMonitoring(false);
       return;
     }
 
     // Refresh the active trade data
-    await refresh();
+    await refreshActiveTrade();
     const trade = activeTrade.value;
 
     if (!trade || trade.status === "sleeping") {
-      traderStore.setMonitoring(false);
       return;
     }
-
-    traderStore.setMonitoring(true);
 
     try {
       const exchangeClient = hlClient.getExchangeClient(wallet.value);
@@ -57,7 +53,7 @@ export const useTraderHook = () => {
         trade,
         address: address.value,
         refresh: async () => {
-          await refresh();
+          await refreshActiveTrade();
         },
         meta: metaAndAssetCtxs.value[0],
         allMids: allMids.value,
@@ -73,7 +69,7 @@ export const useTraderHook = () => {
       }
 
       // Refresh the active trade data after processing a step to update the UI
-      await Promise.all([refresh(), refreshPortfolio()]);
+      await Promise.all([refreshActiveTrade(), refreshPortfolio()]);
     } catch (e: any) {
       const errorMsg = e?.message || "Unknown error occurred";
       traderStore.addLog(`Error processing trade: ${errorMsg}`, "error");
@@ -81,7 +77,7 @@ export const useTraderHook = () => {
     }
   };
 
-  const { pause, resume, isActive } = useIntervalFn(processTrade, 60000, {
+  const { pause, resume, isActive } = useIntervalFn(processTrade, 10000, {
     immediate: false,
   });
 

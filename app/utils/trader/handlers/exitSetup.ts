@@ -24,7 +24,5 @@ export const handleExitSetup = async (ctx: TraderContext) => {
       .eq("id", userId);
 
     await refresh();
-
-    traderStore.setMonitoring(false);
   }
 };

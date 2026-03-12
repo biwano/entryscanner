@@ -1,4 +1,3 @@
-import { ref } from "vue";
 import { useLocalStorage } from "~/composables/useLocalStorage";
 
 export interface TraderLog {
@@ -9,7 +8,6 @@ export interface TraderLog {
 
 // State defined outside the composable to make it shared/global
 const logs = useLocalStorage<TraderLog[]>("trader_logs", []);
-const isMonitoring = ref(false);
 
 export const useTraderStore = () => {
   function addLog(
@@ -31,15 +29,9 @@ export const useTraderStore = () => {
     logs.value = [];
   }
 
-  function setMonitoring(status: boolean) {
-    isMonitoring.value = status;
-  }
-
   return {
     logs,
-    isMonitoring,
     addLog,
     clearLogs,
-    setMonitoring,
   };
 };
