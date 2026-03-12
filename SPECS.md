@@ -79,7 +79,11 @@ This page provides a comprehensive view of all active assets being tracked by th
   - **Take Profit % Input**: A numerical input field for the `take_profit_pct` (default: **50**).
   - **Stop Loss % Input**: A numerical input field for the `stop_loss_pct` (default: **10**).
   - **Action**: Clicking "Buy" or "Sell" validates the inputs, automatically calculates the **Notional Size** based on the account value and a target leverage (9.5x if the coin supports 10x, otherwise 95% of the coin's maximum leverage), creates or updates a record in the `user_trades` table (setting status to `requested`), and triggers the **Trader Hook**.
+  - **Leverage Rules**:
+    - **Default Leverage**: 9.5x.
+    - **Max Leverage Handling**: If the coin does not support 10x leverage, set it to **95% of the coin's maximum leverage**.
   - **Max Leverage Display**: The trade form displays the maximum leverage supported by the specific coin for user awareness.
+  - **Price Display**: Always display at least **4 significant digits** for prices across the application (charts, tables, inputs, and logs).
 - **Historical Price Chart**: Interactive price chart showing historical data (using candles from `info.candles`). The system displays exactly **400 candles** regardless of the timeframe (Daily or Weekly) to ensure a consistent view. Users can switch between **Daily (D1)** and **Weekly (W1)** timeframes by clicking the corresponding trend status badges. The chart displays two simple moving averages:
   - **SMA 50**: Used for trend flip triggers and primary visualization.
   - **SMA 200**: Provided for additional technical context.

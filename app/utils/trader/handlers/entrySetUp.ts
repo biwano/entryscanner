@@ -1,4 +1,5 @@
 import type { TraderContext } from "../types";
+import { formatPriceNumber } from "~/utils/format";
 
 export const handleEntrySetUp = async (ctx: TraderContext) => {
   const {
@@ -48,12 +49,12 @@ export const handleEntrySetUp = async (ctx: TraderContext) => {
           : entryPrice * (1 - tpPricePct);
     }
 
-    const formattedSL = slPrice.toFixed(4);
-    const formattedTP = tpPrice.toFixed(4);
+    const formattedSL = slPrice.toFixed(5);
+    const formattedTP = tpPrice.toFixed(5);
     const posSize = Math.abs(parseFloat(position.position.szi)).toString();
 
     traderStore.addLog(
-      `Setting SL at ${formattedSL} and TP at ${formattedTP}`,
+      `Setting SL at ${formatPriceNumber(slPrice)} and TP at ${formatPriceNumber(tpPrice)}`,
       "info"
     );
 

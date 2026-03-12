@@ -95,7 +95,9 @@ const orderColumns = [
           class="border border-gray-100 dark:border-gray-800 rounded-lg overflow-hidden"
         >
           <template #asset-cell="{ row }">
-            <CoinDisplay :coin="row.original.asset" size="sm" />
+            <TableLink :to="`/pair/${row.original.asset}`">
+              <CoinDisplay :coin="row.original.asset" size="sm" />
+            </TableLink>
           </template>
           <template #size-cell="{ row }">
             {{ row.original.size }}
@@ -127,7 +129,9 @@ const orderColumns = [
           class="border border-gray-100 dark:border-gray-800 rounded-lg overflow-hidden"
         >
           <template #asset-cell="{ row }">
-            <CoinDisplay :coin="row.original.asset" size="sm" />
+            <TableLink :to="`/pair/${row.original.asset}`">
+              <CoinDisplay :coin="row.original.asset" size="sm" />
+            </TableLink>
           </template>
           <template #side-cell="{ row }">
             <UBadge

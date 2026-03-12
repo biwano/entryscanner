@@ -13,6 +13,7 @@ import {
 } from "echarts/components";
 import VChart from "vue-echarts";
 import dayjs from "dayjs";
+import { formatPriceNumber } from "~/utils/format";
 
 import type { HyperliquidCandle, TrendFlip, TrendStatus } from "~~shared/types";
 import { TREND_BULLISH, TREND_BEARISH } from "~~shared/constants";
@@ -187,6 +188,40 @@ const option = computed(() => {
     tooltip: {
       trigger: "axis",
       axisPointer: { type: "cross" },
+      formatter: (params: any) => {
+        let res = "";
+        params.forEach((item: any) => {
+          const val = Array.isArray(item.value) ? item.value : [null, item.value];
+          if (item.seriesName === "Price") {
+            res += `<div class="font-bold mb-1">${item.name}</div>`;
+            res += `<div class="grid grid-cols-2 gap-x-4 text-xs">
+              <span class="text-gray-500">Open:</span> <span class="font-mono text-right">${formatPriceNumber(
+                val[1]
+              )}</span>
+              <span class="text-gray-500">Close:</span> <span class="font-mono text-right">${formatPriceNumber(
+                val[2]
+              )}</span>
+              <span class="text-gray-500">Low:</span> <span class="font-mono text-right">${formatPriceNumber(
+                val[3]
+              )}</span>
+              <span class="text-gray-500">High:</span> <span class="font-mono text-right">${formatPriceNumber(
+                val[4]
+              )}</span>
+            </div>`;
+          } else if (item.seriesName === "Volume") {
+            const vol = Array.isArray(item.value) ? item.value[1] : item.value;
+            res += `<div class="text-xs mt-1 text-gray-500">Volume: <span class="font-mono text-gray-200 ml-1">${vol}</span></div>`;
+          } else {
+            const price = Array.isArray(item.value) ? item.value[1] : item.value;
+            res += `<div class="text-xs mt-1 text-gray-500">${
+              item.seriesName
+            }: <span class="font-mono text-gray-200 ml-1">${formatPriceNumber(
+              price
+            )}</span></div>`;
+          }
+        });
+        return res;
+      },
     },
     grid: [
       { left: "8%", right: "8%", height: "60%" },
@@ -214,7 +249,13 @@ const option = computed(() => {
       },
     ],
     yAxis: [
-      { scale: true, splitArea: { show: false } },
+      {
+        scale: true,
+        splitArea: { show: false },
+        axisLabel: {
+          formatter: (value: number) => formatPriceNumber(value),
+        },
+      },
       {
         scale: true,
         gridIndex: 1,

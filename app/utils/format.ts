@@ -1,10 +1,26 @@
 import dayjs from "dayjs";
 
 export const formatPrice = (price: string | number) => {
+  const val = Number(price);
+  if (isNaN(val)) return "$0.000";
+
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
-  }).format(Number(price));
+    minimumSignificantDigits: 4,
+    maximumSignificantDigits: 8,
+  }).format(val);
+};
+
+export const formatPriceNumber = (price: string | number) => {
+  const val = Number(price);
+  if (isNaN(val)) return "0.000";
+
+  return new Intl.NumberFormat("en-US", {
+    useGrouping: false,
+    minimumSignificantDigits: 4,
+    maximumSignificantDigits: 8,
+  }).format(val);
 };
 
 export const formatVolume = (vol: string | number) => {

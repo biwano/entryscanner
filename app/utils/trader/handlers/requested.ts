@@ -1,4 +1,5 @@
 import type { TraderContext } from "../types";
+import { formatPriceNumber } from "~/utils/format";
 
 export const handleRequested = async (ctx: TraderContext) => {
   const {
@@ -77,12 +78,12 @@ export const handleRequested = async (ctx: TraderContext) => {
   // Ensure size is formatted with correct decimals
   const szDecimals = assetInfo.szDecimals;
   const formattedSize = size.toFixed(szDecimals);
-  const formattedPrice = price.toFixed(4);
+  const formattedPrice = price.toFixed(5);
 
   traderStore.addLog(
     `Placing ${trade.direction} limit order for ${
       trade.coin
-    } at ${formattedPrice} (Size: $${calculatedSizeUsd.toFixed(2)})`,
+    } at ${formatPriceNumber(price)} (Size: $${calculatedSizeUsd.toFixed(2)})`,
     "info"
   );
 
