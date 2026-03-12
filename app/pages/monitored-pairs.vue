@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed } from "vue";
-import { useSupabaseClient } from "#imports";
+import { computed, watch } from "vue";
+import { useRoute } from "vue-router";
+import { useSupabaseClient, navigateTo } from "#imports";
 import { useQuery } from "@tanstack/vue-query";
 import { useHyperliquid } from "~/composables/useHyperliquid";
 import { useUser } from "~/composables/useUser";
@@ -9,6 +10,17 @@ import { REFRESH_INTERVAL } from "~~/shared/constants";
 import type { Database } from "~/types/database.types";
 import type { UserSubscription, MonitoredPairWithTrends } from "~/types/database.friendly.types";
 import MonitoredPairsTable from "~/features/monitored-pairs/MonitoredPairsTable/index.vue";
+
+const route = useRoute();
+const page = computed({
+  get: () => parseInt(route.query.page as string) || 1,
+  set: (val: number) => {
+    navigateTo({
+      path: route.path,
+      query: { ...route.query, page: val === 1 ? undefined : val },
+    }, { replace: true });
+  }
+});
 
 const { useAllMids } = useHyperliquid();
 const { isAdmin } = useUser();
@@ -57,6 +69,7 @@ const { data: userSubscriptions, refetch: refreshSubscriptions } = useQuery({
 <template>
   <div class="space-y-8">
     <MonitoredPairsTable
+      v-model:page="page"
       :pairs="monitoredPairs || []"
       :all-mids="allMids || null"
       :is-admin="isAdmin"

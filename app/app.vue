@@ -4,7 +4,7 @@ import { useUser } from "~/composables/useUser";
 import { usePortfolio } from "~/composables/usePortfolio";
 
 const { isAdmin } = useUser();
-const { address } = usePortfolio();
+const { address, wallet } = usePortfolio();
 
 const menuItems = computed(() => {
   const baseItems = [
@@ -20,7 +20,7 @@ const menuItems = computed(() => {
     },
   ];
 
-  if (address.value) {
+  if (wallet.value) {
     baseItems.push({
       label: "Portfolio",
       icon: "i-lucide-briefcase",

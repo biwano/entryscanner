@@ -19,10 +19,12 @@ const props = defineProps<{
   subscriptions: UserSubscription[];
   lastUpdated?: number;
   loading?: boolean;
+  page?: number;
 }>();
 
 const emit = defineEmits<{
   (e: "refreshSubscriptions"): void;
+  (e: "update:page", value: number): void;
 }>();
 
 const supabase = useSupabaseClient<Database>();
@@ -35,7 +37,12 @@ const search = ref("");
 const STORAGE_KEY = "monitored_pairs_sorting";
 const sorting = useLocalStorage(STORAGE_KEY, [{ id: "daily", desc: true }]);
 
-const page = ref(1);
+const localPage = computed({
+  get: () => props.page || 1,
+  set: (val: number) => {
+    emit("update:page", val);
+  },
+});
 const itemsPerPage = 10;
 
 const columns = [
@@ -193,23 +200,26 @@ const sortedPairs = computed(() => {
 });
 
 const pagedPairs = computed(() => {
-  const start = (page.value - 1) * itemsPerPage;
+  const start = (localPage.value - 1) * itemsPerPage;
   const end = start + itemsPerPage;
   return sortedPairs.value.slice(start, end);
 });
 
-// Reset to page 1 when sorting or search changes
-watch([sorting, search], () => {
-  page.value = 1;
+// Reset to page 1 when search changes, but only if not on initial load
+watch([search], () => {
+  if (props.pairs.length > 0) {
+    localPage.value = 1;
+  }
 });
 
 // Ensure current page is valid when pairs change
 watch(
   () => sortedPairs.value.length,
   (newCount) => {
+    if (props.loading) return;
     const maxPage = Math.max(1, Math.ceil(newCount / itemsPerPage));
-    if (page.value > maxPage) {
-      page.value = maxPage;
+    if (localPage.value > maxPage) {
+      localPage.value = maxPage;
     }
   }
 );
@@ -278,7 +288,7 @@ const handleUnsubscribeAll = async () => {
       <TableBody
         v-if="!loading"
         v-model:sorting="sorting"
-        v-model:page="page"
+        v-model:page="localPage"
         :data="pagedPairs"
         :columns="columns"
         :all-mids="allMids"
