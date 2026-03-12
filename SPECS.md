@@ -32,6 +32,7 @@ The Dashboard provides a high-level overview of the most recent significant mark
   - **Account Value**: Total equity in USD.
   - **Open Positions**: A table showing active perpetual positions (Asset, Size, Entry Price, Mark Price, PnL). This table is only displayed if the user has active positions.
   - **Open Orders**: A table showing active limit/trigger orders (Asset, Side, Size, Price). This table is only displayed if the user has pending orders.
+  - **Navigation**: A "Full View" button is displayed on the dashboard that links to the **Portfolio** page.
 - **Trend Flip Tables**: Two primary tables showing recent market shifts:
   - **Last 5 Weekly Bearish Flips**: Shows the 5 most recent pairs that flipped to a bearish trend on the Weekly (W1) timeframe.
   - **Last 5 Daily Bearish Flips**: Shows the 5 most recent pairs that flipped to a bearish trend on the Daily (D1) timeframe.
@@ -126,8 +127,9 @@ A dedicated view for managing personal Hyperliquid assets, accessible via the ma
 - **Trader Status & Logs**: If the user has an active trade (status is not `sleeping` in `user_trades`), display:
   - **Current Status**: The status from the `user_trades` table.
   - **Activity Logs**: A scrollable log of recent activities from the **Trader Hook** (persisted in `localStorage`).
-- **Account Performance**: Overview of the total account value, equity, and maintenance margin.
-- **Detailed Asset Breakdown**:
+  - **Account Performance**: Overview of the total account value, equity, and maintenance margin.
+  - **Active Trade Card**: A summary card showing the current state of active perpetual positions and open orders, including the **real-time price** of the traded coin(s). The "Full View" button is hidden on this page as it's the target destination.
+  - **Detailed Asset Breakdown**:
   - **Open Positions**: Comprehensive table of all active perpetual positions with real-time PnL calculation.
   - **Open Orders**: Detailed list of pending orders with the ability to see status and types.
 - **Real-Time Data**: The portfolio view uses polling to ensure account data and position statuses are kept up to date.

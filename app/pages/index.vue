@@ -5,7 +5,7 @@ import { useHyperliquid } from "~/composables/useHyperliquid";
 import { REFRESH_INTERVAL, TREND_BEARISH } from "~~/shared/constants";
 import type { Database, Tables } from "~/types/database.types";
 import RecentBearishFlipsTable from "~/features/dashboard/RecentBearishFlipsTable.vue";
-import DashboardPortfolio from "~/features/portfolio/DashboardPortfolio.vue";
+import ActiveTrade from "~/features/portfolio/ActiveTrade.vue";
 
 const { useAllMids } = useHyperliquid();
 const { data: allMids } = useAllMids();
@@ -39,7 +39,7 @@ const { data: dailyBearish, isLoading: isLoadingDaily } = useQuery({
 
 <template>
   <div class="space-y-12">
-    <DashboardPortfolio />
+    <ActiveTrade is-dashboard />
 
     <section>
       <div class="mb-6">

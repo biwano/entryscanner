@@ -1,35 +1,63 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { usePortfolio } from "~/composables/usePortfolio";
+import { useHyperliquid } from "~/composables/useHyperliquid";
 import { formatPrice } from "~/utils/format";
 
+const props = withDefaults(
+  defineProps<{
+    isDashboard?: boolean;
+  }>(),
+  {
+    isDashboard: false,
+  }
+);
+
 const { address, clearinghouse, openOrders, isLoading } = usePortfolio();
+const { useAllMids } = useHyperliquid();
+const { data: allMids } = useAllMids();
 
 const positions = computed(() => {
   if (!clearinghouse.value) return [];
   return clearinghouse.value.assetPositions
     .filter((p) => parseFloat(p.position.szi) !== 0)
-    .map((p) => ({
-      asset: p.position.coin,
-      size: parseFloat(p.position.szi),
-      entryPx: parseFloat(p.position.entryPx),
-      pnl: parseFloat(p.position.unrealizedPnl),
-    }));
+    .map((p) => {
+      return {
+        asset: p.position.coin,
+        size: parseFloat(p.position.szi),
+        entryPx: parseFloat(p.position.entryPx),
+        pnl: parseFloat(p.position.unrealizedPnl),
+      };
+    });
 });
 
 const orders = computed(() => {
   if (!openOrders.value) return [];
-  return openOrders.value.map((o) => ({
-    asset: o.coin,
-    side: o.side,
-    size: parseFloat(o.sz),
-    price: parseFloat(o.limitPx),
-  }));
+  return openOrders.value.map((o) => {
+    const currentPx = allMids.value?.[o.coin];
+    return {
+      asset: o.coin,
+      side: o.side,
+      size: parseFloat(o.sz),
+      price: parseFloat(o.limitPx),
+      currentPx: currentPx ? parseFloat(currentPx) : 0,
+    };
+  });
 });
 
 const withdrawable = computed(() => {
   if (!clearinghouse.value) return 0;
   return parseFloat(clearinghouse.value.withdrawable);
+});
+
+const tradedCoins = computed(() => {
+  const coins = new Set<string>();
+  positions.value.forEach((p) => coins.add(p.asset));
+  orders.value.forEach((o) => coins.add(o.asset));
+  return Array.from(coins).map((coin) => ({
+    symbol: coin,
+    price: allMids.value?.[coin] ? parseFloat(allMids.value[coin]) : 0,
+  }));
 });
 
 const hasData = computed(() => address.value !== null);
@@ -45,7 +73,7 @@ const orderColumns = [
   { id: "asset", header: "Asset" },
   { id: "side", header: "Side" },
   { id: "size", header: "Size" },
-  { id: "price", header: "Price" },
+  { id: "price", header: "Order Price" },
 ];
 </script>
 
@@ -65,6 +93,7 @@ const orderColumns = [
             Real-time overview of your Hyperliquid account.
           </p>
           <UButton
+            v-if="isDashboard"
             to="/portfolio"
             variant="link"
             size="xs"
@@ -74,6 +103,21 @@ const orderColumns = [
           >
             Full View
           </UButton>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-4">
+        <div
+          v-for="coin in tradedCoins"
+          :key="coin.symbol"
+          class="flex flex-col items-end"
+        >
+          <div class="flex items-center gap-1.5">
+            <CoinDisplay :coin="coin.symbol" size="sm" />
+            <span class="text-lg font-bold font-mono">{{
+              formatPrice(coin.price)
+            }}</span>
+          </div>
         </div>
       </div>
     </div>
