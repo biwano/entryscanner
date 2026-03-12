@@ -44,4 +44,8 @@ export class HyperliquidClient {
   async fetchClearinghouseState(user: string) {
     return await this.client.clearinghouseState({ user });
   }
+
+  async fetchOpenOrders(user: string) {
+    return await this.client.openOrders({ user });
+  }
 }

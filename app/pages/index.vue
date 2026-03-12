@@ -5,6 +5,7 @@ import { useHyperliquid } from "~/composables/useHyperliquid";
 import { REFRESH_INTERVAL, TREND_BEARISH } from "~~/shared/constants";
 import type { Database, Tables } from "~/types/database.types";
 import RecentBearishFlipsTable from "~/features/dashboard/RecentBearishFlipsTable.vue";
+import DashboardPortfolio from "~/features/portfolio/DashboardPortfolio.vue";
 
 const { useAllMids } = useHyperliquid();
 const { data: allMids } = useAllMids();
@@ -38,10 +39,16 @@ const { data: dailyBearish, isLoading: isLoadingDaily } = useQuery({
 
 <template>
   <div class="space-y-12">
+    <DashboardPortfolio />
+
     <section>
       <div class="mb-6">
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Recent Market Shifts</h2>
-        <p class="text-gray-500 dark:text-gray-400">The latest 5 pairs that flipped to a bearish trend.</p>
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
+          Recent Market Shifts
+        </h2>
+        <p class="text-gray-500 dark:text-gray-400">
+          The latest 5 pairs that flipped to a bearish trend.
+        </p>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">

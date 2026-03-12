@@ -26,12 +26,17 @@ Entry scanner is a web-based application that monitors real-time market data on 
 
 #### 3.1.0. Dashboard
 
-The Dashboard provides a high-level overview of the most recent significant market shifts. It contains two primary tables:
+The Dashboard provides a high-level overview of the most recent significant market shifts and the user's personal portfolio if connected.
 
-- **Last 5 Weekly Bearish Flips**: Shows the 5 most recent pairs that flipped to a bearish trend on the Weekly (W1) timeframe.
-- **Last 5 Daily Bearish Flips**: Shows the 5 most recent pairs that flipped to a bearish trend on the Daily (D1) timeframe.
+- **Personal Portfolio Summary**: If the user has configured their Hyperliquid API key and wallet address, display a summary card at the top of the dashboard containing:
+  - **Account Value**: Total equity in USD.
+  - **Open Positions**: A table showing active perpetual positions (Asset, Size, Entry Price, Mark Price, PnL). This table is only displayed if the user has active positions.
+  - **Open Orders**: A table showing active limit/trigger orders (Asset, Side, Size, Price). This table is only displayed if the user has pending orders.
+- **Trend Flip Tables**: Two primary tables showing recent market shifts:
+  - **Last 5 Weekly Bearish Flips**: Shows the 5 most recent pairs that flipped to a bearish trend on the Weekly (W1) timeframe.
+  - **Last 5 Daily Bearish Flips**: Shows the 5 most recent pairs that flipped to a bearish trend on the Daily (D1) timeframe.
 
-**Table Columns**:
+**Table Columns (Trend Flips)**:
 
 - **Asset**: The name of the perpetual pair (with icon).
 - **Price**: Current live-polled price.
@@ -92,8 +97,8 @@ This page provides a comprehensive view of all active assets being tracked by th
 - **Supabase Auth**: Secure authentication flow for managing personal settings, subscriptions, and webhooks.
 - **Subscription Overview**: View and manage all active pair/timeframe subscriptions from the profile or dashboard.
 - **Notification History**: View a personal log of past automated alerts triggered by trend flips for subscribed pairs.
-- **Profile Settings**: Configure the Discord Webhook URL for personal notifications and manage Hyperliquid API credentials.
-- **Hyperliquid Wallet Integration**: Allow users to securely save their Hyperliquid API key (private key) to monitor their account balance and address directly from the application header (near the dark mode toggle).
+- **Profile Settings**: Configure the Discord Webhook URL for personal notifications and manage Hyperliquid credentials.
+- **Hyperliquid Integration**: Allow users to securely save their Hyperliquid wallet address (for read-only info requests) and their Hyperliquid API key (private key) for more advanced monitoring and potentially trading actions. These fields are accessible in the profile settings and allow displaying account info in the header and dashboard.
 
 #### 3.1.5. Global Navigation & Search
 
@@ -101,6 +106,17 @@ This page provides a comprehensive view of all active assets being tracked by th
 - **Direct Navigation**: Upon selecting a coin from the search results, the user is navigated directly to that asset's **Pair Analysis** page.
 - **Available Pairs**: The search bar pulls its list from all currently active perpetual pairs available on Hyperliquid.
 - **Mobile Access**: The search bar is accessible on both desktop and mobile devices.
+
+#### 3.1.6. Portfolio Page
+
+A dedicated view for managing personal Hyperliquid assets, accessible via the main navigation only if the user has a wallet address and potentially an API key configured.
+
+- **Access Restriction**: This page is hidden or restricted if the user has not entered their Hyperliquid wallet address in the Profile Settings.
+- **Account Performance**: Overview of the total account value, equity, and maintenance margin.
+- **Detailed Asset Breakdown**:
+  - **Open Positions**: Comprehensive table of all active perpetual positions with real-time PnL calculation.
+  - **Open Orders**: Detailed list of pending orders with the ability to see status and types.
+- **Real-Time Data**: The portfolio view uses polling to ensure account data and position statuses are kept up to date.
 
 ### 3.2. Server Scripts (Workers)
 
@@ -168,7 +184,8 @@ Tables use **Row Level Security (RLS)** to ensure appropriate data access. User-
 
 - `id`: uuid (references auth.users, primary key)
 - `discord_webhook_url`: string (optional, for notifications)
-- `hl_api_key`: string (optional, for wallet monitoring)
+- `hl_api_key`: string (optional, for wallet actions)
+- `hl_wallet_address`: string (optional, for wallet info requests)
 - `created_at`: timestamp
 - **RLS Policy**: Users can only read/update their own profile.
 

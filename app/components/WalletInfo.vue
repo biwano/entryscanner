@@ -1,54 +1,19 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { useProfile } from "~/composables/useProfile";
-import { HyperliquidClient } from "~~shared/hyperliquid";
-import { PrivateKeySigner } from "@nktkas/hyperliquid/signing";
-import { useAsyncData } from "#app";
+import { usePortfolio } from "~/composables/usePortfolio";
 import { formatPrice, truncateAddress } from "~/utils/format";
 
-const { profile } = useProfile();
-const hlClient = new HyperliquidClient();
+const { address, clearinghouse, isLoading } = usePortfolio();
 
-const wallet = computed(() => {
-  if (!profile.value?.hl_api_key) return null;
-  try {
-    return new PrivateKeySigner(profile.value.hl_api_key);
-  } catch (e) {
-    console.error("Invalid HL API key", e);
-    return null;
-  }
+const balance = computed(() => {
+  if (!clearinghouse.value) return 0;
+  return parseFloat(clearinghouse.value.marginSummary.accountValue);
 });
-
-const address = computed(() => wallet.value?.address ?? null);
-
-const {
-  data: balance,
-  refresh: refreshBalance,
-  status,
-} = useAsyncData(
-  "wallet_balance",
-  async () => {
-    if (!address.value) return null;
-    try {
-      const state = await hlClient.fetchClearinghouseState(address.value);
-      console.log("state", state);
-      return parseFloat(state.marginSummary.accountValue);
-    } catch (e) {
-      console.error("Failed to fetch balance", e);
-      return 0;
-    }
-  },
-  {
-    watch: [address],
-  }
-);
-
-const isLoading = computed(() => status.value === "pending");
 
 // Truncate address for display: 0x1234...5678
 const truncatedAddress = computed(() => truncateAddress(address.value || ""));
 
-const formattedBalance = computed(() => formatPrice(balance.value ?? 0));
+const formattedBalance = computed(() => formatPrice(balance.value));
 </script>
 
 <template>

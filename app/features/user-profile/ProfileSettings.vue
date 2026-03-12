@@ -2,6 +2,8 @@
 import { ref } from "vue";
 import { useSupabaseClient } from "#imports";
 import { useUserId } from "~/composables/useUserId";
+import { usePortfolio } from "~/composables/usePortfolio";
+import { useProfile } from "~/composables/useProfile";
 import type { Database } from "~/types/database.types";
 import type { Profile } from "~/types/database.friendly.types";
 
@@ -15,19 +17,36 @@ const emit = defineEmits<{
 
 const supabase = useSupabaseClient<Database>();
 const userId = useUserId();
+const { refreshProfile } = useProfile();
+const { refreshPortfolio: refreshPortfolio } = usePortfolio();
 const toast = useToast();
 
 const discordWebhookUrl = ref(props.profile?.discord_webhook_url || "");
 const hlApiKey = ref(props.profile?.hl_api_key || "");
+const hlWalletAddress = ref(props.profile?.hl_wallet_address || "");
 
 const saveProfile = async () => {
   if (!userId.value) return;
-  await supabase.from("profiles")
+  const { error } = await supabase
+    .from("profiles")
     .update({
       discord_webhook_url: discordWebhookUrl.value,
       hl_api_key: hlApiKey.value,
+      hl_wallet_address: hlWalletAddress.value,
     })
     .eq("id", userId.value);
+
+  if (error) {
+    toast.add({
+      title: "Error",
+      description: error.message,
+      color: "error",
+    });
+    return;
+  }
+
+  await refreshProfile();
+  await refreshPortfolio();
   emit("refresh");
   toast.add({
     title: "Profile Updated",
@@ -54,19 +73,20 @@ const saveProfile = async () => {
       </UFormField>
 
       <UFormField
-        label="Hyperliquid API Key"
-        description="Enter your Hyperliquid API wallet private key to see your balance."
+        label="Hyperliquid Wallet Address"
+        description="Your public wallet address for read-only requests."
       >
-        <UInput
-          v-model="hlApiKey"
-          type="password"
-          placeholder="0x..."
-        />
+        <UInput v-model="hlWalletAddress" placeholder="0x..." />
       </UFormField>
 
-      <UButton color="primary" block @click="saveProfile"
-        >Save Changes</UButton
+      <UFormField
+        label="Hyperliquid API Key"
+        description="Enter your Hyperliquid API wallet private key to sign actions (optional)."
       >
+        <UInput v-model="hlApiKey" type="password" placeholder="0x..." />
+      </UFormField>
+
+      <UButton color="primary" block @click="saveProfile">Save Changes</UButton>
     </div>
   </UCard>
 </template>

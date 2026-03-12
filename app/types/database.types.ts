@@ -164,18 +164,21 @@ export type Database = {
           created_at: string | null
           discord_webhook_url: string | null
           hl_api_key: string | null
+          hl_wallet_address: string | null
           id: string
         }
         Insert: {
           created_at?: string | null
           discord_webhook_url?: string | null
           hl_api_key?: string | null
+          hl_wallet_address?: string | null
           id: string
         }
         Update: {
           created_at?: string | null
           discord_webhook_url?: string | null
           hl_api_key?: string | null
+          hl_wallet_address?: string | null
           id?: string
         }
         Relationships: []
