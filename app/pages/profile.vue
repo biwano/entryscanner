@@ -13,23 +13,14 @@ import ProfileSettings from "~/features/user-profile/ProfileSettings.vue";
 import SubscriptionList from "~/features/subscriptions/SubscriptionList.vue";
 import NotificationHistoryComponent from "~/features/user-profile/NotificationHistory.vue";
 
+import { useProfile } from "~/composables/useProfile";
+
 const supabase = useSupabaseClient<Database>();
 const user = useSupabaseUser();
 const userId = useUserId();
 const colorMode = useColorMode();
 
-const { data: profile, refresh: refreshProfile } = await useAsyncData<Profile | null>(
-  "profile",
-  async () => {
-    if (!userId.value) return null;
-    const { data } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", userId.value)
-      .single();
-    return data;
-  }
-);
+const { profile, refreshProfile } = useProfile();
 
 const { data: subscriptions, refresh: refreshSubscriptions } =
   await useAsyncData<UserSubscription[]>("subscriptions", async () => {

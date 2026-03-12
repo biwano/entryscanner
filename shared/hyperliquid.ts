@@ -1,4 +1,8 @@
-import { InfoClient, HttpTransport, type CandleSnapshotParameters } from "@nktkas/hyperliquid";
+import {
+  InfoClient,
+  HttpTransport,
+  type CandleSnapshotParameters,
+} from "@nktkas/hyperliquid";
 
 export type CandleInterval = CandleSnapshotParameters["interval"];
 
@@ -35,5 +39,9 @@ export class HyperliquidClient {
 
   async fetchMeta() {
     return await this.client.meta();
+  }
+
+  async fetchClearinghouseState(user: string) {
+    return await this.client.clearinghouseState({ user });
   }
 }

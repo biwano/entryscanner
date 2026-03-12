@@ -45,33 +45,33 @@ export type Database = {
           created_at: string
           id: string
           notifications_created: boolean
+          price_at_flip: number | null
           since: string | null
           status: string
           timeframe: string
           timestamp: string
-          price_at_flip: number
         }
         Insert: {
           coin: string
           created_at?: string
           id?: string
           notifications_created?: boolean
+          price_at_flip?: number | null
           since?: string | null
           status: string
           timeframe: string
           timestamp: string
-          price_at_flip: number
         }
         Update: {
           coin?: string
           created_at?: string
           id?: string
           notifications_created?: boolean
+          price_at_flip?: number | null
           since?: string | null
           status?: string
           timeframe?: string
           timestamp?: string
-          price_at_flip?: number
         }
         Relationships: []
       }
@@ -163,16 +163,19 @@ export type Database = {
         Row: {
           created_at: string | null
           discord_webhook_url: string | null
+          hl_api_key: string | null
           id: string
         }
         Insert: {
           created_at?: string | null
           discord_webhook_url?: string | null
+          hl_api_key?: string | null
           id: string
         }
         Update: {
           created_at?: string | null
           discord_webhook_url?: string | null
+          hl_api_key?: string | null
           id?: string
         }
         Relationships: []
@@ -181,26 +184,26 @@ export type Database = {
         Row: {
           coin: string
           created_at: string | null
+          price_at_flip: number | null
           status: string
           timeframe: string
           timestamp: string
-          price_at_flip: number
         }
         Insert: {
           coin: string
           created_at?: string | null
+          price_at_flip?: number | null
           status: string
           timeframe: string
           timestamp: string
-          price_at_flip: number
         }
         Update: {
           coin?: string
           created_at?: string | null
+          price_at_flip?: number | null
           status?: string
           timeframe?: string
           timestamp?: string
-          price_at_flip?: number
         }
         Relationships: []
       }

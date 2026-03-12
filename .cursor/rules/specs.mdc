@@ -23,6 +23,10 @@ Always refer to `SPECS.md` in the root directory to understand the application s
 - Never use the any type
 - Use `~~shared` alias for imports from the shared directory instead of `#shared`
 
+## Behaviour
+
+- Write migration files if necessary
+
 ## Type Safety
 
 Always rely on types defined in `database.types.ts` and `database.friendly.types.ts` files whenever possible to ensure consistency with the Supabase schema.

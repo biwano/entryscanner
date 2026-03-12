@@ -92,7 +92,8 @@ This page provides a comprehensive view of all active assets being tracked by th
 - **Supabase Auth**: Secure authentication flow for managing personal settings, subscriptions, and webhooks.
 - **Subscription Overview**: View and manage all active pair/timeframe subscriptions from the profile or dashboard.
 - **Notification History**: View a personal log of past automated alerts triggered by trend flips for subscribed pairs.
-- **Profile Settings**: Configure and test the Discord Webhook URL for personal notifications.
+- **Profile Settings**: Configure the Discord Webhook URL for personal notifications and manage Hyperliquid API credentials.
+- **Hyperliquid Wallet Integration**: Allow users to securely save their Hyperliquid API key (private key) to monitor their account balance and address directly from the application header (near the dark mode toggle).
 
 #### 3.1.5. Global Navigation & Search
 
@@ -167,6 +168,7 @@ Tables use **Row Level Security (RLS)** to ensure appropriate data access. User-
 
 - `id`: uuid (references auth.users, primary key)
 - `discord_webhook_url`: string (optional, for notifications)
+- `hl_api_key`: string (optional, for wallet monitoring)
 - `created_at`: timestamp
 - **RLS Policy**: Users can only read/update their own profile.
 

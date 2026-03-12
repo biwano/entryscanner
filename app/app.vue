@@ -56,6 +56,7 @@ useHead({
             </div>
           </div>
           <div class="flex items-center gap-4">
+            <WalletInfo />
             <UColorModeButton />
             <UNavigationMenu :items="menuItems[1]" orientation="horizontal" />
           </div>

@@ -18,18 +18,20 @@ const userId = useUserId();
 const toast = useToast();
 
 const discordWebhookUrl = ref(props.profile?.discord_webhook_url || "");
+const hlApiKey = ref(props.profile?.hl_api_key || "");
 
 const saveProfile = async () => {
   if (!userId.value) return;
   await supabase.from("profiles")
     .update({
       discord_webhook_url: discordWebhookUrl.value,
+      hl_api_key: hlApiKey.value,
     })
     .eq("id", userId.value);
   emit("refresh");
   toast.add({
     title: "Profile Updated",
-    description: "Your Discord webhook URL has been saved.",
+    description: "Your settings have been saved.",
     color: "success",
   });
 };
@@ -48,6 +50,17 @@ const saveProfile = async () => {
         <UInput
           v-model="discordWebhookUrl"
           placeholder="https://discord.com/api/webhooks/..."
+        />
+      </UFormField>
+
+      <UFormField
+        label="Hyperliquid API Key"
+        description="Enter your Hyperliquid API wallet private key to see your balance."
+      >
+        <UInput
+          v-model="hlApiKey"
+          type="password"
+          placeholder="0x..."
         />
       </UFormField>
 
