@@ -3,11 +3,20 @@ import type { Tables } from "~/types/database.types";
 import { formatPrice } from "~/utils/format";
 import type { TrendStatus } from "~~shared/types";
 
+type TrendPercentages = {
+  total: number;
+  bullish: number;
+  bearish: number;
+  bullishPercentage: number;
+  bearishPercentage: number;
+};
+
 const props = defineProps<{
   title: string;
   events: Tables<"events">[];
   allMids: Record<string, string> | null;
   loading?: boolean;
+  trendPercentages?: TrendPercentages | null;
 }>();
 
 const columns = [
@@ -46,7 +55,35 @@ const getStatus = (event: Tables<"events">): TrendStatus => {
 <template>
   <UCard class="shadow-sm">
     <template #header>
-      <h3 class="text-lg font-bold">{{ title }}</h3>
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-bold">{{ title }}</h3>
+        <div v-if="trendPercentages" class="flex items-center gap-2 text-sm">
+          <span class="text-green-600 dark:text-green-400">
+            {{ trendPercentages.bullishPercentage }}% Bullish
+          </span>
+          <span class="text-red-600 dark:text-red-400">
+            {{ trendPercentages.bearishPercentage }}% Bearish
+          </span>
+        </div>
+      </div>
+
+      <!-- Visual indicator -->
+      <div v-if="trendPercentages && trendPercentages.total > 0" class="mt-3">
+        <div class="flex w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+          <div
+            class="bg-green-500 h-2 rounded-l-full"
+            :style="{ width: `${trendPercentages.bullishPercentage}%` }"
+          ></div>
+          <div
+            class="bg-red-500 h-2 rounded-r-full"
+            :style="{ width: `${trendPercentages.bearishPercentage}%` }"
+          ></div>
+        </div>
+        <div class="flex justify-between text-xs text-gray-500 mt-1">
+          <span>Bullish</span>
+          <span>Bearish</span>
+        </div>
+      </div>
     </template>
 
     <div class="overflow-x-auto">

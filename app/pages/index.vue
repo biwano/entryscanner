@@ -2,7 +2,7 @@
 import { useSupabaseClient } from "#imports";
 import { useQuery } from "@tanstack/vue-query";
 import { useHyperliquid } from "~/composables/useHyperliquid";
-import { REFRESH_INTERVAL, TREND_BEARISH } from "~~/shared/constants";
+import { REFRESH_INTERVAL, TREND_BEARISH, TREND_BULLISH } from "~~/shared/constants";
 import type { Database, Tables } from "~/types/database.types";
 import RecentBearishFlipsTable from "~/features/dashboard/RecentBearishFlipsTable.vue";
 import ActiveTrade from "~/features/trading/ActiveTrade.vue";
@@ -24,6 +24,27 @@ const fetchRecentBearishFlips = async (timeframe: "D1" | "W1") => {
   return data as Tables<"events">[];
 };
 
+const fetchTrendPercentages = async (timeframe: "D1" | "W1") => {
+  const { data, error } = await supabase
+    .from("trends")
+    .select("status")
+    .eq("timeframe", timeframe);
+
+  if (error) throw error;
+
+  const total = data.length;
+  const bullish = data.filter(trend => trend.status === TREND_BULLISH).length;
+  const bearish = total - bullish;
+
+  return {
+    total,
+    bullish,
+    bearish,
+    bullishPercentage: total > 0 ? Math.round((bullish / total) * 100) : 0,
+    bearishPercentage: total > 0 ? Math.round((bearish / total) * 100) : 0,
+  };
+};
+
 const { data: weeklyBearish, isLoading: isLoadingWeekly } = useQuery({
   queryKey: ["recent_bearish_flips", "W1"],
   queryFn: () => fetchRecentBearishFlips("W1"),
@@ -33,6 +54,18 @@ const { data: weeklyBearish, isLoading: isLoadingWeekly } = useQuery({
 const { data: dailyBearish, isLoading: isLoadingDaily } = useQuery({
   queryKey: ["recent_bearish_flips", "D1"],
   queryFn: () => fetchRecentBearishFlips("D1"),
+  refetchInterval: REFRESH_INTERVAL,
+});
+
+const { data: weeklyTrends } = useQuery({
+  queryKey: ["trend_percentages", "W1"],
+  queryFn: () => fetchTrendPercentages("W1"),
+  refetchInterval: REFRESH_INTERVAL,
+});
+
+const { data: dailyTrends } = useQuery({
+  queryKey: ["trend_percentages", "D1"],
+  queryFn: () => fetchTrendPercentages("D1"),
   refetchInterval: REFRESH_INTERVAL,
 });
 </script>
@@ -57,6 +90,7 @@ const { data: dailyBearish, isLoading: isLoadingDaily } = useQuery({
           :events="weeklyBearish || []"
           :all-mids="allMids || null"
           :loading="isLoadingWeekly"
+          :trend-percentages="weeklyTrends"
         />
 
         <RecentBearishFlipsTable
@@ -64,6 +98,7 @@ const { data: dailyBearish, isLoading: isLoadingDaily } = useQuery({
           :events="dailyBearish || []"
           :all-mids="allMids || null"
           :loading="isLoadingDaily"
+          :trend-percentages="dailyTrends"
         />
       </div>
     </section>
