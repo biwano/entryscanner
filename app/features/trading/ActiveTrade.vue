@@ -60,7 +60,8 @@ const tradedCoins = computed(() => {
   }));
 });
 
-const hasData = computed(() => address.value !== null);
+const hasActiveTrades = computed(() => positions.value.length > 0 || orders.value.length > 0);
+const shouldShow = computed(() => address.value !== null && hasActiveTrades.value);
 
 const columns = [
   { id: "asset", header: "Asset" },
@@ -79,7 +80,7 @@ const orderColumns = [
 
 <template>
   <div
-    v-if="hasData"
+    v-if="shouldShow"
     class="space-y-6 bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm"
   >
     <div class="flex items-center justify-between">

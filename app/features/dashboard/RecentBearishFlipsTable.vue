@@ -87,12 +87,7 @@ const getStatus = (event: Tables<"events">): TrendStatus => {
     </template>
 
     <div class="overflow-x-auto">
-      <UTable
-        v-if="!loading"
-        :data="events"
-        :columns="columns"
-        class="w-full"
-      >
+      <UTable v-if="!loading" :data="events" :columns="columns" class="w-full">
         <template #coin-cell="{ row }">
           <CoinDisplay :coin="row.original.coin" />
         </template>
@@ -113,7 +108,9 @@ const getStatus = (event: Tables<"events">): TrendStatus => {
         <template #actions-cell="{ row }">
           <div class="flex justify-end">
             <UButton
-              :to="`/pair/${row.original.coin}`"
+              :to="`/pair/${row.original.coin}?timeframe=${
+                row.original.timeframe === 'D1' ? '1d' : '1w'
+              }`"
               icon="i-lucide-chevron-right"
               size="xs"
               variant="ghost"

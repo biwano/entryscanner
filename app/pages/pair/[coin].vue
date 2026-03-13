@@ -31,16 +31,22 @@ const queryTimeframe = route.query.timeframe as string;
 const timeframe = ref<"1d" | "1w">(queryTimeframe === "1w" ? "1w" : "1d");
 
 const isBullish = computed(() => {
-  const flip = timeframe.value === '1d' ? pair.value?.last_trend_flip_daily : pair.value?.last_trend_flip_weekly;
+  const flip =
+    timeframe.value === "1d"
+      ? pair.value?.last_trend_flip_daily
+      : pair.value?.last_trend_flip_weekly;
   return flip?.status === TREND_BULLISH;
 });
 
 // Watch for timeframe changes to update the URL
 watch(timeframe, (newVal) => {
-  navigateTo({
-    path: route.path,
-    query: { ...route.query, timeframe: newVal },
-  }, { replace: true });
+  navigateTo(
+    {
+      path: route.path,
+      query: { ...route.query, timeframe: newVal },
+    },
+    { replace: true }
+  );
 });
 
 const selectedCandles = computed(
@@ -191,10 +197,7 @@ const percentChangeSinceTrendStart = computed(() => {
       </div>
 
       <div class="space-y-6">
-        <TradingControls 
-          :coin="coin" 
-          :is-bullish="isBullish ?? false" 
-        />
+        <TradingControls :coin="coin" :is-bullish="isBullish ?? false" />
 
         <AssetStats
           :coin="coin"

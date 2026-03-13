@@ -26,6 +26,7 @@ Always refer to `SPECS.md` in the root directory to understand the application s
 ## Behaviour
 
 - Write migration files if necessary
+- Never try to run or write tests
 
 ## Type Safety
 
