@@ -237,7 +237,7 @@ All server-side workers (Trend Worker, Notification Dispatcher) can be triggered
 - **AppHeader**: A global header component that manages the navigation menu, search bar, and user profile/wallet information. It dynamically adjusts its menu items based on the user's roles (admin) and wallet connection status.
 - **AccountSummary**: Displays a user's Hyperliquid account metrics (Total Account Value, Margin Used, Maintenance Margin, Withdrawable) in a grid of summary cards.
 - **GlobalSearch**: A search input that allows users to quickly search for any perpetual pair and navigate to its analysis page.
-- **WalletInfo**: Displays the connected wallet address and basic account information.
+- **WalletInfo**: Displays the connected wallet address and basic account information. The wallet address is copyable to the clipboard on click, providing visual feedback (e.g., icon change and "Copied!" tooltip).
 - **TrendIndicator**: A reusable component for showing bullish or bearish trend status and its duration.
 - **Chart**: An interactive price chart component for visualizing historical candle data and technical indicators.
 
