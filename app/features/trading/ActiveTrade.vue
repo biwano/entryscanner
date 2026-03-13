@@ -195,5 +195,12 @@ const orderColumns = [
         </UTable>
       </div>
     </div>
+    <div
+      v-else-if="!isLoading"
+      class="flex flex-col items-center justify-center py-8 text-center space-y-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-dashed border-gray-200 dark:border-gray-700"
+    >
+      <UIcon name="i-lucide-info" class="w-8 h-8 text-gray-400" />
+      <div class="text-gray-500 font-medium">No active trades</div>
+    </div>
   </div>
 </template>

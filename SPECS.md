@@ -32,6 +32,7 @@ The Dashboard provides a high-level overview of the most recent significant mark
   - **Account Value**: Total equity in USD.
   - **Open Positions**: A table showing active perpetual positions (Asset, Size, Entry Price, Mark Price, PnL). This table is only displayed if the user has active positions.
   - **Open Orders**: A table showing active limit/trigger orders (Asset, Side, Size, Price). This table is only displayed if the user has pending orders.
+  - **No Active Trades**: If neither positions nor orders are present, a "No active trades" message is displayed within the card.
   - **Navigation**: A "Full View" button is displayed on the dashboard that links to the **Trading** page.
 - **Trend Flip Tables**: Two primary tables showing recent market shifts:
   - **Last 5 Weekly Bearish Flips**: Shows the 5 most recent pairs that flipped to a bearish trend on the Weekly (W1) timeframe.
@@ -132,6 +133,13 @@ A dedicated view for managing personal Hyperliquid assets and trades, accessible
   - **Detailed Asset Breakdown**:
   - **Open Positions**: Comprehensive table of all active perpetual positions with real-time PnL calculation.
   - **Open Orders**: Detailed list of pending orders with the ability to see status and types.
+  - **Recent Trades**: A table displaying the recent closed trades for the user's account, including:
+    - **Asset**: The name of the perpetual pair (with icon).
+    - **Leverage**: The leverage used for the trade.
+    - **Entry**: Date and time of entry, and entry price.
+    - **Exit**: Date and time of exit, and exit price.
+    - **PnL**: The realized profit or loss for the trade.
+    - **Pagination**: Display 5 trades per page with pagination controls.
 - **Real-Time Data**: The trading view uses polling to ensure account data and position statuses are kept up to date.
 
 ### 3.2. Server Scripts (Workers)

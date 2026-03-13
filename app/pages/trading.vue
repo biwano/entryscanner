@@ -5,6 +5,7 @@ import { formatPrice } from "~/utils/format";
 import { useRouter } from "vue-router";
 import ActiveTrade from "~/features/trading/ActiveTrade.vue";
 import TraderStatus from "~/features/trading/TraderStatus.vue";
+import RecentTrades from "~/features/trading/RecentTrades.vue";
 
 const {
   address,
@@ -124,6 +125,7 @@ useHead({
         </div>
 
         <ActiveTrade />
+        <RecentTrades />
         <TraderStatus />
       </div>
 

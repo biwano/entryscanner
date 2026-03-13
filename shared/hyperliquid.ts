@@ -58,4 +58,8 @@ export class HyperliquidClient {
   async fetchOpenOrders(user: string) {
     return await this.infoClient.openOrders({ user });
   }
+
+  async fetchUserFills(user: string) {
+    return await this.infoClient.userFills({ user });
+  }
 }
