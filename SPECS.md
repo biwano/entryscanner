@@ -86,7 +86,7 @@ This page provides a comprehensive view of all active assets being tracked by th
     - **Max Leverage Handling**: If the coin does not support 10x leverage, set it to **95% of the coin's maximum leverage**.
   - **Max Leverage Display**: The trade form displays the maximum leverage supported by the specific coin for user awareness.
   - **Price Display**: Always display at least **4 significant digits** for prices across the application (charts, tables, inputs, and logs).
-- **Historical Price Chart**: Interactive price chart showing historical data (using candles from `info.candles`). The system displays exactly **400 candles** regardless of the timeframe (Daily or Weekly) to ensure a consistent view. Users can switch between **Daily (D1)** and **Weekly (W1)** timeframes by clicking the corresponding trend status badges. The chart displays two simple moving averages:
+- **Historical Price Chart**: Interactive price chart showing historical data (using candles from `info.candles`). The system displays exactly **400 candles** regardless of the timeframe (Daily or Weekly) to ensure a consistent view. Users can switch between **Daily (D1)** and **Weekly (W1)** timeframes by clicking the corresponding **TrendIndicator** components in the header. The chart displays two simple moving averages:
   - **SMA 50**: Used for trend flip triggers and primary visualization.
   - **SMA 200**: Provided for additional technical context.
 - **Trend Visual Markers**: The price chart displays vertical markers for all trend flips (SMA 50 crossover) that occurred within the displayed 400 candles. Bullish flips are marked with a success color (green), and bearish flips with an error color (red).
@@ -238,6 +238,7 @@ All server-side workers (Trend Worker, Notification Dispatcher) can be triggered
 - **AccountSummary**: Displays a user's Hyperliquid account metrics (Total Account Value, Margin Used, Maintenance Margin, Withdrawable) in a grid of summary cards.
 - **GlobalSearch**: A search input that allows users to quickly search for any perpetual pair and navigate to its analysis page.
 - **WalletInfo**: Displays the connected wallet address and basic account information. The wallet address is copyable to the clipboard on click, providing visual feedback (e.g., icon change and "Copied!" tooltip).
+- **PairHeader**: A component for the Pair Analysis page that displays the asset name, percentage change since trend start, status badges, timeframe selectors with trend indicators, and the live price.
 - **TrendIndicator**: A reusable component for showing bullish or bearish trend status and its duration.
 - **Chart**: An interactive price chart component for visualizing historical candle data and technical indicators.
 

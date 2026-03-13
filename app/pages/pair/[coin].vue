@@ -5,7 +5,7 @@ import { useAsyncData, navigateTo } from "#app";
 import { useSupabaseClient } from "#imports";
 import { useHyperliquid } from "~/composables/useHyperliquid";
 import type { MonitoredPairWithTrends } from "~/types/database.friendly.types";
-import type { AssetMeta } from "~~shared/types";
+import type { AssetMeta, TrendStatus } from "~~shared/types";
 import { calculateStartTime } from "~~shared/trends";
 import { CANDLE_COUNT, TREND_BULLISH } from "~~shared/constants";
 import { formatPrice, formatPercentChange } from "~/utils/format";
@@ -13,6 +13,7 @@ import PriceChart from "~/features/charts/PriceChart.vue";
 import AssetStats from "~/features/monitored-pairs/AssetStats.vue";
 import EventHistory from "~/features/monitored-pairs/EventHistory.vue";
 import TradingControls from "~/features/trading/TradingControls.vue";
+import PairHeader from "~/features/monitored-pairs/PairHeader.vue";
 
 const route = useRoute();
 const coinParam = route.params.coin;
@@ -112,79 +113,14 @@ const percentChangeSinceTrendStart = computed(() => {
 
 <template>
   <div v-if="pair" class="space-y-8">
-    <div class="flex items-center justify-between">
-      <div class="flex items-center gap-4">
-        <UButton
-          :to="backRoute"
-          icon="i-lucide-arrow-left"
-          variant="ghost"
-          color="neutral"
-        />
-        <h1 class="text-3xl font-bold flex items-center gap-2">
-          <span>{{ coin }} Analysis</span>
-          <span
-            v-if="percentChangeSinceTrendStart"
-            :class="
-              percentChangeSinceTrendStart.startsWith('+')
-                ? 'text-green-500'
-                : 'text-red-500'
-            "
-            class="text-2xl font-normal font-mono"
-          >
-            ({{ percentChangeSinceTrendStart }})
-          </span>
-        </h1>
-        <div class="flex gap-2">
-          <UBadge v-if="!pair.active" color="neutral" variant="solid"
-            >INACTIVE</UBadge
-          >
-          <UBadge
-            class="cursor-pointer"
-            :color="
-              pair.last_trend_flip_daily?.status === TREND_BULLISH
-                ? 'success'
-                : 'error'
-            "
-            :variant="timeframe === '1d' ? 'solid' : 'subtle'"
-            @click="timeframe = '1d'"
-            >D1: {{ pair.last_trend_flip_daily?.status?.toUpperCase() }}
-            <span
-              v-if="pair.last_trend_flip_daily?.since"
-              class="ml-1 opacity-80 text-[10px]"
-              >(<RelativeTime
-                :timestamp="pair.last_trend_flip_daily.since"
-                :show-ago="false"
-              />)</span
-            ></UBadge
-          >
-          <UBadge
-            class="cursor-pointer"
-            :color="
-              pair.last_trend_flip_weekly?.status === TREND_BULLISH
-                ? 'success'
-                : 'error'
-            "
-            :variant="timeframe === '1w' ? 'solid' : 'subtle'"
-            @click="timeframe = '1w'"
-            >W1: {{ pair.last_trend_flip_weekly?.status?.toUpperCase() }}
-            <span
-              v-if="pair.last_trend_flip_weekly?.since"
-              class="ml-1 opacity-80 text-[10px]"
-              >(<RelativeTime
-                :timestamp="pair.last_trend_flip_weekly.since"
-                :show-ago="false"
-              />)</span
-            ></UBadge
-          >
-        </div>
-      </div>
-      <div class="text-right">
-        <div class="text-2xl font-mono font-bold">
-          {{ formatPrice(currentPrice) }}
-        </div>
-        <div class="text-sm text-gray-500">Live Price</div>
-      </div>
-    </div>
+    <PairHeader
+      v-model:timeframe="timeframe"
+      :coin="coin"
+      :pair="pair"
+      :current-price="currentPrice"
+      :back-route="backRoute"
+      :percent-change-since-trend-start="percentChangeSinceTrendStart"
+    />
 
     <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
       <div class="lg:col-span-3">

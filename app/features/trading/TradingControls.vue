@@ -80,7 +80,11 @@ const startTrade = async (direction: "long" | "short") => {
 
 <template>
   <div
-    v-if="wallet && !hasOpenPosition && !activeTrade"
+    v-if="
+      wallet &&
+      !hasOpenPosition &&
+      (!activeTrade || activeTrade?.status === 'sleeping')
+    "
     class="bg-white dark:bg-gray-900 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-800 space-y-4"
   >
     <div
