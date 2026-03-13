@@ -145,7 +145,7 @@ const getStatus = (event: Tables<"events">): TrendStatus => {
         class="flex flex-col items-center justify-center py-8 text-gray-500"
       >
         <UIcon name="i-lucide-info" class="w-8 h-8 mb-2 opacity-50" />
-        <p>No recent bearish flips found.</p>
+        <p>No recent flips found.</p>
       </div>
     </div>
   </UCard>

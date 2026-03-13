@@ -35,8 +35,8 @@ The Dashboard provides a high-level overview of the most recent significant mark
   - **No Active Trades**: If neither positions nor orders are present, a "No active trades" message is displayed within the card.
   - **Navigation**: A "Full View" button is displayed on the dashboard that links to the **Trading** page.
 - **Trend Flip Tables**: Two primary tables showing recent market shifts:
-  - **Last 5 Weekly Bearish Flips**: Shows the 5 most recent pairs that flipped to a bearish trend on the Weekly (W1) timeframe. Display the percentage of all monitored pairs that are currently bullish/bearish with a small visual indicator.
-  - **Last 5 Daily Bearish Flips**: Shows the 5 most recent pairs that flipped to a bearish trend on the Daily (D1) timeframe. Display the percentage of all monitored pairs that are currently bullish/bearish with a small visual indicator.
+  - **Last 5 Weekly Flips**: Shows the 5 most recent pairs that flipped to either bullish or bearish trend on the Weekly (W1) timeframe (one flip per coin). Display the percentage of all monitored pairs that are currently bullish/bearish with a small visual indicator.
+  - **Last 5 Daily Flips**: Shows the 5 most recent pairs that flipped to either bullish or bearish trend on the Daily (D1) timeframe (one flip per coin). Display the percentage of all monitored pairs that are currently bullish/bearish with a small visual indicator.
 
 **Table Columns (Trend Flips)**:
 
