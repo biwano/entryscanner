@@ -192,12 +192,12 @@ All server-side workers (Trend Worker, Notification Dispatcher) can be triggered
   - **`requested`** (Handled in `requested.ts`):
     - Sets leverage for the specific coin. If the coin supports 10x leverage, it sets it to **9.5x**. If not, it sets it to **95% of the coin's maximum leverage**.
     - Places a limit order very close to the current market price (calculated using `allMids` from the context).
-    - Updates status to **`entry_set_up`** in Supabase and refreshes the active trade state.
-  - **`entry_set_up`** (Handled in `entrySetUp.ts`):
+    - Updates status to **`entry_setup`** in Supabase and refreshes the active trade state.
+  - **`entry_setup`** (Handled in `entrySetup.ts`):
     - Checks if the user has an open position for the coin via the account state provided in the context.
     - If a position is found:
-      - Creates a **Stop Loss** order (set to user-defined `stop_loss_pct` of capital loss).
-      - Creates a **Take Profit** order using the `take_profit_price` stored in the database if available; otherwise, it is calculated based on `take_profit_pct`.
+      - Creates a **Stop Loss** order (set to user-defined `stop_loss_pct` of capital loss, calculated based on the **actual position leverage**).
+      - Creates a **Take Profit** order using the `take_profit_price` stored in the database if available; otherwise, it is calculated based on `take_profit_pct` and the **actual position leverage**.
       - Updates status to **`exit_setup`** in Supabase and refreshes the active trade state.
   - **`exit_setup`** (Handled in `exitSetup.ts`):
     - Checks if the position has been closed (using the account state from the context).
@@ -315,7 +315,7 @@ Tables use **Row Level Security (RLS)** to ensure appropriate data access. User-
 - `take_profit_price`: decimal (nullable)
 - `take_profit_pct`: decimal (default: 50)
 - `stop_loss_pct`: decimal (default: 10)
-- `status`: enum ("requested", "entry_set_up", "exit_setup", "sleeping")
+- `status`: enum ("requested", "entry_setup", "exit_setup", "sleeping")
 - `direction`: string ("long", "short", nullable)
 - `created_at`: timestamp
 - `updated_at`: timestamp

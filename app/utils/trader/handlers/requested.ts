@@ -101,16 +101,16 @@ export const handleRequested = async (ctx: TraderContext) => {
     grouping: "na",
   });
 
-  // 3. Update status to entry_set_up
+  // 3. Update status to entry_setup
   await supabase
     .from("user_trades")
-    .update({ status: "entry_set_up" })
+    .update({ status: "entry_setup" })
     .eq("id", userId);
 
   await refresh();
 
   traderStore.addLog(
-    `Trade status updated to entry_set_up for ${trade.coin}`,
+    `Trade status updated to entry_setup for ${trade.coin}`,
     "success"
   );
 };

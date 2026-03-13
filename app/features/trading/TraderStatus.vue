@@ -13,7 +13,7 @@ const statusColor = computed(() => {
   switch (activeTrade.value?.status) {
     case "requested":
       return "primary";
-    case "entry_set_up":
+    case "entry_setup":
       return "warning";
     case "exit_setup":
       return "success";

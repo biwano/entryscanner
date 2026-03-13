@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS public.user_trades (
     take_profit_price NUMERIC,
     take_profit_pct NUMERIC DEFAULT 50 NOT NULL,
     stop_loss_pct NUMERIC DEFAULT 10 NOT NULL,
-    status TEXT NOT NULL DEFAULT 'sleeping' CHECK (status IN ('requested', 'entry_set_up', 'exit_setup', 'sleeping')),
+    status TEXT NOT NULL DEFAULT 'sleeping' CHECK (status IN ('requested', 'entry_setup', 'exit_setup', 'sleeping')),
     direction TEXT NOT NULL CHECK (direction IN ('long', 'short')),
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()

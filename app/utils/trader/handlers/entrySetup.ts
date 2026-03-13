@@ -1,7 +1,7 @@
 import type { TraderContext } from "../types";
 import { formatPriceNumber } from "~/utils/format";
 
-export const handleEntrySetUp = async (ctx: TraderContext) => {
+export const handleEntrySetup = async (ctx: TraderContext) => {
   const {
     traderStore,
     trade,
@@ -32,8 +32,10 @@ export const handleEntrySetUp = async (ctx: TraderContext) => {
     if (!assetInfo) throw new Error(`Asset ${trade.coin} not found`);
     const assetIndex = meta.universe.indexOf(assetInfo);
 
+    const leverage = position.position.leverage.value;
+
     // Calculate SL: loss % of capital (margin)
-    const priceMovePct = trade.stop_loss_pct / 100 / 10;
+    const priceMovePct = trade.stop_loss_pct / 100 / leverage;
     const slPrice =
       trade.direction === "long"
         ? entryPrice * (1 - priceMovePct)
@@ -42,7 +44,7 @@ export const handleEntrySetUp = async (ctx: TraderContext) => {
     // Calculate TP
     let tpPrice = trade.take_profit_price;
     if (!tpPrice) {
-      const tpPricePct = trade.take_profit_pct / 100 / 10;
+      const tpPricePct = trade.take_profit_pct / 100 / leverage;
       tpPrice =
         trade.direction === "long"
           ? entryPrice * (1 + tpPricePct)

@@ -6,7 +6,7 @@ import { useHyperliquid } from "~/composables/useHyperliquid";
 import { useSupabaseClient, useSupabaseUser } from "#imports";
 import { HyperliquidClient } from "~~shared/hyperliquid";
 import { handleRequested } from "~/utils/trader/handlers/requested";
-import { handleEntrySetUp } from "~/utils/trader/handlers/entrySetUp";
+import { handleEntrySetup } from "~/utils/trader/handlers/entrySetup";
 import { handleExitSetup } from "~/utils/trader/handlers/exitSetup";
 import type { TraderContext } from "~/utils/trader/types";
 
@@ -62,8 +62,8 @@ export const useTraderHook = () => {
 
       if (trade.status === "requested") {
         await handleRequested(ctx);
-      } else if (trade.status === "entry_set_up") {
-        await handleEntrySetUp(ctx);
+      } else if (trade.status === "entry_setup") {
+        await handleEntrySetup(ctx);
       } else if (trade.status === "exit_setup") {
         await handleExitSetup(ctx);
       }
