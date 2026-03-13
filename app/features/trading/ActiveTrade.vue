@@ -22,9 +22,11 @@ const positions = computed(() => {
   return clearinghouse.value.assetPositions
     .filter((p) => parseFloat(p.position.szi) !== 0)
     .map((p) => {
+      const size = parseFloat(p.position.szi);
       return {
         asset: p.position.coin,
-        size: parseFloat(p.position.szi),
+        side: size > 0 ? "LONG" : "SHORT",
+        size: Math.abs(size),
         entryPx: parseFloat(p.position.entryPx),
         pnl: parseFloat(p.position.unrealizedPnl),
       };
@@ -60,11 +62,16 @@ const tradedCoins = computed(() => {
   }));
 });
 
-const hasActiveTrades = computed(() => positions.value.length > 0 || orders.value.length > 0);
-const shouldShow = computed(() => address.value !== null && hasActiveTrades.value);
+const hasActiveTrades = computed(
+  () => positions.value.length > 0 || orders.value.length > 0
+);
+const shouldShow = computed(
+  () => address.value !== null && hasActiveTrades.value
+);
 
 const columns = [
   { id: "asset", header: "Asset" },
+  { id: "side", header: "Side" },
   { id: "size", header: "Size" },
   { id: "entryPx", header: "Entry Price" },
   { id: "pnl", header: "PnL" },
@@ -143,6 +150,15 @@ const orderColumns = [
             <TableLink :to="`/pair/${row.original.asset}`">
               <CoinDisplay :coin="row.original.asset" size="sm" />
             </TableLink>
+          </template>
+          <template #side-cell="{ row }">
+            <UBadge
+              :color="row.original.side === 'LONG' ? 'success' : 'error'"
+              variant="subtle"
+              size="sm"
+            >
+              {{ row.original.side }}
+            </UBadge>
           </template>
           <template #size-cell="{ row }">
             {{ row.original.size }}
