@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { usePortfolio } from "~/composables/usePortfolio";
+import { useTrading } from "~/composables/useTrading";
 import { useSupabaseUser } from "#imports";
 import { useActiveTrade } from "~/composables/useActiveTrade";
 import { useTraderHook } from "~/composables/useTraderHook";
@@ -12,7 +12,7 @@ const props = defineProps<{
   isBullish: boolean;
 }>();
 
-const { wallet, address, clearinghouse } = usePortfolio();
+const { wallet, address, clearinghouse } = useTrading();
 const { updateTrade } = useActiveTrade();
 const user = useSupabaseUser();
 const { processTrade } = useTraderHook();

@@ -4,7 +4,7 @@ import { PrivateKeySigner } from "@nktkas/hyperliquid/signing";
 import { HyperliquidClient } from "~~shared/hyperliquid";
 import { useAsyncData } from "#app";
 
-export const usePortfolio = () => {
+export const useTrading = () => {
   const { profile } = useProfile();
   const hlClient = new HyperliquidClient();
 
@@ -27,7 +27,7 @@ export const usePortfolio = () => {
     refresh: refreshClearinghouse,
     status: chStatus,
   } = useAsyncData(
-    "portfolio_clearinghouse",
+    "trading_clearinghouse",
     async () => {
       if (!address.value) return null;
       return await hlClient.fetchClearinghouseState(address.value);
@@ -42,7 +42,7 @@ export const usePortfolio = () => {
     refresh: refreshOpenOrders,
     status: ooStatus,
   } = useAsyncData(
-    "portfolio_open_orders",
+    "trading_open_orders",
     async () => {
       if (!address.value) return null;
       return await hlClient.fetchOpenOrders(address.value);
@@ -56,7 +56,7 @@ export const usePortfolio = () => {
     () => chStatus.value === "pending" || ooStatus.value === "pending"
   );
 
-  const refreshPortfolio = async () => {
+  const refreshTrading = async () => {
     await Promise.all([refreshClearinghouse(), refreshOpenOrders()]);
   };
 
@@ -66,6 +66,6 @@ export const usePortfolio = () => {
     clearinghouse,
     openOrders,
     isLoading,
-    refreshPortfolio,
+    refreshTrading,
   };
 };

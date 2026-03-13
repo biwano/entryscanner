@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted, watch } from "vue";
-import { usePortfolio } from "~/composables/usePortfolio";
+import { useTrading } from "~/composables/useTrading";
 import { formatPrice } from "~/utils/format";
 import { useRouter } from "vue-router";
-import ActiveTrade from "~/features/portfolio/ActiveTrade.vue";
+import ActiveTrade from "~/features/trading/ActiveTrade.vue";
 import TraderStatus from "~/features/trading/TraderStatus.vue";
 
 const {
@@ -12,8 +12,8 @@ const {
   clearinghouse,
   openOrders,
   isLoading,
-  refreshPortfolio: refresh,
-} = usePortfolio();
+  refreshTrading: refresh,
+} = useTrading();
 const router = useRouter();
 
 // Watch for wallet/api_key and redirect to profile if not set and not loading
@@ -48,7 +48,7 @@ const withdrawable = computed(() => {
 });
 
 useHead({
-  title: "Portfolio",
+  title: "Trading",
 });
 </script>
 
@@ -58,8 +58,8 @@ useHead({
       <div v-if="address" class="space-y-8">
         <div class="flex items-center justify-between">
           <div>
-            <h1 class="text-3xl font-bold">Your Portfolio</h1>
-            <p class="text-gray-500">Managing assets for {{ address }}</p>
+            <h1 class="text-3xl font-bold">Trading Status</h1>
+            <p class="text-gray-500">Managing trades for {{ address }}</p>
           </div>
           <UButton
             color="primary"
@@ -136,7 +136,7 @@ useHead({
           <h1 class="text-2xl font-bold">Wallet Address Required</h1>
           <p class="text-gray-500 max-w-sm">
             You have entered an API key, but we also need your Hyperliquid
-            wallet address to fetch your portfolio data.
+            wallet address to fetch your trading data.
           </p>
         </div>
         <UButton to="/profile" color="primary" icon="i-lucide-user">
@@ -151,10 +151,10 @@ useHead({
     >
       <UIcon name="i-lucide-lock" class="w-12 h-12 text-gray-400" />
       <div class="space-y-2">
-        <h1 class="text-2xl font-bold">Portfolio Locked</h1>
+        <h1 class="text-2xl font-bold">Trading Locked</h1>
         <p class="text-gray-500 max-w-sm">
           Please enter your Hyperliquid API key in the Profile Settings to
-          access your portfolio.
+          access trading features.
         </p>
       </div>
       <UButton to="/profile" color="primary" icon="i-lucide-user">

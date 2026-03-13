@@ -5,7 +5,7 @@ import { useHyperliquid } from "~/composables/useHyperliquid";
 import { REFRESH_INTERVAL, TREND_BEARISH } from "~~/shared/constants";
 import type { Database, Tables } from "~/types/database.types";
 import RecentBearishFlipsTable from "~/features/dashboard/RecentBearishFlipsTable.vue";
-import ActiveTrade from "~/features/portfolio/ActiveTrade.vue";
+import ActiveTrade from "~/features/trading/ActiveTrade.vue";
 
 const { useAllMids } = useHyperliquid();
 const { data: allMids } = useAllMids();

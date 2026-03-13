@@ -2,7 +2,7 @@
 import { ref } from "vue";
 import { useSupabaseClient } from "#imports";
 import { useUserId } from "~/composables/useUserId";
-import { usePortfolio } from "~/composables/usePortfolio";
+import { useTrading } from "~/composables/useTrading";
 import { useProfile } from "~/composables/useProfile";
 import type { Database } from "~/types/database.types";
 import type { Profile } from "~/types/database.friendly.types";
@@ -18,7 +18,7 @@ const emit = defineEmits<{
 const supabase = useSupabaseClient<Database>();
 const userId = useUserId();
 const { refreshProfile } = useProfile();
-const { refreshPortfolio: refreshPortfolio } = usePortfolio();
+const { refreshTrading } = useTrading();
 const toast = useToast();
 
 const discordWebhookUrl = ref(props.profile?.discord_webhook_url || "");
@@ -46,7 +46,7 @@ const saveProfile = async () => {
   }
 
   await refreshProfile();
-  await refreshPortfolio();
+  await refreshTrading();
   emit("refresh");
   toast.add({
     title: "Profile Updated",

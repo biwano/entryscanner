@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { usePortfolio } from "~/composables/usePortfolio";
+import { useTrading } from "~/composables/useTrading";
 import { formatPrice, truncateAddress } from "~/utils/format";
 
-const { address, clearinghouse, isLoading } = usePortfolio();
+const { address, clearinghouse, isLoading } = useTrading();
 
 const balance = computed(() => {
   if (!clearinghouse.value) return 0;

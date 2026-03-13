@@ -1,5 +1,5 @@
 import { useIntervalFn } from "@vueuse/core";
-import { usePortfolio } from "~/composables/usePortfolio";
+import { useTrading } from "~/composables/useTrading";
 import { useTraderStore } from "~/composables/useTraderStore";
 import { useActiveTrade } from "~/composables/useActiveTrade";
 import { useHyperliquid } from "~/composables/useHyperliquid";
@@ -13,7 +13,7 @@ import type { TraderContext } from "~/utils/trader/types";
 export const useTraderHook = () => {
   const userId = useUserId();
   const traderStore = useTraderStore();
-  const { wallet, address, clearinghouse, refreshPortfolio } = usePortfolio();
+  const { wallet, address, clearinghouse, refreshTrading } = useTrading();
   const { activeTrade, refreshActiveTrade } = useActiveTrade();
   const { useAllMids, useMetaAndAssetCtxs } = useHyperliquid();
   const hlClient = new HyperliquidClient();
@@ -69,7 +69,7 @@ export const useTraderHook = () => {
       }
 
       // Refresh the active trade data after processing a step to update the UI
-      await Promise.all([refreshActiveTrade(), refreshPortfolio()]);
+      await Promise.all([refreshActiveTrade(), refreshTrading()]);
     } catch (e: any) {
       const errorMsg = e?.message || "Unknown error occurred";
       traderStore.addLog(`Error processing trade: ${errorMsg}`, "error");

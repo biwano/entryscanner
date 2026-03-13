@@ -26,13 +26,13 @@ Entry scanner is a web-based application that monitors real-time market data on 
 
 #### 3.1.0. Dashboard
 
-The Dashboard provides a high-level overview of the most recent significant market shifts and the user's personal portfolio if connected.
+The Dashboard provides a high-level overview of the most recent significant market shifts and the user's personal trading status if connected.
 
-- **Personal Portfolio Summary**: If the user has configured their Hyperliquid API key and wallet address, display a summary card at the top of the dashboard containing:
+- **Personal Trading Summary**: If the user has configured their Hyperliquid API key and wallet address, display a summary card at the top of the dashboard containing:
   - **Account Value**: Total equity in USD.
   - **Open Positions**: A table showing active perpetual positions (Asset, Size, Entry Price, Mark Price, PnL). This table is only displayed if the user has active positions.
   - **Open Orders**: A table showing active limit/trigger orders (Asset, Side, Size, Price). This table is only displayed if the user has pending orders.
-  - **Navigation**: A "Full View" button is displayed on the dashboard that links to the **Portfolio** page.
+  - **Navigation**: A "Full View" button is displayed on the dashboard that links to the **Trading** page.
 - **Trend Flip Tables**: Two primary tables showing recent market shifts:
   - **Last 5 Weekly Bearish Flips**: Shows the 5 most recent pairs that flipped to a bearish trend on the Weekly (W1) timeframe.
   - **Last 5 Daily Bearish Flips**: Shows the 5 most recent pairs that flipped to a bearish trend on the Daily (D1) timeframe.
@@ -119,9 +119,9 @@ This page provides a comprehensive view of all active assets being tracked by th
 - **Available Pairs**: The search bar pulls its list from all currently active perpetual pairs available on Hyperliquid.
 - **Mobile Access**: The search bar is accessible on both desktop and mobile devices.
 
-#### 3.1.6. Portfolio Page
+#### 3.1.6. Trading Page
 
-A dedicated view for managing personal Hyperliquid assets, accessible via the main navigation only if the user has a valid Hyperliquid API key configured.
+A dedicated view for managing personal Hyperliquid assets and trades, accessible via the main navigation only if the user has a valid Hyperliquid API key configured.
 
 - **Access Restriction**: This page is hidden in the main navigation and restricted via a redirect if the user has not entered their Hyperliquid API key in the Profile Settings. If an API key is present but a wallet address is missing, a message is displayed to the user.
 - **Trader Status & Logs**: If the user has an active trade (status is not `sleeping` in `user_trades`), display:
@@ -132,7 +132,7 @@ A dedicated view for managing personal Hyperliquid assets, accessible via the ma
   - **Detailed Asset Breakdown**:
   - **Open Positions**: Comprehensive table of all active perpetual positions with real-time PnL calculation.
   - **Open Orders**: Detailed list of pending orders with the ability to see status and types.
-- **Real-Time Data**: The portfolio view uses polling to ensure account data and position statuses are kept up to date.
+- **Real-Time Data**: The trading view uses polling to ensure account data and position statuses are kept up to date.
 
 ### 3.2. Server Scripts (Workers)
 
@@ -194,7 +194,7 @@ All server-side workers (Trend Worker, Notification Dispatcher) can be triggered
   - **`exit_setup`** (Handled in `exitSetup.ts`):
     - Checks if the position has been closed (using the account state from the context).
     - If the position is closed, updates status to **`sleeping`** in Supabase and refreshes the active trade state.
-- **Activity Logging**: Maintains a persistent activity log (stored in **`localStorage`**) of all actions, successes, and failures. This ensures logs are preserved across page refreshes and are accessible via the Portfolio page.
+- **Activity Logging**: Maintains a persistent activity log (stored in **`localStorage`**) of all actions, successes, and failures. This ensures logs are preserved across page refreshes and are accessible via the Trading page.
 
 #### 3.3.2. Active Trade Hook (Client-Side)
 
@@ -202,7 +202,7 @@ All server-side workers (Trend Worker, Notification Dispatcher) can be triggered
 - **Features**:
   - **Manual Refresh**: Instead of continuous polling, the hook provides a `refresh` function that should be called after any action that modifies the trade status (e.g., starting a trade or processing a trade step). This ensures the UI remains consistent with the backend state without unnecessary network traffic.
   - **Trade Management**: Exposes an `updateTrade` function to genericly update a record in the `user_trades` table (e.g., starting a new trade, or changing target prices).
-  - **Shared State**: Uses `useAsyncData` with a consistent key to share the active trade data across multiple components (e.g., `TradingControls`, `TraderStatus`, `PortfolioPage`).
+  - **Shared State**: Uses `useAsyncData` with a consistent key to share the active trade data across multiple components (e.g., `TradingControls`, `TraderStatus`, `TradingPage`).
 
 ### 3.4. Shared Features
 

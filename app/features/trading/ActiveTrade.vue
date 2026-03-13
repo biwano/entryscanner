@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { usePortfolio } from "~/composables/usePortfolio";
+import { useTrading } from "~/composables/useTrading";
 import { useHyperliquid } from "~/composables/useHyperliquid";
 import { formatPrice } from "~/utils/format";
 
@@ -13,7 +13,7 @@ const props = withDefaults(
   }
 );
 
-const { address, clearinghouse, openOrders, isLoading } = usePortfolio();
+const { address, clearinghouse, openOrders, isLoading } = useTrading();
 const { useAllMids } = useHyperliquid();
 const { data: allMids } = useAllMids();
 
@@ -86,15 +86,15 @@ const orderColumns = [
       <div>
         <h2 class="text-xl font-bold flex items-center gap-2">
           <UIcon name="i-lucide-wallet" class="text-primary" />
-          Active trade
+          Active trades
         </h2>
         <div class="flex items-center gap-2">
           <p class="text-sm text-gray-500">
-            Real-time overview of your Hyperliquid account.
+            Real-time overview of your Hyperliquid trading account.
           </p>
           <UButton
             v-if="isDashboard"
-            to="/portfolio"
+            to="/trading"
             variant="link"
             size="xs"
             color="primary"

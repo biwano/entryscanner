@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { useUser } from "~/composables/useUser";
-import { usePortfolio } from "~/composables/usePortfolio";
+import { useTrading } from "~/composables/useTrading";
 import { useTraderHook } from "~/composables/useTraderHook";
 
 const { isAdmin } = useUser();
-const { address, wallet } = usePortfolio();
+const { address, wallet } = useTrading();
 
 // Initialize the trader hook globally
 const { resume, processTrade } = useTraderHook();
@@ -30,9 +30,9 @@ const menuItems = computed(() => {
 
   if (wallet.value) {
     baseItems.push({
-      label: "Portfolio",
+      label: "Trading",
       icon: "i-lucide-briefcase",
-      to: "/portfolio",
+      to: "/trading",
     });
   }
 
