@@ -125,8 +125,8 @@ useHead({
         </div>
 
         <ActiveTrade />
-        <RecentTrades />
         <TraderStatus />
+        <RecentTrades />
       </div>
 
       <div

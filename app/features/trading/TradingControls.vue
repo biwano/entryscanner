@@ -13,7 +13,7 @@ const props = defineProps<{
 }>();
 
 const { wallet, address, clearinghouse } = useTrading();
-const { updateTrade } = useActiveTrade();
+const { updateTrade, activeTrade } = useActiveTrade();
 const user = useSupabaseUser();
 const { processTrade } = useTraderHook();
 const { useMetaAndAssetCtxs } = useHyperliquid();
@@ -78,7 +78,7 @@ const startTrade = async (direction: "long" | "short") => {
 
 <template>
   <div
-    v-if="wallet && !hasOpenPosition"
+    v-if="wallet && !hasOpenPosition && !activeTrade"
     class="bg-white dark:bg-gray-900 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-800 space-y-4"
   >
     <div
