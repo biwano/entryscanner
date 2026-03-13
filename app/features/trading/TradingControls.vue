@@ -36,7 +36,9 @@ const accountValue = computed(() => {
   return parseFloat(clearinghouse.value.marginSummary.accountValue);
 });
 
-const estimatedSizeUsd = computed(() => accountValue.value * targetLeverage.value);
+const estimatedSizeUsd = computed(
+  () => accountValue.value * targetLeverage.value
+);
 
 const hasOpenPosition = computed(() => {
   if (!clearinghouse.value || !address.value) return false;

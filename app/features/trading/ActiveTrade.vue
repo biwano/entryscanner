@@ -94,12 +94,10 @@ const orderColumns = [
       <div>
         <h2 class="text-xl font-bold flex items-center gap-2">
           <UIcon name="i-lucide-wallet" class="text-primary" />
-          Active trades
+          Active trade
         </h2>
         <div class="flex items-center gap-2">
-          <p class="text-sm text-gray-500">
-            Real-time overview of your Hyperliquid trading account.
-          </p>
+          <p class="text-sm text-gray-500">Real-time overview of your trade.</p>
           <UButton
             v-if="isDashboard"
             to="/trading"

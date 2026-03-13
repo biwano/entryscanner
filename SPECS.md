@@ -232,6 +232,15 @@ All server-side workers (Trend Worker, Notification Dispatcher) can be triggered
 - **Volume Formatting**: `formatVolume` uses compact notation (e.g., "1.2M") for trading volumes and open interest.
 - **Time Formatting**: `formatTime` handles ISO string to "HH:mm:ss" conversion using `dayjs`.
 
+#### 3.4.3. Shared UI Components
+
+- **AppHeader**: A global header component that manages the navigation menu, search bar, and user profile/wallet information. It dynamically adjusts its menu items based on the user's roles (admin) and wallet connection status.
+- **AccountSummary**: Displays a user's Hyperliquid account metrics (Total Account Value, Margin Used, Maintenance Margin, Withdrawable) in a grid of summary cards.
+- **GlobalSearch**: A search input that allows users to quickly search for any perpetual pair and navigate to its analysis page.
+- **WalletInfo**: Displays the connected wallet address and basic account information.
+- **TrendIndicator**: A reusable component for showing bullish or bearish trend status and its duration.
+- **Chart**: An interactive price chart component for visualizing historical candle data and technical indicators.
+
 ## 4. Database Schema (Supabase)
 
 Tables use **Row Level Security (RLS)** to ensure appropriate data access. User-specific data is private to each user, while system-wide data is publicly readable.

@@ -77,12 +77,14 @@ export const useTrading = () => {
     [...fills.value].forEach((fill) => {
       if (!fill || !fill.coin) return;
       if (!fillsByCoin[fill.coin]) fillsByCoin[fill.coin] = [];
-      fillsByCoin[fill.coin].push(fill);
+      (fillsByCoin[fill.coin] || []).push(fill);
     });
 
     Object.keys(fillsByCoin).forEach((coin) => {
       // Sort fills for this coin oldest to newest
-      const coinFills = [...fillsByCoin[coin]].sort((a, b) => a.time - b.time);
+      const coinFills = [...(fillsByCoin[coin] || [])].sort(
+        (a, b) => a.time - b.time
+      );
 
       let currentPos = 0;
       let totalPnl = 0;
@@ -107,7 +109,8 @@ export const useTrading = () => {
           // We're closing or reducing a position
           const avgEntryPx = entryPriceSum / entrySizeSum;
           const reducedSz = Math.min(Math.abs(currentPos), sz);
-          const realizedPnl = (px - avgEntryPx) * reducedSz * (currentPos > 0 ? 1 : -1);
+          const realizedPnl =
+            (px - avgEntryPx) * reducedSz * (currentPos > 0 ? 1 : -1);
 
           totalPnl += realizedPnl;
           currentPos += sz * sideMult;
@@ -132,7 +135,10 @@ export const useTrading = () => {
             entryPriceSum = 0;
             entrySizeSum = 0;
             firstEntryTime = 0;
-          } else if (Math.sign(currentPos) !== (fill.side === "B" ? 1 : -1) && currentPos !== 0) {
+          } else if (
+            Math.sign(currentPos) !== (fill.side === "B" ? 1 : -1) &&
+            currentPos !== 0
+          ) {
             // Position flipped - close current, start new
             const leftoverSz = Math.abs(currentPos);
             completedTrades.push({
@@ -162,7 +168,9 @@ export const useTrading = () => {
         const position = clearinghouse.value?.assetPositions?.find(
           (p: any) => p?.position?.coin === trade.coin
         );
-        const leverage = position ? `${position.position.leverage.value}x` : "N/A";
+        const leverage = position
+          ? `${position.position.leverage.value}x`
+          : "N/A";
         return { ...trade, leverage };
       })
       .sort(
