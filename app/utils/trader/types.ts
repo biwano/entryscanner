@@ -8,8 +8,10 @@ import type {
 } from "@nktkas/hyperliquid";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "~/types/database.types";
+import type { useToast } from "#imports";
 
 type ExchangeClient = ReturnType<HyperliquidClient["getExchangeClient"]>;
+type Toast = ReturnType<typeof useToast>;
 
 export interface TraderContext {
   supabase: SupabaseClient<Database>;
@@ -23,4 +25,5 @@ export interface TraderContext {
   meta: MetaResponse;
   allMids: AllMidsResponse;
   clearinghouseState: ClearinghouseStateResponse;
+  toast: Toast;
 }

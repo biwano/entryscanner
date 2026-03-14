@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { useTrading } from "~/composables/useTrading";
-import { useSupabaseUser } from "#imports";
+import { useSupabaseUser, useToast } from "#imports";
 import { useActiveTrade } from "~/composables/useActiveTrade";
 import { useTraderHook } from "~/composables/useTraderHook";
 import { useHyperliquid } from "~/composables/useHyperliquid";
@@ -17,6 +17,7 @@ const { updateTrade, activeTrade } = useActiveTrade();
 const user = useSupabaseUser();
 const { processTrade } = useTraderHook();
 const { useMetaAndAssetCtxs } = useHyperliquid();
+const toast = useToast();
 
 const { data: metaAndAssetCtxs } = useMetaAndAssetCtxs();
 
@@ -68,10 +69,21 @@ const startTrade = async (direction: "long" | "short") => {
 
     if (error) throw error;
 
+    toast.add({
+      title: "Trade Requested",
+      description: `Starting ${direction} trade for ${props.coin}...`,
+      color: "success",
+    });
+
     // Trigger immediate check
     processTrade();
-  } catch (e) {
+  } catch (e: any) {
     console.error("Error starting trade:", e);
+    toast.add({
+      title: "Error starting trade",
+      description: e.message || "An unknown error occurred",
+      color: "error",
+    });
   } finally {
     isSubmitting.value = false;
   }

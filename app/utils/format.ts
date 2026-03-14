@@ -60,5 +60,5 @@ export const truncateAddress = (address: string) => {
 };
 
 export const formatTime = (isoString: string) => {
-  return dayjs(isoString).format("HH:mm:ss");
+  return dayjs(isoString).format("MM/DD HH:mm:ss");
 };

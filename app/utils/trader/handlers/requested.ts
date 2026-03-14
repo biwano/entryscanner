@@ -12,6 +12,7 @@ export const handleRequested = async (ctx: TraderContext) => {
     meta,
     allMids,
     clearinghouseState,
+    toast,
   } = ctx;
 
   if (!trade.coin) {
@@ -108,6 +109,12 @@ export const handleRequested = async (ctx: TraderContext) => {
     .eq("id", userId);
 
   await refresh();
+
+  toast.add({
+    title: "Order Placed",
+    description: `Limit ${trade.direction} order for ${trade.coin} placed at ${formattedPrice}`,
+    color: "success",
+  });
 
   traderStore.addLog(
     `Trade status updated to entry_setup for ${trade.coin}`,

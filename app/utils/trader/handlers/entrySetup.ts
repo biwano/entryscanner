@@ -11,6 +11,7 @@ export const handleEntrySetup = async (ctx: TraderContext) => {
     refresh,
     meta,
     clearinghouseState,
+    toast,
   } = ctx;
 
   if (!trade.coin) {
@@ -93,6 +94,12 @@ export const handleEntrySetup = async (ctx: TraderContext) => {
       .eq("id", userId);
 
     await refresh();
+
+    toast.add({
+      title: "Position Detected",
+      description: `Position for ${trade.coin} opened at ${entryPrice}. SL/TP orders placed.`,
+      color: "success",
+    });
 
     traderStore.addLog(
       `Exit orders set up for ${trade.coin}. Status: exit_setup`,

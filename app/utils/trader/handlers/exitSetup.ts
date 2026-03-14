@@ -1,8 +1,15 @@
 import type { TraderContext } from "../types";
 
 export const handleExitSetup = async (ctx: TraderContext) => {
-  const { traderStore, trade, supabase, userId, refresh, clearinghouseState } =
-    ctx;
+  const {
+    traderStore,
+    trade,
+    supabase,
+    userId,
+    refresh,
+    clearinghouseState,
+    toast,
+  } = ctx;
 
   if (!trade.coin) {
     throw new Error("No coin specified for trade");
@@ -24,5 +31,11 @@ export const handleExitSetup = async (ctx: TraderContext) => {
       .eq("id", userId);
 
     await refresh();
+
+    toast.add({
+      title: "Trade Completed",
+      description: `Position for ${trade.coin} closed. Trade finished successfully.`,
+      color: "success",
+    });
   }
 };

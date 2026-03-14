@@ -3,7 +3,7 @@ import { useTrading } from "~/composables/useTrading";
 import { useTraderStore } from "~/composables/useTraderStore";
 import { useActiveTrade } from "~/composables/useActiveTrade";
 import { useHyperliquid } from "~/composables/useHyperliquid";
-import { useSupabaseClient, useSupabaseUser } from "#imports";
+import { useSupabaseClient, useSupabaseUser, useToast } from "#imports";
 import { HyperliquidClient } from "~~shared/hyperliquid";
 import { handleRequested } from "~/utils/trader/handlers/requested";
 import { handleEntrySetup } from "~/utils/trader/handlers/entrySetup";
@@ -17,6 +17,7 @@ export const useTraderHook = () => {
   const { activeTrade, refreshActiveTrade } = useActiveTrade();
   const { useAllMids, useMetaAndAssetCtxs } = useHyperliquid();
   const hlClient = new HyperliquidClient();
+  const toast = useToast();
 
   const { data: allMids } = useAllMids();
   const { data: metaAndAssetCtxs } = useMetaAndAssetCtxs();
@@ -58,6 +59,7 @@ export const useTraderHook = () => {
         meta: metaAndAssetCtxs.value[0],
         allMids: allMids.value,
         clearinghouseState: clearinghouse.value,
+        toast,
       };
 
       if (trade.status === "requested") {
@@ -74,6 +76,11 @@ export const useTraderHook = () => {
       const errorMsg = e?.message || "Unknown error occurred";
       traderStore.addLog(`Error processing trade: ${errorMsg}`, "error");
       console.error("Trade processing error:", e);
+      toast.add({
+        title: "Trade Error",
+        description: errorMsg,
+        color: "error",
+      });
     }
   };
 

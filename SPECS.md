@@ -230,7 +230,7 @@ All server-side workers (Trend Worker, Notification Dispatcher) can be triggered
 - **Shared Formatting Logic**: Centralized formatting functions located in `app/utils/format.ts` for consistent UI representation.
 - **Price Formatting**: `formatPrice` handles USD currency formatting for asset prices.
 - **Volume Formatting**: `formatVolume` uses compact notation (e.g., "1.2M") for trading volumes and open interest.
-- **Time Formatting**: `formatTime` handles ISO string to "HH:mm:ss" conversion using `dayjs`.
+- **Time Formatting**: `formatTime` handles ISO string to "MM/DD HH:mm:ss" conversion using `dayjs`.
 
 #### 3.4.3. Shared UI Components
 
@@ -340,8 +340,9 @@ Tables use **Row Level Security (RLS)** to ensure appropriate data access. User-
     - Calculates bullish/bearish trends on **Daily and Weekly** timeframes.
     - Updates the `trends` table (single row per coin/timeframe) and creates an entry in `events` if a trend flip occurs.
     - **Notification Dispatcher**: A background worker that identifies new `events` for which the user hasn't been notified (based on `created_at` value comparison with last notification) and sends alerts.
-    - **Trader Hook (Client-Side)**: A Nuxt composable that periodically polls for `user_trades` and executes trade actions directly from the browser using the user's API key. Activity logs are persisted in `localStorage`.
+    - **Trader Hook (Client-Side)**: A Nuxt composable that periodically polls for `user_trades` and executes trade actions directly from the browser using the user's API key. Activity logs are persisted in `localStorage`. Provides real-time visual feedback via toast notifications when trade steps are completed or errors occur.
     - **Active Trade Hook (Client-Side)**: A Nuxt composable (`useActiveTrade`) that provides real-time access to the current user's active trade status, including automated polling while a trade is in progress.
+    - **UI Toasts**: Global toast notification system (via Nuxt UI `useToast`) used to provide immediate feedback on trade requests and automated trade status transitions.
 3.  **Server-Side Workers**: Background processes (via Nitro/Server API) that cycle through monitored pairs (Trend Worker) and events (Dispatcher). These workers can be triggered through API endpoints or direct bash commands.
 4.  **Persistence Layer**: Supabase handles all system and user-specific data, ensuring monitored states and alerts remain persistent.
 5.  **Market Integration**: Uses the `InfoClient` for real-time market data retrieval.

@@ -28,10 +28,6 @@ const columns = [
   { id: "exit", header: "Exit (Time / Price)" },
   { id: "pnl", header: "PnL" },
 ];
-
-const formatDate = (iso: string) => {
-  return dayjs(iso).format("MM/DD HH:mm:ss");
-};
 </script>
 
 <template>
@@ -70,7 +66,7 @@ const formatDate = (iso: string) => {
         <template #entry-cell="{ row }">
           <div class="flex flex-col">
             <span class="text-xs text-gray-500 font-mono">{{
-              formatDate(row.original.entryTime)
+              formatTime(row.original.entryTime)
             }}</span>
             <span class="font-bold">{{
               formatPrice(row.original.entryPrice)
@@ -81,7 +77,7 @@ const formatDate = (iso: string) => {
         <template #exit-cell="{ row }">
           <div class="flex flex-col">
             <span class="text-xs text-gray-500 font-mono">{{
-              formatDate(row.original.exitTime)
+              formatTime(row.original.exitTime)
             }}</span>
             <span class="font-bold">{{
               formatPrice(row.original.exitPrice)
