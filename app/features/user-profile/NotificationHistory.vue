@@ -30,23 +30,16 @@ defineProps<{
             <RelativeTime :timestamp="notif.sent_at" />
           </span>
           <UBadge
-            :color="
-              notif.event?.status === TREND_BULLISH ? 'success' : 'error'
-            "
+            :color="notif.event?.status === TREND_BULLISH ? 'success' : 'error'"
             size="xs"
             variant="subtle"
           >
             {{ notif.event?.status?.toUpperCase() }}
           </UBadge>
         </div>
-        <p
-          class="mt-2 text-sm font-medium text-gray-900 dark:text-white"
-        >
+        <p class="mt-2 text-sm font-medium text-gray-900 dark:text-white">
           {{ notif.message }}
         </p>
-        <div class="mt-1 text-[10px] text-gray-400 font-mono">
-          {{ notif.id }}
-        </div>
       </div>
 
       <div

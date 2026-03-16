@@ -3,7 +3,7 @@ import { computed } from "vue";
 import { useUser } from "~/composables/useUser";
 import { useTrading } from "~/composables/useTrading";
 
-const { isAdmin } = useUser();
+const { isAdmin, user } = useUser();
 const { wallet } = useTrading();
 
 const menuItems = computed(() => {
@@ -40,8 +40,8 @@ const menuItems = computed(() => {
     baseItems,
     [
       {
-        label: "Profile",
-        icon: "i-lucide-user",
+        label: user.value ? "Profile" : "Login",
+        icon: user.value ? "i-lucide-user" : "i-lucide-log-in",
         to: "/profile",
       },
     ],
