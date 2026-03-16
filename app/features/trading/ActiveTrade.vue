@@ -209,18 +209,24 @@ const orderColumns = [
             </UBadge>
           </template>
           <template #size-cell="{ row }">
-            {{ row.original.size }}
+            <Private>
+              {{ row.original.size }}
+            </Private>
           </template>
           <template #entryPx-cell="{ row }">
             {{ formatPrice(row.original.entryPx) }}
           </template>
           <template #pnl-cell="{ row }">
-            <span
-              :class="row.original.pnl >= 0 ? 'text-green-500' : 'text-red-500'"
-            >
-              {{ row.original.pnl >= 0 ? "+" : ""
-              }}{{ formatPrice(row.original.pnl) }}
-            </span>
+            <Private>
+              <span
+                :class="
+                  row.original.pnl >= 0 ? 'text-green-500' : 'text-red-500'
+                "
+              >
+                {{ row.original.pnl >= 0 ? "+" : ""
+                }}{{ formatPrice(row.original.pnl) }}
+              </span>
+            </Private>
           </template>
         </UTable>
       </div>
@@ -262,7 +268,9 @@ const orderColumns = [
             </UBadge>
           </template>
           <template #size-cell="{ row }">
-            {{ row.original.size }}
+            <Private>
+              {{ row.original.size }}
+            </Private>
           </template>
           <template #price-cell="{ row }">
             {{ formatPrice(row.original.price) }}

@@ -2,9 +2,11 @@
 import { computed } from "vue";
 import { useUser } from "~/composables/useUser";
 import { useTrading } from "~/composables/useTrading";
+import { useUIStore } from "~/composables/useUIStore";
 
 const { isAdmin, user } = useUser();
 const { wallet } = useTrading();
+const { isPrivacyMode, togglePrivacyMode } = useUIStore();
 
 const menuItems = computed(() => {
   const baseItems = [
@@ -67,8 +69,14 @@ const menuItems = computed(() => {
           <GlobalSearch />
         </div>
       </div>
-      <div class="flex items-center gap-4">
+      <div class="flex items-center gap-2">
         <WalletInfo />
+        <UButton
+          :icon="isPrivacyMode ? 'i-lucide-eye-off' : 'i-lucide-eye'"
+          color="neutral"
+          variant="ghost"
+          @click="togglePrivacyMode"
+        />
         <UColorModeButton />
         <UNavigationMenu :items="menuItems[1]" orientation="horizontal" />
       </div>

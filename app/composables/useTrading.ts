@@ -202,5 +202,6 @@ export const useTrading = () => {
     recentTrades,
     isLoading,
     refreshTrading,
+    hlClient, // Export hlClient
   };
 };

@@ -33,7 +33,9 @@ const withdrawable = computed(() => {
         Total Account Value
       </div>
       <div class="text-3xl font-black text-primary mt-1">
-        {{ formatPrice(accountValue) }}
+        <Private>
+          {{ formatPrice(accountValue) }}
+        </Private>
       </div>
     </UCard>
 
@@ -44,7 +46,9 @@ const withdrawable = computed(() => {
         Margin Used
       </div>
       <div class="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-        {{ formatPrice(marginUsed) }}
+        <Private>
+          {{ formatPrice(marginUsed) }}
+        </Private>
       </div>
     </UCard>
 
@@ -55,7 +59,9 @@ const withdrawable = computed(() => {
         Maint. Margin
       </div>
       <div class="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-        {{ formatPrice(crossMaintenanceMarginUsed) }}
+        <Private>
+          {{ formatPrice(crossMaintenanceMarginUsed) }}
+        </Private>
       </div>
     </UCard>
 
@@ -66,7 +72,9 @@ const withdrawable = computed(() => {
         Withdrawable
       </div>
       <div class="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-        {{ formatPrice(withdrawable) }}
+        <Private>
+          {{ formatPrice(withdrawable) }}
+        </Private>
       </div>
     </UCard>
   </div>

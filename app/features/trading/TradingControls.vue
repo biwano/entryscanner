@@ -111,7 +111,10 @@ const startTrade = async (direction: "long" | "short") => {
         >
       </div>
       <div class="text-xs font-mono font-bold text-primary">
-        Est. Size: {{ formatPrice(estimatedSizeUsd) }}
+        Est. Size:
+        <Private>
+          {{ formatPrice(estimatedSizeUsd) }}
+        </Private>
       </div>
     </div>
 
@@ -196,7 +199,9 @@ const startTrade = async (direction: "long" | "short") => {
 
     <p class="text-[10px] text-gray-400 text-center italic">
       Trade uses {{ targetLeverage.toFixed(1) }}x leverage based on your account
-      value ({{ formatPrice(accountValue) }}).
+      value (
+      <Private> {{ formatPrice(accountValue) }} </Private>
+      ).
     </p>
   </div>
 </template>

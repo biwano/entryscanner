@@ -1,7 +1,9 @@
 import { ref } from "vue";
+import { useLocalStorage } from "@vueuse/core";
 
 const isSidebarOpen = ref(false);
 const colorMode = ref<"light" | "dark" | "system">("system");
+const isPrivacyMode = useLocalStorage("privacy-mode", false);
 
 export const useUIStore = () => {
   function toggleSidebar() {
@@ -12,10 +14,16 @@ export const useUIStore = () => {
     colorMode.value = mode;
   }
 
+  function togglePrivacyMode() {
+    isPrivacyMode.value = !isPrivacyMode.value;
+  }
+
   return {
     isSidebarOpen,
     colorMode,
+    isPrivacyMode,
     toggleSidebar,
     setColorMode,
+    togglePrivacyMode,
   };
 };

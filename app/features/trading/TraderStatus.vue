@@ -52,7 +52,9 @@ const statusColor = computed(() => {
               Asset
             </div>
             <div class="text-lg font-black">
-              {{ activeTrade.coin }} ({{ activeTrade.direction.toUpperCase() }})
+              {{ activeTrade.coin }} ({{
+                activeTrade.direction?.toUpperCase()
+              }})
             </div>
           </div>
           <div
@@ -79,7 +81,9 @@ const statusColor = computed(() => {
               Stop Loss
             </div>
             <div class="text-lg font-black">
-              {{ activeTrade.stop_loss_pct }}%
+              {{
+                activeTrade.stop_loss_price || activeTrade.stop_loss_pct + "%"
+              }}
             </div>
           </div>
         </div>

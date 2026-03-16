@@ -87,13 +87,17 @@ const columns = [
 
         <template #pnl-cell="{ row }">
           <div class="flex flex-col">
-            <span
-              :class="row.original.pnl >= 0 ? 'text-green-500' : 'text-red-500'"
-              class="font-black"
-            >
-              {{ row.original.pnl >= 0 ? "+" : ""
-              }}{{ formatPrice(row.original.pnl) }}
-            </span>
+            <Private>
+              <span
+                :class="
+                  row.original.pnl >= 0 ? 'text-green-500' : 'text-red-500'
+                "
+                class="font-black"
+              >
+                {{ row.original.pnl >= 0 ? "+" : ""
+                }}{{ formatPrice(row.original.pnl) }}
+              </span>
+            </Private>
           </div>
         </template>
       </UTable>

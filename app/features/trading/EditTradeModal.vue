@@ -3,6 +3,7 @@ import { ref, watch } from "vue";
 import { useActiveTrade } from "~/composables/useActiveTrade";
 import { useTraderHook } from "~/composables/useTraderHook";
 import { useTrading } from "~/composables/useTrading";
+import { useHyperliquid } from "~/composables/useHyperliquid";
 import { useToast } from "#imports";
 
 const props = defineProps<{
@@ -16,7 +17,9 @@ const emit = defineEmits(["update:open", "saved"]);
 
 const { updateTrade } = useActiveTrade();
 const { processTrade } = useTraderHook();
-const { refreshTrading } = useTrading();
+const { refreshTrading, hlClient, address, wallet } = useTrading();
+const { useMetaAndAssetCtxs } = useHyperliquid();
+const { data: metaAndAssetCtxs } = useMetaAndAssetCtxs();
 const toast = useToast();
 
 const localTpPrice = ref<number | undefined>(props.tpPrice);
@@ -36,6 +39,33 @@ watch(
 const saveEdit = async () => {
   isSaving.value = true;
   try {
+    // 1. Cancel existing open orders for this coin
+    if (hlClient && address.value && wallet.value && metaAndAssetCtxs.value) {
+      const openOrders = await hlClient.fetchOpenOrders(address.value);
+      const coinOrders = openOrders.filter((o: any) => o.coin === props.coin);
+
+      if (coinOrders.length > 0) {
+        const meta = metaAndAssetCtxs.value[0];
+        const assetInfo = meta.universe.find((u: any) => u.name === props.coin);
+        if (assetInfo) {
+          const assetIndex = meta.universe.indexOf(assetInfo);
+          const exchangeClient = hlClient.getExchangeClient(wallet.value);
+
+          for (const order of coinOrders) {
+            await exchangeClient.cancel({
+              cancels: [
+                {
+                  a: assetIndex,
+                  o: order.oid,
+                },
+              ],
+            });
+          }
+        }
+      }
+    }
+
+    // 2. Update the trade
     const { error } = await updateTrade({
       coin: props.coin,
       status: "entry_setup",

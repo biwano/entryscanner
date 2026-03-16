@@ -123,7 +123,13 @@ This page provides a comprehensive view of all active assets being tracked by th
 - **Available Pairs**: The search bar pulls its list from all currently active perpetual pairs available on Hyperliquid.
 - **Mobile Access**: The search bar is accessible on both desktop and mobile devices.
 
-#### 3.1.6. Trading Page
+#### 3.1.6. Privacy Mode
+
+- **Global Toggle**: A privacy mode toggle is available in the top menu (near the dark mode button), allowing users to hide sensitive wallet and trade information.
+- **Privacy Component**: A reusable `Private` component wraps sensitive data and shows a placeholder when privacy mode is active.
+- **Persistence**: The privacy mode state is persisted across page reloads in the browser's local storage.
+
+#### 3.1.7. Trading Page
 
 A dedicated view for managing personal Hyperliquid assets and trades, accessible via the main navigation only if the user has a valid Hyperliquid API key configured.
 
@@ -197,6 +203,7 @@ All server-side workers (Trend Worker, Notification Dispatcher) can be triggered
     - Places a limit order very close to the current market price (calculated using `allMids` from the context).
     - Updates status to **`entry_setup`** in Supabase and refreshes the active trade state.
   - **`entry_setup`** (Handled in `entrySetup.ts`):
+    - Systematically checks for and cancels any existing open orders (limit or trigger) for the coin on Hyperliquid before proceeding.
     - Checks if the user has an open position for the coin via the account state provided in the context.
     - If a position is found:
       - Creates a **Stop Loss** order (set to user-defined `stop_loss_pct` of capital loss, calculated based on the **actual position leverage**).
@@ -244,6 +251,7 @@ All server-side workers (Trend Worker, Notification Dispatcher) can be triggered
 - **PairHeader**: A component for the Pair Analysis page that displays the asset name, percentage change since trend start, status badges, timeframe selectors with trend indicators, and the live price.
 - **TrendIndicator**: A reusable component for showing bullish or bearish trend status and its duration.
 - **Chart**: An interactive price chart component for visualizing historical candle data and technical indicators.
+- **Private**: A utility component that conditionally renders its content or a placeholder state based on the user's privacy mode setting. This is used to hide sensitive wallet and trade information.
 
 ## 4. Database Schema (Supabase)
 
