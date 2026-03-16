@@ -76,16 +76,15 @@ const resetPassword = async () => {
 </script>
 
 <template>
-  <div class="flex flex-col items-center justify-center py-20">
-    <UCard class="w-full max-w-sm">
-      <template #header>
-        <div class="flex flex-col items-center text-center space-y-2">
-          <UIcon name="i-lucide-key-round" class="w-10 h-10 text-primary" />
-          <h1 class="text-2xl font-bold">Reset Password</h1>
-          <p class="text-gray-500">Enter your new password below.</p>
-        </div>
-      </template>
-
+  <div
+    class="flex flex-col items-center justify-center py-20 text-center space-y-6"
+  >
+    <UIcon name="i-lucide-key-round" class="w-12 h-12 text-primary" />
+    <div class="flex flex-col items-center text-center space-y-2">
+      <h1 class="text-2xl font-bold">Reset Password</h1>
+      <p class="text-gray-500">Enter your new password below.</p>
+    </div>
+    <UCard class="w-full max-w-sm text-left">
       <form @submit.prevent="resetPassword" class="space-y-4">
         <UFormField label="New Password">
           <UInput
@@ -93,6 +92,7 @@ const resetPassword = async () => {
             type="password"
             placeholder="Min 6 characters"
             required
+            class="w-full"
           />
         </UFormField>
 
@@ -102,6 +102,7 @@ const resetPassword = async () => {
             type="password"
             placeholder="Confirm your password"
             required
+            class="w-full"
           />
         </UFormField>
 

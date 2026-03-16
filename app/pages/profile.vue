@@ -4,10 +4,10 @@ import { useSupabaseClient, useSupabaseUser } from "#imports";
 import { Auth } from "@supa-kit/auth-ui-vue";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import type { Database } from "~/types/database.types";
-import type { 
-  Profile, 
-  UserSubscription, 
-  NotificationHistory 
+import type {
+  Profile,
+  UserSubscription,
+  NotificationHistory,
 } from "~/types/database.friendly.types.js";
 import ProfileSettings from "~/features/user-profile/ProfileSettings.vue";
 import SubscriptionList from "~/features/subscriptions/SubscriptionList.vue";
@@ -24,15 +24,18 @@ const { profile, refreshProfile, pendingProfile } = useProfile();
 const url = useRequestURL();
 const redirectTo = `${url.origin}/auth/reset-password`;
 
-const { data: subscriptions, refresh: refreshSubscriptions, pending: pendingSubscriptions } =
-  useAsyncData<UserSubscription[]>("subscriptions", async () => {
-    if (!userId.value) return [];
-    const { data } = await supabase
-      .from("user_subscriptions")
-      .select("*")
-      .eq("user_id", userId.value);
-    return data || [];
-  });
+const {
+  data: subscriptions,
+  refresh: refreshSubscriptions,
+  pending: pendingSubscriptions,
+} = useAsyncData<UserSubscription[]>("subscriptions", async () => {
+  if (!userId.value) return [];
+  const { data } = await supabase
+    .from("user_subscriptions")
+    .select("*")
+    .eq("user_id", userId.value);
+  return data || [];
+});
 
 type NotificationWithEvent = NotificationHistory & {
   event: {
@@ -40,25 +43,24 @@ type NotificationWithEvent = NotificationHistory & {
   } | null;
 };
 
-const { data: notifications, pending: pendingNotifications } = useAsyncData<NotificationWithEvent[]>(
-  "notification_history_profile",
-  async () => {
-    if (!userId.value) return [];
-    const { data } = await supabase
-      .from("notification_history")
-      .select(
-        `
+const { data: notifications, pending: pendingNotifications } = useAsyncData<
+  NotificationWithEvent[]
+>("notification_history_profile", async () => {
+  if (!userId.value) return [];
+  const { data } = await supabase
+    .from("notification_history")
+    .select(
+      `
       *,
       event:events (status)
     `
-      )
-      .eq("user_id", userId.value)
-      .not("sent_at", "is", null)
-      .order("sent_at", { ascending: false })
-      .returns<NotificationWithEvent[]>();
-    return data || [];
-  }
-);
+    )
+    .eq("user_id", userId.value)
+    .not("sent_at", "is", null)
+    .order("sent_at", { ascending: false })
+    .returns<NotificationWithEvent[]>();
+  return data || [];
+});
 
 const logout = async () => {
   await supabase.auth.signOut();
@@ -71,15 +73,13 @@ const logout = async () => {
       v-if="!user"
       class="flex flex-col items-center justify-center py-20 text-center space-y-6"
     >
-      <UIcon name="i-lucide-lock" class="w-12 h-12 text-gray-400" />
+      <UIcon name="i-lucide-lock" class="w-12 h-12 text-primary" />
       <div class="space-y-2">
         <h1 class="text-2xl font-bold">Authentication Required</h1>
-        <p class="text-gray-500 max-w-sm">
-          Sign in to manage your subscriptions and notification settings.
-        </p>
+        <p class="text-gray-500 max-w-sm">Sign in</p>
       </div>
 
-      <UCard class="w-full max-w-sm p-4">
+      <UCard class="w-full max-w-sm">
         <Auth
           :supabase-client="supabase"
           :providers="[]"
@@ -87,9 +87,72 @@ const logout = async () => {
           :appearance="{
             theme: ThemeSupa,
             brand: 'fuchsia',
+            style: {
+              container: {
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 'calc(var(--spacing) * 3)',
+                'text-align': 'left',
+                margin: 0,
+              },
+              label: {
+                fontSize: 'var(--text-sm)',
+                fontWeight: '500',
+                marginBottom: 'var(--spacing)',
+                display: 'block',
+                color:
+                  colorMode.value === 'dark'
+                    ? 'var(--color-gray-200)'
+                    : 'var(--color-gray-700)',
+              },
+              input: {
+                borderRadius: 'var(--ui-radius)',
+                padding:
+                  'calc(var(--spacing) * 1.5) calc(var(--spacing) * 2.5)',
+                fontSize: 'var(--text-sm)',
+                border: '1px solid',
+                borderColor:
+                  colorMode.value === 'dark'
+                    ? 'var(--color-gray-800)'
+                    : 'var(--color-gray-300)',
+                backgroundColor:
+                  colorMode.value === 'dark'
+                    ? 'var(--color-gray-950)'
+                    : 'var(--color-white)',
+                color:
+                  colorMode.value === 'dark'
+                    ? 'var(--color-white)'
+                    : 'var(--color-gray-900)',
+                width: '100%',
+                boxShadow: 'none',
+              },
+              button: {
+                borderRadius: 'var(--ui-radius)',
+                padding:
+                  'calc(var(--spacing) * 1.5) calc(var(--spacing) * 2.5)',
+                fontSize: 'var(--text-sm)',
+                fontWeight: '600',
+                backgroundColor: 'var(--color-primary-500)',
+                color: 'var(--color-white)',
+                border: 'none',
+                cursor: 'pointer',
+                width: '100%',
+                margin: 0,
+              },
+              anchor: {
+                fontSize: 'var(--text-sm)',
+                color: 'var(--color-primary-500)',
+                textDecoration: 'none',
+              },
+              divider: {},
+              message: {
+                fontSize: 'var(--text-sm)',
+                color: 'var(--color-error-500)',
+                marginTop: 'var(--spacing)',
+              },
+            },
           }"
           :redirect-to="redirectTo"
-          theme="default"
         />
       </UCard>
     </div>
