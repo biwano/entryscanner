@@ -10,21 +10,31 @@ const confirmPassword = ref("");
 const isLoading = ref(false);
 
 onMounted(async () => {
-  const code = route.query.code as string;
-  if (code) {
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (error) {
+  // Check if we already have a session
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  // If no session, check if we have a code
+  if (!session) {
+    const code = route.query.code as string;
+    if (code) {
+      const { error } = await supabase.auth.exchangeCodeForSession(code);
+      if (error) {
+        toast.add({
+          title: "Reset Link Invalid",
+          description:
+            "The password reset link is invalid or has expired. Please request a new one.",
+          color: "error",
+        });
+        router.push("/profile");
+      }
+    } else {
+      // If no code, check if we already have a session
       toast.add({
-        title: "Reset Link Invalid",
-        description: "The password reset link is invalid or has expired. Please request a new one.",
+        title: "Not authorized",
+        description: "You are not authorized to access this page.",
         color: "error",
       });
-      router.push("/profile");
-    }
-  } else {
-    // If no code, check if we already have a session
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
       router.push("/profile");
     }
   }
@@ -58,10 +68,9 @@ const resetPassword = async () => {
 
   toast.add({
     title: "Password Updated",
-    description: "Your password has been successfully reset. You can now log in.",
+    description: "Your password has been successfully reset.",
     color: "success",
   });
-
   router.push("/profile");
 };
 </script>
@@ -96,12 +105,7 @@ const resetPassword = async () => {
           />
         </UFormField>
 
-        <UButton
-          type="submit"
-          block
-          color="primary"
-          :loading="isLoading"
-        >
+        <UButton type="submit" block color="primary" :loading="isLoading">
           Update Password
         </UButton>
       </form>

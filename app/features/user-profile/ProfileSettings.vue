@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import { useSupabaseClient } from "#imports";
 import { useUserId } from "~/composables/useUserId";
 import { useTrading } from "~/composables/useTrading";
@@ -24,6 +24,14 @@ const toast = useToast();
 const discordWebhookUrl = ref(props.profile?.discord_webhook_url || "");
 const hlApiKey = ref(props.profile?.hl_api_key || "");
 const hlWalletAddress = ref(props.profile?.hl_wallet_address || "");
+
+watch(() => props.profile, (newProfile) => {
+  if (newProfile) {
+    discordWebhookUrl.value = newProfile.discord_webhook_url || "";
+    hlApiKey.value = newProfile.hl_api_key || "";
+    hlWalletAddress.value = newProfile.hl_wallet_address || "";
+  }
+}, { immediate: true });
 
 const saveProfile = async () => {
   if (!userId.value) return;

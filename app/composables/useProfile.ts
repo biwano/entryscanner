@@ -8,7 +8,7 @@ export const useProfile = () => {
   const supabase = useSupabaseClient<Database>();
   const userId = useUserId();
 
-  const { data: profile, refresh: refreshProfile } = useAsyncData<Profile | null>(
+  const { data: profile, refresh: refreshProfile, pending: pendingProfile } = useAsyncData<Profile | null>(
     "profile",
     async () => {
       if (!userId.value) return null;
@@ -27,5 +27,6 @@ export const useProfile = () => {
   return {
     profile,
     refreshProfile,
+    pendingProfile,
   };
 };

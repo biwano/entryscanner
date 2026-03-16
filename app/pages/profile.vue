@@ -20,12 +20,12 @@ const user = useSupabaseUser();
 const userId = useUserId();
 const colorMode = useColorMode();
 
-const { profile, refreshProfile } = useProfile();
+const { profile, refreshProfile, pendingProfile } = useProfile();
 const url = useRequestURL();
 const redirectTo = `${url.origin}/auth/reset-password`;
 
-const { data: subscriptions, refresh: refreshSubscriptions } =
-  await useAsyncData<UserSubscription[]>("subscriptions", async () => {
+const { data: subscriptions, refresh: refreshSubscriptions, pending: pendingSubscriptions } =
+  useAsyncData<UserSubscription[]>("subscriptions", async () => {
     if (!userId.value) return [];
     const { data } = await supabase
       .from("user_subscriptions")
@@ -40,7 +40,7 @@ type NotificationWithEvent = NotificationHistory & {
   } | null;
 };
 
-const { data: notifications } = await useAsyncData<NotificationWithEvent[]>(
+const { data: notifications, pending: pendingNotifications } = useAsyncData<NotificationWithEvent[]>(
   "notification_history_profile",
   async () => {
     if (!userId.value) return [];
@@ -108,19 +108,70 @@ const logout = async () => {
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div class="space-y-8">
+          <UCard v-if="pendingProfile">
+            <template #header>
+              <USkeleton class="h-7 w-48" />
+            </template>
+            <div class="space-y-6">
+              <div v-for="i in 3" :key="i" class="space-y-2">
+                <USkeleton class="h-4 w-32" />
+                <USkeleton class="h-10 w-full" />
+              </div>
+              <USkeleton class="h-10 w-full mt-4" />
+            </div>
+          </UCard>
           <ProfileSettings
+            v-else
             :profile="profile || null"
             @refresh="refreshProfile"
           />
 
+          <UCard v-if="pendingSubscriptions">
+            <template #header>
+              <USkeleton class="h-7 w-48" />
+            </template>
+            <div class="divide-y divide-gray-100 dark:divide-gray-800">
+              <div
+                v-for="i in 3"
+                :key="i"
+                class="flex items-center justify-between py-3"
+              >
+                <div class="flex items-center gap-3">
+                  <USkeleton class="h-5 w-12" />
+                  <USkeleton class="h-5 w-8 rounded-full" />
+                </div>
+                <USkeleton class="h-8 w-8 rounded-md" />
+              </div>
+            </div>
+          </UCard>
           <SubscriptionList
+            v-else
             :subscriptions="subscriptions || []"
             @refresh="refreshSubscriptions"
           />
         </div>
 
         <div class="space-y-8">
+          <UCard v-if="pendingNotifications">
+            <template #header>
+              <USkeleton class="h-7 w-48" />
+            </template>
+            <div class="space-y-4">
+              <div
+                v-for="i in 4"
+                :key="i"
+                class="p-4 rounded-lg bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 space-y-3"
+              >
+                <div class="flex justify-between items-start">
+                  <USkeleton class="h-3 w-20" />
+                  <USkeleton class="h-5 w-16 rounded-full" />
+                </div>
+                <USkeleton class="h-4 w-3/4" />
+              </div>
+            </div>
+          </UCard>
           <NotificationHistoryComponent
+            v-else
             :notifications="notifications || []"
           />
         </div>
