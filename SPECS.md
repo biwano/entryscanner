@@ -134,9 +134,9 @@ A dedicated view for managing personal Hyperliquid assets and trades, accessible
   - **Account Performance**: Overview of the total account value, equity, and maintenance margin.
   - **Active Trade Card**: A summary card showing the current state of active perpetual positions and open orders, including the **real-time price** of the traded coin(s). The "Full View" button is hidden on this page as it's the target destination.
   - **Detailed Asset Breakdown**:
-  - **Open Positions**: Comprehensive table of all active perpetual positions with real-time PnL calculation.
-  - **Open Orders**: Detailed list of pending orders with the ability to see status and types.
-  - **Recent Trades**: A table displaying the recent closed trades for the user's account, including:
+    - **Open Positions**: Comprehensive table of all active perpetual positions with real-time PnL calculation.
+    - **Open Orders**: Detailed list of pending orders with the ability to see status and types. Users can edit a trade's parameters (Take Profit and Stop Loss prices) via a pen icon in the open orders table header (only visible when in `exit_setup` status). The edit modal is pre-filled with the actual trigger prices from the open orders on Hyperliquid, falling back to the values stored in the database if no orders are found. This action updates the `user_trades` table and sets the status to `entry_setup`, which triggers the trader hook to cancel existing trigger orders and place new ones based on the updated configuration.
+    - **Recent Trades**: A table displaying the recent closed trades for the user's account, including:
     - **Asset**: The name of the perpetual pair (with icon).
     - **Leverage**: The leverage used for the trade.
     - **Entry**: Date and time of entry, and entry price.
@@ -326,6 +326,7 @@ Tables use **Row Level Security (RLS)** to ensure appropriate data access. User-
 - `id`: uuid (references auth.users, primary key)
 - `coin`: string (nullable)
 - `take_profit_price`: decimal (nullable)
+- `stop_loss_price`: decimal (nullable)
 - `take_profit_pct`: decimal (default: 50)
 - `stop_loss_pct`: decimal (default: 10)
 - `status`: enum ("requested", "entry_setup", "exit_setup", "sleeping")
@@ -345,6 +346,7 @@ Tables use **Row Level Security (RLS)** to ensure appropriate data access. User-
     - **Notification Dispatcher**: A background worker that identifies new `events` for which the user hasn't been notified (based on `created_at` value comparison with last notification) and sends alerts.
     - **Trader Hook (Client-Side)**: A Nuxt composable that periodically polls for `user_trades` and executes trade actions directly from the browser using the user's API key. Activity logs are persisted in `localStorage`. Provides real-time visual feedback via toast notifications when trade steps are completed or errors occur.
     - **Active Trade Hook (Client-Side)**: A Nuxt composable (`useActiveTrade`) that provides real-time access to the current user's active trade status, including automated polling while a trade is in progress.
+    - **Trade Edition**: When editing a trade (e.g., from the open orders table), the system updates the `take_profit_price` and `stop_loss_price` columns in `user_trades` and resets the `status` to `entry_setup`. The `Trader Hook` then re-processes the trade, cancelling existing trigger orders and placing new ones based on the updated configuration.
     - **UI Toasts**: Global toast notification system (via Nuxt UI `useToast`) used to provide immediate feedback on trade requests and automated trade status transitions.
 3.  **Server-Side Workers**: Background processes (via Nitro/Server API) that cycle through monitored pairs (Trend Worker) and events (Dispatcher). These workers can be triggered through API endpoints or direct bash commands.
 4.  **Persistence Layer**: Supabase handles all system and user-specific data, ensuring monitored states and alerts remain persistent.

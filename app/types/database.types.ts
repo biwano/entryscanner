@@ -278,6 +278,7 @@ export type Database = {
           id: string
           status: string
           stop_loss_pct: number
+          stop_loss_price: number | null
           take_profit_pct: number
           take_profit_price: number | null
           updated_at: string | null
@@ -289,6 +290,7 @@ export type Database = {
           id: string
           status?: string
           stop_loss_pct?: number
+          stop_loss_price?: number | null
           take_profit_pct?: number
           take_profit_price?: number | null
           updated_at?: string | null
@@ -300,6 +302,7 @@ export type Database = {
           id?: string
           status?: string
           stop_loss_pct?: number
+          stop_loss_price?: number | null
           take_profit_pct?: number
           take_profit_price?: number | null
           updated_at?: string | null

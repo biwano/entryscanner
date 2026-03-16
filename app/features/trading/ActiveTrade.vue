@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import { useTrading } from "~/composables/useTrading";
 import { useHyperliquid } from "~/composables/useHyperliquid";
+import { useActiveTrade } from "~/composables/useActiveTrade";
 import { formatPrice } from "~/utils/format";
+import EditTradeModal from "./EditTradeModal.vue";
 
 const props = withDefaults(
   defineProps<{
@@ -16,6 +18,58 @@ const props = withDefaults(
 const { address, clearinghouse, openOrders, isLoading } = useTrading();
 const { useAllMids } = useHyperliquid();
 const { data: allMids } = useAllMids();
+const { activeTrade } = useActiveTrade();
+
+const isEditModalOpen = ref(false);
+const editForm = ref({
+  coin: "",
+  tpPrice: undefined as number | undefined,
+  slPrice: undefined as number | undefined,
+});
+
+const openEditModal = () => {
+  if (!activeTrade.value?.coin) return;
+
+  // Start with database values as fallback
+  let tpPrice = activeTrade.value.take_profit_price || undefined;
+  let slPrice = activeTrade.value.stop_loss_price || undefined;
+
+  // Try to find actual trigger prices from open orders on the exchange
+  const coinOrders = (openOrders.value || []).filter(
+    (o) => o.coin === activeTrade.value?.coin
+  );
+
+  const position = positions.value.find(
+    (p) => p.asset === activeTrade.value?.coin
+  );
+  console.log(coinOrders);
+  console.log(position);
+
+  if (position) {
+    const entryPx = position.entryPx;
+    const isLong = activeTrade.value.direction === "long";
+
+    coinOrders.forEach((o) => {
+      // Hyperliquid trigger orders have isTrigger: true and a triggerPx
+      const px = parseFloat(o.limitPx);
+      if (isLong) {
+        if (px > entryPx) tpPrice = px;
+        else if (px < entryPx) slPrice = px;
+      } else {
+        if (px < entryPx) tpPrice = px;
+        else if (px > entryPx) slPrice = px;
+      }
+    });
+  }
+
+  editForm.value = {
+    coin: activeTrade.value.coin,
+    tpPrice,
+    slPrice,
+  };
+
+  isEditModalOpen.value = true;
+};
 
 const positions = computed(() => {
   if (!clearinghouse.value) return [];
@@ -43,13 +97,9 @@ const orders = computed(() => {
       size: parseFloat(o.sz),
       price: parseFloat(o.limitPx),
       currentPx: currentPx ? parseFloat(currentPx) : 0,
+      oid: o.oid,
     };
   });
-});
-
-const withdrawable = computed(() => {
-  if (!clearinghouse.value) return 0;
-  return parseFloat(clearinghouse.value.withdrawable);
 });
 
 const tradedCoins = computed(() => {
@@ -176,12 +226,22 @@ const orderColumns = [
       </div>
 
       <div v-if="orders.length > 0" class="space-y-4">
-        <h3
-          class="font-bold flex items-center gap-2 text-sm uppercase tracking-wider text-gray-500"
-        >
-          <UIcon name="i-lucide-clock" />
-          Open Orders ({{ orders.length }})
-        </h3>
+        <div class="flex items-center justify-between">
+          <h3
+            class="font-bold flex items-center gap-2 text-sm uppercase tracking-wider text-gray-500"
+          >
+            <UIcon name="i-lucide-clock" />
+            Open Orders ({{ orders.length }})
+          </h3>
+          <UButton
+            v-if="activeTrade?.status === 'exit_setup'"
+            icon="i-lucide-pencil"
+            variant="ghost"
+            color="neutral"
+            size="xs"
+            @click="openEditModal"
+          />
+        </div>
         <UTable
           :data="orders"
           :columns="orderColumns"
@@ -217,5 +277,13 @@ const orderColumns = [
       <UIcon name="i-lucide-info" class="w-8 h-8 text-gray-400" />
       <div class="text-gray-500 font-medium">No active trades</div>
     </div>
+
+    <!-- Edit Trade Modal -->
+    <EditTradeModal
+      v-model:open="isEditModalOpen"
+      :coin="editForm.coin"
+      :tp-price="editForm.tpPrice"
+      :sl-price="editForm.slPrice"
+    />
   </div>
 </template>

@@ -5,6 +5,8 @@ export const handleEntrySetup = async (ctx: TraderContext) => {
   const {
     traderStore,
     trade,
+    hlClient,
+    address,
     exchangeClient,
     supabase,
     userId,
@@ -35,12 +37,15 @@ export const handleEntrySetup = async (ctx: TraderContext) => {
 
     const leverage = position.position.leverage.value;
 
-    // Calculate SL: loss % of capital (margin)
-    const priceMovePct = trade.stop_loss_pct / 100 / leverage;
-    const slPrice =
-      trade.direction === "long"
-        ? entryPrice * (1 - priceMovePct)
-        : entryPrice * (1 + priceMovePct);
+    // Calculate SL
+    let slPrice = trade.stop_loss_price;
+    if (!slPrice) {
+      const priceMovePct = trade.stop_loss_pct / 100 / leverage;
+      slPrice =
+        trade.direction === "long"
+          ? entryPrice * (1 - priceMovePct)
+          : entryPrice * (1 + priceMovePct);
+    }
 
     // Calculate TP
     let tpPrice = trade.take_profit_price;
@@ -60,6 +65,29 @@ export const handleEntrySetup = async (ctx: TraderContext) => {
       `Setting SL at ${formatPriceNumber(slPrice)} and TP at ${formatPriceNumber(tpPrice)}`,
       "info"
     );
+
+    // Cancel existing trigger orders for this coin before placing new ones
+    const openOrders = await hlClient.fetchOpenOrders(address);
+    const triggerOrders = openOrders.filter(
+      (o: any) => o.coin === trade.coin && o.isTrigger
+    );
+
+    if (triggerOrders.length > 0) {
+      traderStore.addLog(
+        `Cancelling ${triggerOrders.length} existing trigger orders for ${trade.coin}`,
+        "info"
+      );
+      for (const order of triggerOrders) {
+        await exchangeClient.cancel({
+          cancels: [
+            {
+              a: assetIndex,
+              o: order.oid,
+            },
+          ],
+        });
+      }
+    }
 
     // Place SL and TP trigger orders
     await exchangeClient.order({

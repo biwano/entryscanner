@@ -49,6 +49,7 @@ const hasOpenPosition = computed(() => {
 });
 
 const tpPrice = ref<number | undefined>();
+const slPrice = ref<number | undefined>();
 const tpPct = ref(50);
 const slPct = ref(10);
 const isSubmitting = ref(false);
@@ -63,6 +64,7 @@ const startTrade = async (direction: "long" | "short") => {
       direction,
       status: "requested",
       take_profit_price: tpPrice.value || null,
+      stop_loss_price: slPrice.value || null,
       take_profit_pct: tpPct.value,
       stop_loss_pct: slPct.value,
     });
@@ -140,7 +142,7 @@ const startTrade = async (direction: "long" | "short") => {
       </div>
     </div>
 
-    <div class="grid grid-cols-1 gap-4">
+    <div class="grid grid-cols-2 gap-4">
       <div class="space-y-2">
         <label class="text-xs font-medium text-gray-500 uppercase"
           >TP Price (Optional)</label
@@ -150,7 +152,20 @@ const startTrade = async (direction: "long" | "short") => {
           class="w-full"
           type="number"
           step="any"
-          placeholder="Manual Target"
+          placeholder="Manual TP"
+          color="neutral"
+        />
+      </div>
+      <div class="space-y-2">
+        <label class="text-xs font-medium text-gray-500 uppercase"
+          >SL Price (Optional)</label
+        >
+        <UInput
+          v-model="slPrice"
+          class="w-full"
+          type="number"
+          step="any"
+          placeholder="Manual SL"
           color="neutral"
         />
       </div>
