@@ -21,6 +21,8 @@ const userId = useUserId();
 const colorMode = useColorMode();
 
 const { profile, refreshProfile } = useProfile();
+const url = useRequestURL();
+const redirectTo = `${url.origin}/auth/reset-password`;
 
 const { data: subscriptions, refresh: refreshSubscriptions } =
   await useAsyncData<UserSubscription[]>("subscriptions", async () => {
@@ -86,6 +88,7 @@ const logout = async () => {
             theme: ThemeSupa,
             brand: 'fuchsia',
           }"
+          :redirect-to="redirectTo"
           theme="default"
         />
       </UCard>

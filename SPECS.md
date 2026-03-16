@@ -107,6 +107,9 @@ This page provides a comprehensive view of all active assets being tracked by th
 
 - **Supabase Auth UI**: Uses `@supa-kit/auth-ui-vue` with the **Supa theme** to provide a standardized login/registration interface.
 - **Email-Based Authentication**: Users can sign up and sign in using their email address and password via Supabase Auth.
+- **Password Reset functionality**:
+  - **Request Reset**: Users can initiate a password reset through the auth UI.
+  - **Reset Password View**: Redirects directly to `/auth/reset-password` to exchange the `code` for a session. It assumes any auth code exchange on this page is for a password reset flow and presents the new password form. If the code exchange fails, an error message is displayed to the user.
 - **Supabase Auth**: Secure authentication flow for managing personal settings, subscriptions, and webhooks.
 - **Subscription Overview**: View and manage all active pair/timeframe subscriptions from the profile or dashboard.
 - **Notification History**: View a personal log of past automated alerts triggered by trend flips for subscribed pairs.

@@ -57,9 +57,7 @@ const menuItems = computed(() => {
       class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between"
     >
       <div class="flex items-center gap-4">
-        <h1 class="text-xl font-bold text-primary shrink-0">
-          Entry scanner
-        </h1>
+        <h1 class="text-xl font-bold text-primary shrink-0">Entry scanner</h1>
         <UNavigationMenu
           :items="menuItems[0]"
           orientation="horizontal"
