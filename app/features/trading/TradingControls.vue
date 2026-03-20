@@ -28,18 +28,12 @@ const maxLeverage = computed(() => {
   return asset?.maxLeverage ?? 50;
 });
 
-const targetLeverage = computed(() => {
-  return maxLeverage.value >= 10 ? 9.5 : maxLeverage.value * 0.95;
-});
-
 const accountValue = computed(() => {
   if (!clearinghouse.value) return 0;
   return parseFloat(clearinghouse.value.marginSummary.accountValue);
 });
 
-const estimatedSizeUsd = computed(
-  () => accountValue.value * targetLeverage.value
-);
+const estimatedSizeUsd = computed(() => accountValue.value * leverage.value);
 
 const hasOpenPosition = computed(() => {
   if (!clearinghouse.value || !address.value) return false;
@@ -52,7 +46,16 @@ const tpPrice = ref<number | undefined>();
 const slPrice = ref<number | undefined>();
 const tpPct = ref(50);
 const slPct = ref(10);
+const leverage = ref(9.5);
 const isSubmitting = ref(false);
+
+watch(
+  maxLeverage,
+  (max) => {
+    leverage.value = max >= 10 ? 9.5 : max * 0.95;
+  },
+  { immediate: true }
+);
 
 const startTrade = async (direction: "long" | "short") => {
   if (!user.value || !clearinghouse.value) return;
@@ -67,6 +70,7 @@ const startTrade = async (direction: "long" | "short") => {
       stop_loss_price: slPrice.value || null,
       take_profit_pct: tpPct.value,
       stop_loss_pct: slPct.value,
+      leverage: leverage.value,
     });
 
     if (error) throw error;
@@ -117,7 +121,20 @@ const startTrade = async (direction: "long" | "short") => {
       </div>
     </div>
 
-    <div class="grid grid-cols-2 gap-4">
+    <div class="grid grid-cols-3 gap-4">
+      <div class="space-y-2">
+        <label class="text-xs font-medium text-gray-500 uppercase"
+          >Leverage</label
+        >
+        <UInput
+          v-model="leverage"
+          type="number"
+          step="0.1"
+          :min="0.1"
+          :max="maxLeverage"
+          color="neutral"
+        />
+      </div>
       <div class="space-y-2">
         <label class="text-xs font-medium text-gray-500 uppercase"
           >Stop Loss (%)</label
@@ -147,19 +164,6 @@ const startTrade = async (direction: "long" | "short") => {
     <div class="grid grid-cols-2 gap-4">
       <div class="space-y-2">
         <label class="text-xs font-medium text-gray-500 uppercase"
-          >TP Price (Optional)</label
-        >
-        <UInput
-          v-model="tpPrice"
-          class="w-full"
-          type="number"
-          step="any"
-          placeholder="Manual TP"
-          color="neutral"
-        />
-      </div>
-      <div class="space-y-2">
-        <label class="text-xs font-medium text-gray-500 uppercase"
           >SL Price (Optional)</label
         >
         <UInput
@@ -168,6 +172,19 @@ const startTrade = async (direction: "long" | "short") => {
           type="number"
           step="any"
           placeholder="Manual SL"
+          color="neutral"
+        />
+      </div>
+      <div class="space-y-2">
+        <label class="text-xs font-medium text-gray-500 uppercase"
+          >TP Price (Optional)</label
+        >
+        <UInput
+          v-model="tpPrice"
+          class="w-full"
+          type="number"
+          step="any"
+          placeholder="Manual TP"
           color="neutral"
         />
       </div>
@@ -197,7 +214,7 @@ const startTrade = async (direction: "long" | "short") => {
     </div>
 
     <p class="text-[10px] text-gray-400 text-center italic">
-      Trade uses {{ targetLeverage.toFixed(1) }}x leverage based on your account
+      Trade uses {{ leverage.toFixed(1) }}x leverage based on your account
       value (
       <Private> {{ formatPrice(accountValue) }} </Private>
       ).

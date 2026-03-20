@@ -43,6 +43,39 @@ export const formatPercentChange = (
   return `${sign}${change.toFixed(2)}%`;
 };
 
+/**
+ * Ensures a price is formatted correctly for the Hyperliquid API:
+ * 1. Max 5 significant figures
+ * 2. Max decimal places = Math.max(0, 6 - szDecimals)
+ * 3. Integer prices are always valid
+ */
+export const formatPriceForHL = (price: number, szDecimals: number): string => {
+  if (isNaN(price)) return "0.0";
+
+  // Integer prices are always valid, regardless of significant figures
+  if (Number.isInteger(price)) {
+    return price.toString();
+  }
+
+  // 1. Limit to 5 significant figures
+  // Use toPrecision(5) which returns a string, then parse back to number
+  const sigFigPrice = parseFloat(price.toPrecision(5));
+
+  // 2. Limit decimals: MAX_DECIMALS - szDecimals
+  // MAX_DECIMALS = 6 for perpetuals
+  const maxDecimals = Math.max(0, 6 - szDecimals);
+  const factor = Math.pow(10, maxDecimals);
+
+  // Rounding to the allowed decimal precision
+  const roundedPrice = Math.round(sigFigPrice * factor) / factor;
+
+  // Use toFixed to ensure we don't use scientific notation and have the correct precision
+  const formatted = roundedPrice.toFixed(maxDecimals);
+
+  // Remove trailing zeros and possible decimal point for a clean output
+  return formatted.replace(/\.?0+$/, "");
+};
+
 export const calculatePercentChange = (
   current: string | number,
   base: string | number

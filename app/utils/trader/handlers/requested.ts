@@ -1,5 +1,5 @@
 import type { TraderContext } from "../types";
-import { formatPriceNumber } from "~/utils/format";
+import { formatPriceNumber, formatPriceForHL } from "~/utils/format";
 
 export const handleRequested = async (ctx: TraderContext) => {
   const {
@@ -42,18 +42,17 @@ export const handleRequested = async (ctx: TraderContext) => {
 
   const assetIndex = meta.universe.indexOf(assetInfo);
 
-  // 1. Set leverage (9.5x if supported, otherwise 95% of max)
-  const maxLeverage = assetInfo.maxLeverage || 50;
-  const targetLeverage = maxLeverage >= 10 ? 9.5 : maxLeverage * 0.95;
+  // 1. Set leverage from trade record
+  const leverage = trade.leverage || 10;
 
   traderStore.addLog(
-    `Setting ${targetLeverage.toFixed(1)}x leverage for ${trade.coin}`,
+    `Setting ${leverage.toFixed(1)}x leverage for ${trade.coin}`,
     "info"
   );
   await exchangeClient.updateLeverage({
     asset: assetIndex,
     isCross: true,
-    leverage: maxLeverage,
+    leverage: leverage,
   });
 
   // 2. Place limit order very close to current price
@@ -64,11 +63,11 @@ export const handleRequested = async (ctx: TraderContext) => {
     throw new Error(`Could not get current price for ${trade.coin}`);
   }
 
-  // Calculate size: Account Value * targetLeverage
+  // Calculate size: Account Value * leverage
   const accountValue = parseFloat(
     clearinghouseState.marginSummary.accountValue
   );
-  const calculatedSizeUsd = accountValue * targetLeverage;
+  const calculatedSizeUsd = accountValue * leverage;
 
   if (calculatedSizeUsd <= 0) {
     throw new Error("Insufficient capital for trade");
@@ -80,17 +79,18 @@ export const handleRequested = async (ctx: TraderContext) => {
 
   const size = calculatedSizeUsd / price;
 
-  // Ensure size is formatted with correct decimals
+  // Ensure size and price are formatted with correct decimals
   const szDecimals = assetInfo.szDecimals;
   const formattedSize = size.toFixed(szDecimals);
-  const formattedPrice = price.toFixed(5);
+  const formattedPrice = formatPriceForHL(price, szDecimals);
 
   traderStore.addLog(
     `Placing ${trade.direction} limit order for ${
       trade.coin
-    } at ${formatPriceNumber(price)} (Size: $${calculatedSizeUsd.toFixed(2)})`,
+    } at $${formatPriceNumber(price)} (Size: ${calculatedSizeUsd.toFixed(2)})`,
     "info"
   );
+  console.log(formattedPrice);
 
   await exchangeClient.order({
     orders: [
@@ -112,7 +112,9 @@ export const handleRequested = async (ctx: TraderContext) => {
     .eq("id", userId);
 
   if (statusError) {
-    throw new Error(`Failed to set trade to entry_setup: ${statusError.message}`);
+    throw new Error(
+      `Failed to set trade to entry_setup: ${statusError.message}`
+    );
   }
 
   await refresh();

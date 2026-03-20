@@ -73,15 +73,28 @@ const openEditModal = () => {
 
 const positions = computed(() => {
   if (!clearinghouse.value) return [];
+  const accountValue = parseFloat(
+    clearinghouse.value.marginSummary.accountValue
+  );
+
   return clearinghouse.value.assetPositions
     .filter((p) => parseFloat(p.position.szi) !== 0)
     .map((p) => {
       const size = parseFloat(p.position.szi);
+      const coin = p.position.coin;
+      const currentPrice = allMids.value?.[coin]
+        ? parseFloat(allMids.value[coin])
+        : parseFloat(p.position.entryPx);
+
+      const notionalSize = Math.abs(size) * currentPrice;
+      const actualLeverage = accountValue > 0 ? notionalSize / accountValue : 0;
+
       return {
-        asset: p.position.coin,
+        asset: coin,
         side: size > 0 ? "LONG" : "SHORT",
         size: Math.abs(size),
         entryPx: parseFloat(p.position.entryPx),
+        leverage: actualLeverage,
         pnl: parseFloat(p.position.unrealizedPnl),
       };
     });
@@ -122,6 +135,7 @@ const shouldShow = computed(
 const columns = [
   { id: "asset", header: "Asset" },
   { id: "side", header: "Side" },
+  { id: "leverage", header: "Lev" },
   { id: "size", header: "Size" },
   { id: "entryPx", header: "Entry Price" },
   { id: "pnl", header: "PnL" },
@@ -207,6 +221,11 @@ const orderColumns = [
             >
               {{ row.original.side }}
             </UBadge>
+          </template>
+          <template #leverage-cell="{ row }">
+            <span class="text-xs font-medium text-gray-500"
+              >{{ row.original.leverage.toFixed(2) }}x</span
+            >
           </template>
           <template #size-cell="{ row }">
             <Private>

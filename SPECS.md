@@ -30,7 +30,8 @@ The Dashboard provides a high-level overview of the most recent significant mark
 
 - **Personal Trading Summary**: If the user has configured their Hyperliquid API key and wallet address, display a summary card at the top of the dashboard containing:
   - **Account Value**: Total equity in USD.
-  - **Open Positions**: A table showing active perpetual positions (Asset, Size, Entry Price, Mark Price, PnL). This table is only displayed if the user has active positions.
+  - **Open Positions**: A table showing active perpetual positions (Asset, Side, Actual Leverage, Size, Entry Price, Mark Price, PnL). This table is only displayed if the user has active positions.
+    - **Actual Leverage**: Calculated as `(position size * price) / account value` for real-time risk assessment.
   - **Open Orders**: A table showing active limit/trigger orders (Asset, Side, Size, Price). This table is only displayed if the user has pending orders.
   - **No Active Trades**: If neither positions nor orders are present, a "No active trades" message is displayed within the card.
   - **Navigation**: A "Full View" button is displayed on the dashboard that links to the **Trading** page.
@@ -80,10 +81,10 @@ This page provides a comprehensive view of all active assets being tracked by th
   - **Take Profit Price Input**: An optional numerical input field for the `take_profit_price`.
   - **Take Profit % Input**: A numerical input field for the `take_profit_pct` (default: **50**).
   - **Stop Loss % Input**: A numerical input field for the `stop_loss_pct` (default: **10**).
-  - **Action**: Clicking "Buy" or "Sell" validates the inputs, automatically calculates the **Notional Size** based on the account value and a target leverage (9.5x if the coin supports 10x, otherwise 95% of the coin's maximum leverage), creates or updates a record in the `user_trades` table (setting status to `requested`), and triggers the **Trader Hook**.
+  - **Action**: Clicking "Buy" or "Sell" validates the inputs, automatically calculates the **Notional Size** based on the account value and the configured **leverage**, creates or updates a record in the `user_trades` table (setting status to `requested`), and triggers the **Trader Hook**.
   - **Leverage Rules**:
-    - **Default Leverage**: 9.5x.
-    - **Max Leverage Handling**: If the coin does not support 10x leverage, set it to **95% of the coin's maximum leverage**.
+    - **Default Leverage**: 9.5x (or 95% of max if max < 10x).
+    - **Configurable**: Users can adjust leverage via an input field in the trading controls.
   - **Max Leverage Display**: The trade form displays the maximum leverage supported by the specific coin for user awareness.
   - **Price Display**: Always display at least **4 significant digits** for prices across the application (charts, tables, inputs, and logs).
 - **Historical Price Chart**: Interactive price chart showing historical data (using candles from `info.candles`). The system displays exactly **400 candles** regardless of the timeframe (Daily or Weekly) to ensure a consistent view. Users can switch between **Daily (D1)** and **Weekly (W1)** timeframes by clicking the corresponding **TrendIndicator** components in the header. The chart displays two simple moving averages:
@@ -138,10 +139,12 @@ A dedicated view for managing personal Hyperliquid assets and trades, accessible
   - **Current Status**: The status from the `user_trades` table.
   - **Activity Logs**: A scrollable log of recent activities from the **Trader Hook** (persisted in `localStorage`).
   - **Account Performance**: Overview of the total account value, equity, and maintenance margin.
-  - **Active Trade Card**: A summary card showing the current state of active perpetual positions and open orders, including the **real-time price** of the traded coin(s). The "Full View" button is hidden on this page as it's the target destination.
-  - **Detailed Asset Breakdown**:
-    - **Open Positions**: Comprehensive table of all active perpetual positions with real-time PnL calculation.
-    - **Open Orders**: Detailed list of pending orders with the ability to see status and types. Users can edit a trade's parameters (Take Profit and Stop Loss prices) via a pen icon in the open orders table header (only visible when in `exit_setup` status). The edit modal is pre-filled with the actual trigger prices from the open orders on Hyperliquid, falling back to the values stored in the database if no orders are found. This action updates the `user_trades` table and sets the status to `entry_setup`, which triggers the trader hook to cancel existing trigger orders and place new ones based on the updated configuration.
+    - **Active Trade Card**: A summary card showing the current state of active perpetual positions and open orders, including the **real-time price** of the traded coin(s). The "Full View" button is hidden on this page as it's the target destination. Each open position in the card includes a **"Close" button** to manually exit the position.
+    - **Close Position Action**: Clicking "Close" is a shortcut for editing the trade. It updates the `user_trades` record by setting both `take_profit_price` and `stop_loss_price` to values very close to the current market price (e.g., +/- 0.01% offset) and resets the status to `entry_setup`. This triggers the Trader Hook to cancel existing trigger orders and place a new TP/SL pair that will execute almost immediately, effectively closing the position.
+    - **Detailed Asset Breakdown**:
+    - **Open Positions**: Comprehensive table of all active perpetual positions with real-time PnL calculation and **Actual Leverage** (size * price / account value). Includes a "Close" button for each position.
+    - **Open Orders**: Detailed list of pending orders with the ability to see status and types. Users can edit a trade's parameters (Take Profit and Stop Loss prices) via a pen icon in the open orders table header (only visible when in `exit_setup` status). The edit modal is pre-filled with the actual trigger prices from the open orders on Hyperliquid, falling back to the values stored in the database if no orders are found. 
+    - **Close Position Action**: A "Close Position" button is available inside the **Edit Trade Modal**. Clicking it is a shortcut for editing the trade: it calculates Take Profit and Stop Loss prices very close to the current market price (e.g., +/- 0.01% offset), updates the local form, and triggers the save action. This updates the `user_trades` record and resets the status to `entry_setup`, which triggers the Trader Hook to cancel existing trigger orders and place a new TP/SL pair that will execute almost immediately, effectively closing the position.
     - **Recent Trades**: A table displaying the recent closed trades for the user's account, including:
     - **Asset**: The name of the perpetual pair (with icon).
     - **Leverage**: The leverage used for the trade.
@@ -199,12 +202,12 @@ All server-side workers (Trend Worker, Notification Dispatcher) can be triggered
 - **Modular Logic**: The logic for each trade status is decoupled into individual handler files for better maintainability and testability.
 - **Logic Strategy**: Processes records in the `user_trades` table for the authenticated user based on their `status`:
   - **`requested`** (Handled in `requested.ts`):
-    - Sets leverage for the specific coin. If the coin supports 10x leverage, it sets it to **9.5x**. If not, it sets it to **95% of the coin's maximum leverage**.
+    - Sets leverage for the specific coin based on the `leverage` value in `user_trades`.
     - Places a limit order very close to the current market price (calculated using `allMids` from the context).
     - Updates status to **`entry_setup`** in Supabase and refreshes the active trade state.
   - **`entry_setup`** (Handled in `entrySetup.ts`):
     - When an open position exists for the trade’s coin: fetches open orders, **cancels existing trigger (TP/SL) orders** for that coin, then places a new **Stop Loss** and **Take Profit** trigger pair.
-    - The **Edit Trade** flow (`EditTradeModal.vue`) also cancels **all** open orders for that coin before resetting the row to `entry_setup` and **awaiting** `processTrade()`, so entry limits are cleared before SL/TP are re-placed.
+    - The **Edit Trade** flow (`EditTradeModal.vue`) and the **Close Position** action also cancel **all** open orders for that coin before resetting the row to `entry_setup` and **awaiting** `processTrade()`, so entry limits are cleared before SL/TP are re-placed.
     - Checks if the user has an open position for the coin via the account state provided in the context.
     - If a position is found:
       - Creates a **Stop Loss** order (manual `stop_loss_price` if set; otherwise from `stop_loss_pct` and the **actual position leverage**).
@@ -242,6 +245,7 @@ All server-side workers (Trend Worker, Notification Dispatcher) can be triggered
 
 - **Shared Formatting Logic**: Centralized formatting functions located in `app/utils/format.ts` for consistent UI representation.
 - **Price Formatting**: `formatPrice` handles USD currency formatting for asset prices.
+- **API Formatting**: `formatPriceForHL` ensures prices comply with Hyperliquid's strict formatting rules (max 5 significant figures and `6 - szDecimals` decimal places for perpetuals) to avoid "invalid price" errors.
 - **Volume Formatting**: `formatVolume` uses compact notation (e.g., "1.2M") for trading volumes and open interest.
 - **Time Formatting**: `formatTime` handles ISO string to "MM/DD HH:mm:ss" conversion using `dayjs`.
 
@@ -342,6 +346,7 @@ Tables use **Row Level Security (RLS)** to ensure appropriate data access. User-
 - `stop_loss_pct`: decimal (default: 10)
 - `status`: enum ("requested", "entry_setup", "exit_setup", "sleeping")
 - `direction`: string ("long", "short", nullable)
+- `leverage`: decimal (default: 10)
 - `created_at`: timestamp
 - `updated_at`: timestamp
 - **RLS Policy**: Users can only read/update their own trade configuration.

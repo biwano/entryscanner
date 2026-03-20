@@ -1,5 +1,5 @@
 import type { TraderContext } from "../types";
-import { formatPriceNumber } from "~/utils/format";
+import { formatPriceNumber, formatPriceForHL } from "~/utils/format";
 
 export const handleEntrySetup = async (ctx: TraderContext) => {
   const {
@@ -35,7 +35,9 @@ export const handleEntrySetup = async (ctx: TraderContext) => {
     if (!assetInfo) throw new Error(`Asset ${trade.coin} not found`);
     const assetIndex = meta.universe.indexOf(assetInfo);
 
-    const leverage = position.position.leverage.value;
+    // 1. Set leverage (9.5x if supported, otherwise 95% of max)
+    const maxLeverage = assetInfo.maxLeverage || 50;
+    const leverage = maxLeverage >= 10 ? 9.5 : maxLeverage * 0.95;
 
     // Calculate SL
     let slPrice = trade.stop_loss_price;
@@ -57,12 +59,13 @@ export const handleEntrySetup = async (ctx: TraderContext) => {
           : entryPrice * (1 - tpPricePct);
     }
 
-    const formattedSL = slPrice.toFixed(5);
-    const formattedTP = tpPrice.toFixed(5);
+    const szDecimals = assetInfo.szDecimals;
+    const formattedSL = formatPriceForHL(slPrice, szDecimals);
+    const formattedTP = formatPriceForHL(tpPrice, szDecimals);
     const posSize = Math.abs(parseFloat(position.position.szi)).toString();
 
     traderStore.addLog(
-      `Setting SL at ${formatPriceNumber(slPrice)} and TP at ${formatPriceNumber(tpPrice)}`,
+      `Setting SL at ${formattedSL} and TP at ${formattedTP}`,
       "info"
     );
 

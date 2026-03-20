@@ -276,6 +276,7 @@ export type Database = {
           created_at: string | null
           direction: string | null
           id: string
+          leverage: number
           status: string
           stop_loss_pct: number
           stop_loss_price: number | null
@@ -288,6 +289,7 @@ export type Database = {
           created_at?: string | null
           direction?: string | null
           id: string
+          leverage?: number
           status?: string
           stop_loss_pct?: number
           stop_loss_price?: number | null
@@ -300,6 +302,7 @@ export type Database = {
           created_at?: string | null
           direction?: string | null
           id?: string
+          leverage?: number
           status?: string
           stop_loss_pct?: number
           stop_loss_price?: number | null

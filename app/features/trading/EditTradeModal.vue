@@ -15,11 +15,12 @@ const props = defineProps<{
 
 const emit = defineEmits(["update:open", "saved"]);
 
-const { updateTrade } = useActiveTrade();
-const { processTrade } = useTraderHook();
-const { hlClient, address, wallet } = useTrading();
-const { useMetaAndAssetCtxs } = useHyperliquid();
+const { address, wallet, hlClient } = useTrading();
+const { useMetaAndAssetCtxs, useAllMids } = useHyperliquid();
 const { data: metaAndAssetCtxs } = useMetaAndAssetCtxs();
+const { data: allMids } = useAllMids();
+const { activeTrade, updateTrade } = useActiveTrade();
+const { processTrade } = useTraderHook();
 const toast = useToast();
 
 const localTpPrice = ref<number | undefined>(props.tpPrice);
@@ -96,6 +97,27 @@ const saveEdit = async () => {
     isSaving.value = false;
   }
 };
+
+const closeNow = async () => {
+  const mid = allMids.value?.[props.coin];
+  if (!mid) {
+    toast.add({
+      title: "Error",
+      description: `Could not get current price for ${props.coin}`,
+      color: "error",
+    });
+    return;
+  }
+
+  const currentMid = parseFloat(mid);
+  const isLong = activeTrade.value?.direction === "long";
+
+  // tight offset (0.01%)
+  localTpPrice.value = isLong ? currentMid * 1.0001 : currentMid * 0.9999;
+  localSlPrice.value = isLong ? currentMid * 0.9999 : currentMid * 1.0001;
+
+  await saveEdit();
+};
 </script>
 
 <template>
@@ -141,17 +163,28 @@ const saveEdit = async () => {
     </template>
 
     <template #footer>
-      <div class="flex justify-end gap-3">
+      <div class="flex items-center justify-between w-full">
         <UButton
-          variant="ghost"
-          color="neutral"
-          @click="emit('update:open', false)"
+          color="error"
+          variant="soft"
+          icon="i-lucide-x-circle"
+          :loading="isSaving"
+          @click="closeNow"
         >
-          Cancel
+          Close Position
         </UButton>
-        <UButton color="primary" :loading="isSaving" @click="saveEdit">
-          Save Changes
-        </UButton>
+        <div class="flex items-center gap-3">
+          <UButton
+            variant="ghost"
+            color="neutral"
+            @click="emit('update:open', false)"
+          >
+            Cancel
+          </UButton>
+          <UButton color="primary" :loading="isSaving" @click="saveEdit">
+            Save Changes
+          </UButton>
+        </div>
       </div>
     </template>
   </UModal>
