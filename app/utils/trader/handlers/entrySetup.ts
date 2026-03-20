@@ -116,10 +116,16 @@ export const handleEntrySetup = async (ctx: TraderContext) => {
       grouping: "na",
     });
 
-    await supabase
+    const { error: statusError } = await supabase
       .from("user_trades")
       .update({ status: "exit_setup" })
       .eq("id", userId);
+
+    if (statusError) {
+      throw new Error(
+        `Failed to set trade to exit_setup: ${statusError.message}`
+      );
+    }
 
     await refresh();
 

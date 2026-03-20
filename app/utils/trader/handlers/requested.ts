@@ -21,11 +21,15 @@ export const handleRequested = async (ctx: TraderContext) => {
 
   if (clearinghouseState.assetPositions.length) {
     traderStore.addLog(`Position already exists. Skipping trade.`, "info");
-    await supabase
+    const { error: sleepError } = await supabase
       .from("user_trades")
       .update({ status: "sleeping" })
       .eq("id", userId);
+    if (sleepError) {
+      throw new Error(`Failed to skip trade: ${sleepError.message}`);
+    }
     await refresh();
+    return;
   }
 
   traderStore.addLog(`Processing requested trade for ${trade.coin}`, "info");
@@ -102,11 +106,14 @@ export const handleRequested = async (ctx: TraderContext) => {
     grouping: "na",
   });
 
-  // 3. Update status to entry_setup
-  await supabase
+  const { error: statusError } = await supabase
     .from("user_trades")
     .update({ status: "entry_setup" })
     .eq("id", userId);
+
+  if (statusError) {
+    throw new Error(`Failed to set trade to entry_setup: ${statusError.message}`);
+  }
 
   await refresh();
 

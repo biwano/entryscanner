@@ -194,7 +194,7 @@ All server-side workers (Trend Worker, Notification Dispatcher) can be triggered
 
 #### 3.3.1. Trader Hook (Client-Side)
 
-- **Execution**: Runs every minute while the application is open, or when triggered by a UI action.
+- **Execution**: Runs on a **10-second interval** while the application is open (started from `app.vue`), and whenever triggered explicitly by the UI (e.g. starting a trade, saving the **Edit Trade** modal).
 - **State Management**: The hook provides the handlers with all necessary real-time market data (Meta, Prices) and account states (Clearinghouse, Positions) via the context. Handlers do not fetch these states independently.
 - **Modular Logic**: The logic for each trade status is decoupled into individual handler files for better maintainability and testability.
 - **Logic Strategy**: Processes records in the `user_trades` table for the authenticated user based on their `status`:
@@ -203,16 +203,19 @@ All server-side workers (Trend Worker, Notification Dispatcher) can be triggered
     - Places a limit order very close to the current market price (calculated using `allMids` from the context).
     - Updates status to **`entry_setup`** in Supabase and refreshes the active trade state.
   - **`entry_setup`** (Handled in `entrySetup.ts`):
-    - Systematically checks for and cancels any existing open orders (limit or trigger) for the coin on Hyperliquid before proceeding.
+    - When an open position exists for the trade’s coin: fetches open orders, **cancels existing trigger (TP/SL) orders** for that coin, then places a new **Stop Loss** and **Take Profit** trigger pair.
+    - The **Edit Trade** flow (`EditTradeModal.vue`) also cancels **all** open orders for that coin before resetting the row to `entry_setup` and **awaiting** `processTrade()`, so entry limits are cleared before SL/TP are re-placed.
     - Checks if the user has an open position for the coin via the account state provided in the context.
     - If a position is found:
-      - Creates a **Stop Loss** order (set to user-defined `stop_loss_pct` of capital loss, calculated based on the **actual position leverage**).
-      - Creates a **Take Profit** order using the `take_profit_price` stored in the database if available; otherwise, it is calculated based on `take_profit_pct` and the **actual position leverage**.
+      - Creates a **Stop Loss** order (manual `stop_loss_price` if set; otherwise from `stop_loss_pct` and the **actual position leverage**).
+      - Creates a **Take Profit** order using `take_profit_price` when set; otherwise from `take_profit_pct` and the **actual position leverage**.
       - Updates status to **`exit_setup`** in Supabase and refreshes the active trade state.
   - **`exit_setup`** (Handled in `exitSetup.ts`):
     - Checks if the position has been closed (using the account state from the context).
     - If the position is closed, updates status to **`sleeping`** in Supabase and refreshes the active trade state.
 - **Activity Logging**: Maintains a persistent activity log (stored in **`localStorage`**) of all actions, successes, and failures. This ensures logs are preserved across page refreshes and are accessible via the Trading page.
+- **Concurrency**: `processTrade` is guarded by a **module-level mutex** so the 10s interval and UI triggers (e.g. **Edit Trade**, **Buy/Sell**) never run two handler chains at once—preventing duplicate SL/TP placement when status is still `entry_setup`. UI actions **await** `processTrade()` after mutating `user_trades`.
+- **Persistence errors**: Status transitions in handler modules check Supabase `.update` results and throw on failure (surfaced via the hook’s toast) so a failed `exit_setup` update cannot leave the app silently stuck re-placing orders every poll.
 
 #### 3.3.2. Active Trade Hook (Client-Side)
 

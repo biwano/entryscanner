@@ -77,8 +77,7 @@ const startTrade = async (direction: "long" | "short") => {
       color: "success",
     });
 
-    // Trigger immediate check
-    processTrade();
+    await processTrade();
   } catch (e: any) {
     console.error("Error starting trade:", e);
     toast.add({

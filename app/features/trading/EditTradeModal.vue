@@ -17,7 +17,7 @@ const emit = defineEmits(["update:open", "saved"]);
 
 const { updateTrade } = useActiveTrade();
 const { processTrade } = useTraderHook();
-const { refreshTrading, hlClient, address, wallet } = useTrading();
+const { hlClient, address, wallet } = useTrading();
 const { useMetaAndAssetCtxs } = useHyperliquid();
 const { data: metaAndAssetCtxs } = useMetaAndAssetCtxs();
 const toast = useToast();
@@ -84,11 +84,7 @@ const saveEdit = async () => {
     emit("update:open", false);
     emit("saved");
 
-    // Trigger the trader hook
-    processTrade();
-
-    // Refresh the table
-    await refreshTrading();
+    await processTrade();
   } catch (e: any) {
     console.error("Error saving trade:", e);
     toast.add({

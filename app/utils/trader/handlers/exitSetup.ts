@@ -25,10 +25,14 @@ export const handleExitSetup = async (ctx: TraderContext) => {
       "success"
     );
 
-    await supabase
+    const { error: statusError } = await supabase
       .from("user_trades")
       .update({ status: "sleeping" })
       .eq("id", userId);
+
+    if (statusError) {
+      throw new Error(`Failed to complete trade: ${statusError.message}`);
+    }
 
     await refresh();
 
