@@ -35,9 +35,8 @@ export const handleEntrySetup = async (ctx: TraderContext) => {
     if (!assetInfo) throw new Error(`Asset ${trade.coin} not found`);
     const assetIndex = meta.universe.indexOf(assetInfo);
 
-    // 1. Set leverage (9.5x if supported, otherwise 95% of max)
-    const maxLeverage = assetInfo.maxLeverage || 50;
-    const leverage = maxLeverage >= 10 ? 9.5 : maxLeverage * 0.95;
+    // 1. Use leverage from trade record for calculations
+    const leverage = trade.leverage || 10;
 
     // Calculate SL
     let slPrice = trade.stop_loss_price;

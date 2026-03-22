@@ -121,20 +121,7 @@ const startTrade = async (direction: "long" | "short") => {
       </div>
     </div>
 
-    <div class="grid grid-cols-3 gap-4">
-      <div class="space-y-2">
-        <label class="text-xs font-medium text-gray-500 uppercase"
-          >Leverage</label
-        >
-        <UInput
-          v-model="leverage"
-          type="number"
-          step="0.1"
-          :min="0.1"
-          :max="maxLeverage"
-          color="neutral"
-        />
-      </div>
+    <div class="grid grid-cols-2 gap-4">
       <div class="space-y-2">
         <label class="text-xs font-medium text-gray-500 uppercase"
           >Stop Loss (%)</label
@@ -188,6 +175,18 @@ const startTrade = async (direction: "long" | "short") => {
           color="neutral"
         />
       </div>
+    </div>
+
+    <div class="space-y-2">
+      <label class="text-xs font-medium text-gray-500 uppercase">Leverage</label>
+      <UInput
+        v-model="leverage"
+        type="number"
+        step="0.1"
+        :min="0.1"
+        :max="maxLeverage"
+        color="neutral"
+      />
     </div>
 
     <div class="flex gap-4 pt-2">

@@ -44,15 +44,20 @@ export const handleRequested = async (ctx: TraderContext) => {
 
   // 1. Set leverage from trade record
   const leverage = trade.leverage || 10;
+  // Hyperliquid updateLeverage requires an integer.
+  // We round up to ensure the configured leverage is possible.
+  const leverageInt = Math.ceil(leverage);
 
   traderStore.addLog(
-    `Setting ${leverage.toFixed(1)}x leverage for ${trade.coin}`,
+    `Setting ${leverageInt}x account leverage (Target: ${leverage.toFixed(
+      1
+    )}x) for ${trade.coin}`,
     "info"
   );
   await exchangeClient.updateLeverage({
     asset: assetIndex,
     isCross: true,
-    leverage: leverage,
+    leverage: leverageInt,
   });
 
   // 2. Place limit order very close to current price
