@@ -16,13 +16,20 @@ export async function runRecoverWorker() {
     .eq("active", true);
 
   if (pairsError || !pairs) {
-    return { status: "error", message: "Failed to fetch monitored pairs", error: pairsError };
+    return {
+      status: "error",
+      message: "Failed to fetch monitored pairs",
+      error: pairsError,
+    };
   }
 
   const results: any[] = [];
   const timeframes: Timeframe[] = ["D1", "W1"];
 
+  let i = 0;
   for (const pair of pairs) {
+    i++;
+    console.log(`Processing pair ${i} of ${pairs.length}: ${pair.coin}`);
     const coin = pair.coin;
     const coinResults: any = { coin, timeframes: {} };
 
@@ -51,15 +58,19 @@ export async function runRecoverWorker() {
           .eq("timeframe", timeframe);
 
         if (eventsError) {
-          coinResults.timeframes[timeframe] = { status: "error", message: "Failed to fetch existing events", error: eventsError };
+          coinResults.timeframes[timeframe] = {
+            status: "error",
+            message: "Failed to fetch existing events",
+            error: eventsError,
+          };
           continue;
         }
 
         const createdEvents = [];
         for (const flip of trendAnalysis.flips) {
-          // Check if this flip already exists (matching coin, timeframe, status, and since)
-          const exists = existingEvents?.some(
-            (e) => e.status === flip.status && dayjs(e.since).isSame(dayjs(flip.timestamp))
+          // Check if this flip already exists (matching coin, timeframe, since)
+          const exists = existingEvents?.some((e) =>
+            dayjs(e.since).isSame(dayjs(flip.timestamp))
           );
 
           if (!exists) {
@@ -78,7 +89,10 @@ export async function runRecoverWorker() {
               .single();
 
             if (insertError) {
-              console.error(`Failed to insert recovered event for ${coin} ${timeframe}:`, insertError);
+              console.error(
+                `Failed to insert recovered event for ${coin} ${timeframe}:`,
+                insertError
+              );
             } else {
               createdEvents.push(newEvent);
             }
@@ -91,7 +105,10 @@ export async function runRecoverWorker() {
           new_events_created: createdEvents.length,
         };
       } catch (err: any) {
-        coinResults.timeframes[timeframe] = { status: "error", message: err.message };
+        coinResults.timeframes[timeframe] = {
+          status: "error",
+          message: err.message,
+        };
       }
     }
     results.push(coinResults);
