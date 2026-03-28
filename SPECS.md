@@ -32,7 +32,7 @@ The Dashboard provides a high-level overview of the most recent significant mark
   - **Account Value**: Total equity in USD.
   - **Open Positions**: A table showing active perpetual positions (Asset, Side, Actual Leverage, Size, Entry Price, Mark Price, PnL). This table is only displayed if the user has active positions.
     - **Actual Leverage**: Calculated as `(position size * price) / account value` for real-time risk assessment.
-  - **Open Orders**: A table showing active limit/trigger orders (Asset, Side, Size, Price). This table is only displayed if the user has pending orders.
+  - **Open Orders**: A table showing active limit/trigger orders (Asset, Side, Size, Price). This table is only displayed if the user has pending orders. If an open position exists for the same asset that matches the user's active trade, orders are visually identified as "Take Profit" or "Stop Loss" by matching their price against the trade's configuration.
   - **No Active Trades**: If neither positions nor orders are present, a "No active trades" message is displayed within the card.
   - **Navigation**: A "Full View" button is displayed on the dashboard that links to the **Trading** page.
 - **Trend Flip Tables**: Two primary tables showing recent market shifts:
@@ -143,7 +143,7 @@ A dedicated view for managing personal Hyperliquid assets and trades, accessible
     - **Close Position Action**: Clicking "Close" is a shortcut for editing the trade. It updates the `user_trades` record by setting both `take_profit_price` and `stop_loss_price` to values very close to the current market price (e.g., +/- 0.01% offset) and resets the status to `entry_setup`. This triggers the Trader Hook to cancel existing trigger orders and place a new TP/SL pair that will execute almost immediately, effectively closing the position.
     - **Detailed Asset Breakdown**:
     - **Open Positions**: Comprehensive table of all active perpetual positions with real-time PnL calculation and **Actual Leverage** (size * price / account value). Includes a "Close" button for each position.
-    - **Open Orders**: Detailed list of pending orders with the ability to see status and types. Users can edit a trade's parameters (Take Profit and Stop Loss prices) via a pen icon in the open orders table header (only visible when in `exit_setup` status). The edit modal is pre-filled with the actual trigger prices from the open orders on Hyperliquid, falling back to the values stored in the database if no orders are found. 
+    - **Open Orders**: Detailed list of pending orders with the ability to see status and types. When an active position is present, pending orders are annotated with "TP" (Take Profit) or "SL" (Stop Loss) indicators by matching their trigger price against the configured trade parameters. Users can edit a trade's parameters (Take Profit and Stop Loss prices) via a pen icon in the open orders table header (only visible when in `exit_setup` status). The edit modal is pre-filled with the actual trigger prices from the open orders on Hyperliquid, falling back to the values stored in the database if no orders are found. 
     - **Close Position Action**: A "Close Position" button is available inside the **Edit Trade Modal**. Clicking it is a shortcut for editing the trade: it calculates Take Profit and Stop Loss prices very close to the current market price (e.g., +/- 0.01% offset), updates the local form, and triggers the save action. This updates the `user_trades` record and resets the status to `entry_setup`, which triggers the Trader Hook to cancel existing trigger orders and place a new TP/SL pair that will execute almost immediately, effectively closing the position.
     - **Recent Trades**: A table displaying the recent closed trades for the user's account, including:
     - **Asset**: The name of the perpetual pair (with icon).
@@ -206,6 +206,20 @@ All server-side workers (Trend Worker, Notification Dispatcher) can be triggered
           - If it doesn't exist, create a new record in the `events` table.
           - Set `notifications_created` to `true` for these recovered events to avoid sending historical alerts.
 - **Endpoint**: Available at `/api/recover` for manual execution.
+
+#### 3.2.5. Stats Worker
+
+- **Compute Daily Stats**: This worker computes market-wide trend statistics for a specific day. It runs iteratively to process all pending days until it reaches the current day.
+- **Iterative Logic**: The worker continues to process days in a loop until it encounters an error or reaches a day that is either today or in the future.
+- **Logic for each day**:
+    1.  **Determine Target Day**:
+        - If no stats exist: find the earliest day with a trend event in the `events` table (based on `since`).
+        - If stats exist: find the day of the first event in the `events` table that occurs *after* the day of the last existing stat.
+    2.  **Validation**: If no matching events are found, or if the target day is today (UTC) or later, the loop stops. We only compute statistics for fully completed days.
+    3.  **Market Snapshot**: For the target day, identifies the trend status (bullish/bearish) of all pairs on both Daily and Weekly timeframes at the end of that day (23:59:59 UTC).
+    4.  **Aggregation**: Computes the total number of pairs and the counts of bullish/bearish pairs for each timeframe.
+    5.  **Persistence**: Stores the aggregated results in the `stats` table.
+- **Endpoint**: Available at `/api/stats` for manual execution or scheduled triggers.
 
 ### 3.3. Client-Side Hooks & Logic
 
@@ -365,6 +379,18 @@ Tables use **Row Level Security (RLS)** to ensure appropriate data access. User-
 - `updated_at`: timestamp
 - **RLS Policy**: Users can only read/update their own trade configuration.
 - **Initialization**: Automatically initialized for every new user with status `sleeping` via the `handle_new_user` trigger.
+
+### `stats`
+
+- `day`: timestamp (primary key)
+- `pairs_total`: integer
+- `pairs_bearish_daily`: integer
+- `pairs_bearish_weekly`: integer
+- `pairs_bullish_daily`: integer
+- `pairs_bullish_weekly`: integer
+- `created_at`: timestamp
+- **RLS Policy**: Publicly readable. Only system-level processes can insert.
+- **Note**: This table stores daily snapshots of the market trend status for all monitored pairs. All timestamps represent the **start time** of the day (00:00:00.000Z) to uniquely identify the day. market snapshot is taken at the end of that day.
 
 ## 5. System Architecture
 

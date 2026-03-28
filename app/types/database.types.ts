@@ -183,6 +183,36 @@ export type Database = {
         }
         Relationships: []
       }
+      stats: {
+        Row: {
+          created_at: string
+          day: string
+          pairs_bearish_daily: number
+          pairs_bearish_weekly: number
+          pairs_bullish_daily: number
+          pairs_bullish_weekly: number
+          pairs_total: number
+        }
+        Insert: {
+          created_at?: string
+          day: string
+          pairs_bearish_daily?: number
+          pairs_bearish_weekly?: number
+          pairs_bullish_daily?: number
+          pairs_bullish_weekly?: number
+          pairs_total?: number
+        }
+        Update: {
+          created_at?: string
+          day?: string
+          pairs_bearish_daily?: number
+          pairs_bearish_weekly?: number
+          pairs_bullish_daily?: number
+          pairs_bullish_weekly?: number
+          pairs_total?: number
+        }
+        Relationships: []
+      }
       trends: {
         Row: {
           coin: string
@@ -276,7 +306,7 @@ export type Database = {
           created_at: string | null
           direction: string | null
           id: string
-          leverage: number
+          leverage: number | null
           status: string
           stop_loss_pct: number
           stop_loss_price: number | null
@@ -289,7 +319,7 @@ export type Database = {
           created_at?: string | null
           direction?: string | null
           id: string
-          leverage?: number
+          leverage?: number | null
           status?: string
           stop_loss_pct?: number
           stop_loss_price?: number | null
@@ -302,7 +332,7 @@ export type Database = {
           created_at?: string | null
           direction?: string | null
           id?: string
-          leverage?: number
+          leverage?: number | null
           status?: string
           stop_loss_pct?: number
           stop_loss_price?: number | null

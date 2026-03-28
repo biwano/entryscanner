@@ -7,6 +7,7 @@ export type UserSubscription = Tables<"user_subscriptions">;
 export type MonitoredPair = Tables<"monitored_pairs">;
 export type Trend = Tables<"trends">;
 export type Event = Tables<"events">;
+export type Stat = Tables<"stats">;
 export type NotificationHistory = Tables<"notification_history">;
 export type UserTrade = Tables<"user_trades">;
 
@@ -17,6 +18,7 @@ export type UserSubscriptionInsert = TablesInsert<"user_subscriptions">;
 export type MonitoredPairInsert = TablesInsert<"monitored_pairs">;
 export type TrendInsert = TablesInsert<"trends">;
 export type EventInsert = TablesInsert<"events">;
+export type StatInsert = TablesInsert<"stats">;
 export type NotificationHistoryInsert = TablesInsert<"notification_history">;
 export type UserTradeInsert = TablesInsert<"user_trades">;
 
@@ -27,6 +29,7 @@ export type UserSubscriptionUpdate = TablesUpdate<"user_subscriptions">;
 export type MonitoredPairUpdate = TablesUpdate<"monitored_pairs">;
 export type TrendUpdate = TablesUpdate<"trends">;
 export type EventUpdate = TablesUpdate<"events">;
+export type StatUpdate = TablesUpdate<"stats">;
 export type NotificationHistoryUpdate = TablesUpdate<"notification_history">;
 export type UserTradeUpdate = TablesUpdate<"user_trades">;
 

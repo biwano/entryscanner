@@ -111,11 +111,41 @@ const orders = computed(() => {
   if (!openOrders.value) return [];
   return openOrders.value.map((o) => {
     const currentPx = allMids.value?.[o.coin];
+    const price = parseFloat(o.limitPx);
+
+    // Identify TP/SL type if there's an open position for this coin
+    let type: "tp" | "sl" | undefined = undefined;
+    const position = positions.value.find((p) => p.asset === o.coin);
+    console.log(position, activeTrade.value?.coin);
+
+    if (
+      position &&
+      activeTrade.value &&
+      activeTrade.value.coin === o.coin &&
+      currentPx
+    ) {
+      type =
+        activeTrade.value.direction === "long"
+          ? o.limitPx > currentPx
+            ? "tp"
+            : "sl"
+          : o.limitPx > currentPx
+          ? "sl"
+          : "tp";
+
+      const tp = activeTrade.value.take_profit_price;
+      const sl = activeTrade.value.stop_loss_price;
+
+      if (tp && Math.abs(price - tp) < 0.0001) type = "tp";
+      else if (sl && Math.abs(price - sl) < 0.0001) type = "sl";
+    }
+
     return {
       asset: o.coin,
       side: o.side,
       size: parseFloat(o.sz),
-      price: parseFloat(o.limitPx),
+      price,
+      type,
       currentPx: currentPx ? parseFloat(currentPx) : 0,
       oid: o.oid,
     };
@@ -310,7 +340,27 @@ const orderColumns = [
             </Private>
           </template>
           <template #price-cell="{ row }">
-            {{ formatPrice(row.original.price) }}
+            <div class="flex items-center gap-2">
+              <span>{{ formatPrice(row.original.price) }}</span>
+              <UBadge
+                v-if="row.original.type === 'tp'"
+                color="success"
+                variant="subtle"
+                size="xs"
+                class="font-bold"
+              >
+                TP
+              </UBadge>
+              <UBadge
+                v-if="row.original.type === 'sl'"
+                color="error"
+                variant="subtle"
+                size="xs"
+                class="font-bold"
+              >
+                SL
+              </UBadge>
+            </div>
           </template>
         </UTable>
       </div>
