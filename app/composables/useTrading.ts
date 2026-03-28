@@ -151,7 +151,7 @@ export const useTrading = () => {
               pnl: totalPnl,
               size: entrySizeSum,
             });
-            // Start new trade with the leftover size
+              // Start new trade h the leftover size
             currentPos = leftoverSz * sideMult;
             totalPnl = 0;
             entryPriceSum = px * leftoverSz;
@@ -168,10 +168,20 @@ export const useTrading = () => {
         const position = clearinghouse.value?.assetPositions?.find(
           (p: any) => p?.position?.coin === trade.coin
         );
-        const leverage = position
-          ? `${position.position.leverage.value}x`
-          : "N/A";
-        return { ...trade, leverage };
+        const leverageValue = position?.position?.leverage?.value || null;
+        const leverage = leverageValue ? `${leverageValue}x` : "N/A";
+
+        let pnlPct = 0;
+        if (leverageValue) {
+          const margin = (trade.size * trade.entryPrice) / leverageValue;
+          pnlPct = (trade.pnl / margin) * 100;
+        } else {
+          // Fallback to simple price change %
+          const p = (trade.exitPrice - trade.entryPrice) / trade.entryPrice;
+          pnlPct = p * 100;
+        }
+
+        return { ...trade, leverage, pnlPct };
       })
       .sort(
         (a, b) =>

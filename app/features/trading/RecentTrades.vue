@@ -86,7 +86,7 @@ const columns = [
         </template>
 
         <template #pnl-cell="{ row }">
-          <div class="flex flex-col">
+          <div class="flex flex-col items-end">
             <Private>
               <span
                 :class="
@@ -96,6 +96,15 @@ const columns = [
               >
                 {{ row.original.pnl >= 0 ? "+" : ""
                 }}{{ formatPrice(row.original.pnl) }}
+              </span>
+              <span
+                class="text-[10px] opacity-70 block"
+                :class="
+                  row.original.pnl >= 0 ? 'text-green-500' : 'text-red-500'
+                "
+              >
+                {{ row.original.pnl >= 0 ? "+" : ""
+                }}{{ row.original.pnlPct.toFixed(2) }}%
               </span>
             </Private>
           </div>

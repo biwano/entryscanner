@@ -89,13 +89,20 @@ const positions = computed(() => {
       const notionalSize = Math.abs(size) * currentPrice;
       const actualLeverage = accountValue > 0 ? notionalSize / accountValue : 0;
 
+      const entryPx = parseFloat(p.position.entryPx);
+      const unrealizedPnl = parseFloat(p.position.unrealizedPnl);
+      const marginLeverage = p.position.leverage?.value || 1;
+      const margin = (Math.abs(size) * entryPx) / marginLeverage;
+      const pnlPct = margin > 0 ? (unrealizedPnl / margin) * 100 : 0;
+
       return {
         asset: coin,
         side: size > 0 ? "LONG" : "SHORT",
         size: Math.abs(size),
-        entryPx: parseFloat(p.position.entryPx),
+        entryPx: entryPx,
         leverage: actualLeverage,
-        pnl: parseFloat(p.position.unrealizedPnl),
+        pnl: unrealizedPnl,
+        pnlPct,
       };
     });
 });
@@ -237,14 +244,25 @@ const orderColumns = [
           </template>
           <template #pnl-cell="{ row }">
             <Private>
-              <span
-                :class="
-                  row.original.pnl >= 0 ? 'text-green-500' : 'text-red-500'
-                "
-              >
-                {{ row.original.pnl >= 0 ? "+" : ""
-                }}{{ formatPrice(row.original.pnl) }}
-              </span>
+              <div class="flex flex-col items-end">
+                <span
+                  :class="
+                    row.original.pnl >= 0 ? 'text-green-500' : 'text-red-500'
+                  "
+                >
+                  {{ row.original.pnl >= 0 ? "+" : ""
+                  }}{{ formatPrice(row.original.pnl) }}
+                </span>
+                <span
+                  class="text-[10px] opacity-70"
+                  :class="
+                    row.original.pnl >= 0 ? 'text-green-500' : 'text-red-500'
+                  "
+                >
+                  {{ row.original.pnl >= 0 ? "+" : ""
+                  }}{{ row.original.pnlPct.toFixed(2) }}%
+                </span>
+              </div>
             </Private>
           </template>
         </UTable>

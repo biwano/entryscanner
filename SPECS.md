@@ -193,6 +193,20 @@ All server-side workers (Trend Worker, Notification Dispatcher) can be triggered
       - For each row, it sends the notification to the user's configured Discord webhook.
       - Upon successful (or attempted) delivery, it updates `sent_at` to the current timestamp.
 
+#### 3.2.4. Recover Worker
+
+- **Backfill Trend History**: This worker ensures that the `events` table is populated with trend flips that occurred before the trend worker was active or during periods of inactivity.
+- **Logic**:
+  1.  **Iterate Pairs**: Loops through all active `monitored_pairs`.
+  2.  **Historical Analysis**: For each pair and timeframe (D1, W1):
+      a. **Fetch History**: Retrieves the last 400 candles.
+      b. **Detect Flips**: Analyzes the historical data to identify every candle where a SMA 50 crossover occurred.
+      c. **Event Backfill**: For each detected historical flip:
+          - Check if an event already exists for this `coin`, `timeframe`, `status`, and `since` (timestamp of the flip).
+          - If it doesn't exist, create a new record in the `events` table.
+          - Set `notifications_created` to `true` for these recovered events to avoid sending historical alerts.
+- **Endpoint**: Available at `/api/recover` for manual execution.
+
 ### 3.3. Client-Side Hooks & Logic
 
 #### 3.3.1. Trader Hook (Client-Side)
