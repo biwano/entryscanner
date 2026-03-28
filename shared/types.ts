@@ -24,7 +24,7 @@ export interface HyperliquidCandle {
   i: string | number; // interval/identifier
 }
 
-export type Timeframe = "D1" | "W1";
+export type Timeframe = "H1" | "D1" | "W1";
 
 export interface TrendFlip {
   status: TrendStatus;

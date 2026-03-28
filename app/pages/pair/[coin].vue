@@ -6,7 +6,7 @@ import { useSupabaseClient } from "#imports";
 import { useHyperliquid } from "~/composables/useHyperliquid";
 import type { MonitoredPairWithTrends } from "~/types/database.friendly.types";
 import type { AssetMeta, TrendStatus } from "~~shared/types";
-import { calculateStartTime } from "~~shared/trends";
+import { calculateStartTime, determineTrend } from "~~shared/trends";
 import { CANDLE_COUNT, TREND_BULLISH } from "~~shared/constants";
 import { formatPrice, formatPercentChange } from "~/utils/format";
 import PriceChart from "~/features/charts/PriceChart.vue";
@@ -23,15 +23,24 @@ const { useAllMids, useMetaAndAssetCtxs, useCandles } = useHyperliquid();
 const { data: allMids } = useAllMids();
 const { data: metaAndAssetCtxs } = useMetaAndAssetCtxs();
 
+const startTimeH1 = calculateStartTime("H1", CANDLE_COUNT);
 const startTimeD1 = calculateStartTime("D1", CANDLE_COUNT);
 const startTimeW1 = calculateStartTime("W1", CANDLE_COUNT);
+const { data: candlesH1 } = useCandles(coin, "1h", startTimeH1);
 const { data: candlesD1 } = useCandles(coin, "1d", startTimeD1);
 const { data: candlesW1 } = useCandles(coin, "1w", startTimeW1);
 
 const queryTimeframe = route.query.timeframe as string;
-const timeframe = ref<"1d" | "1w">(queryTimeframe === "1w" ? "1w" : "1d");
+const timeframe = ref<"1h" | "1d" | "1w">(
+  queryTimeframe === "1w" ? "1w" : queryTimeframe === "1h" ? "1h" : "1d"
+);
 
 const isBullish = computed(() => {
+  if (timeframe.value === "1h") {
+    if (!candlesH1.value || candlesH1.value.length === 0) return false;
+    const analysis = determineTrend(coin, "H1", candlesH1.value);
+    return analysis?.status === TREND_BULLISH;
+  }
   const flip =
     timeframe.value === "1d"
       ? pair.value?.last_trend_flip_daily
@@ -50,9 +59,10 @@ watch(timeframe, (newVal) => {
   );
 });
 
-const selectedCandles = computed(
-  () => (timeframe.value === "1d" ? candlesD1.value : candlesW1.value) || []
-);
+const selectedCandles = computed(() => {
+  if (timeframe.value === "1h") return candlesH1.value || [];
+  return (timeframe.value === "1d" ? candlesD1.value : candlesW1.value) || [];
+});
 
 const supabase = useSupabaseClient();
 const { data: pair } = await useAsyncData<MonitoredPairWithTrends | null>(
@@ -94,12 +104,23 @@ const assetCtx = computed(() => {
 
 const currentPrice = computed(() => allMids.value?.[coin] ?? "0.00");
 
+const analysisH1 = computed(() => {
+  if (!candlesH1.value || candlesH1.value.length === 0) return null;
+  return determineTrend(coin, "H1", candlesH1.value);
+});
+
 const backRoute = ref("/");
 if (import.meta.client) {
   backRoute.value = localStorage.getItem("pair_analysis_source") || "/";
 }
 
 const percentChangeSinceTrendStart = computed(() => {
+  if (timeframe.value === "1h") {
+    if (!candlesH1.value || candlesH1.value.length === 0) return null;
+    const analysis = determineTrend(coin, "H1", candlesH1.value);
+    if (!analysis?.priceAtFlip) return null;
+    return formatPercentChange(currentPrice.value, analysis.priceAtFlip);
+  }
   if (!pair.value) return null;
   const flipEvent =
     timeframe.value === "1d"
@@ -120,16 +141,21 @@ const percentChangeSinceTrendStart = computed(() => {
       :current-price="currentPrice"
       :back-route="backRoute"
       :percent-change-since-trend-start="percentChangeSinceTrendStart"
+      :status-h1="analysisH1?.status"
+      :since-h1="analysisH1?.latestFlipTimestamp"
+      :price-at-flip-h1="analysisH1?.priceAtFlip"
     />
 
     <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
       <div class="lg:col-span-3">
-        <PriceChart
-          v-if="selectedCandles && selectedCandles.length > 0"
-          :coin="coin"
-          :candles="selectedCandles"
-          :timeframe="timeframe === '1d' ? 'D1' : 'W1'"
-        />
+          <PriceChart
+            v-if="selectedCandles && selectedCandles.length > 0"
+            :coin="coin"
+            :candles="selectedCandles"
+            :timeframe="
+              timeframe === '1h' ? 'H1' : timeframe === '1d' ? 'D1' : 'W1'
+            "
+          />
       </div>
 
       <div class="space-y-6">

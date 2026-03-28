@@ -44,7 +44,15 @@ const props = defineProps<{
 const option = computed(() => {
   if (!props.candles || props.candles.length === 0) return {};
 
-  const dates = props.candles.map((c) => dayjs(c.t).format("YYYY-MM-DD"));
+  const formatDate = (timestamp: number | string) => {
+    const d = dayjs(timestamp);
+    if (props.candles[0]?.i === "1h") {
+      return d.format("YYYY-MM-DD\nHH:mm");
+    }
+    return d.format("YYYY-MM-DD");
+  };
+
+  const dates = props.candles.map((c) => formatDate(c.t));
   const data = props.candles.map((c) => [
     parseFloat(c.o),
     parseFloat(c.c),
@@ -53,16 +61,19 @@ const option = computed(() => {
   ]);
   const volumes = props.candles.map((c) => parseFloat(c.v));
 
-  const duration = props.candles[0]?.i === "1w" ? "week" : "day";
+  const duration =
+    props.candles[0]?.i === "1w"
+      ? "week"
+      : props.candles[0]?.i === "1h"
+      ? "hour"
+      : "day";
 
   const markAreaData: any[] = [];
   if (props.flips && props.flips.length > 0) {
     // Initial trend before the first flip
     const firstFlip = props.flips[0]!;
     const initialStatus = firstFlip.status === TREND_BULLISH ? TREND_BEARISH : TREND_BULLISH;
-    const firstFlipDate = dayjs(firstFlip.timestamp)
-      .subtract(1, duration)
-      .format("YYYY-MM-DD");
+    const firstFlipDate = formatDate(dayjs(firstFlip.timestamp).subtract(1, duration).valueOf());
 
     markAreaData.push([
       {
@@ -81,12 +92,8 @@ const option = computed(() => {
     for (let i = 0; i < props.flips.length - 1; i++) {
       const currentFlip = props.flips[i]!;
       const nextFlip = props.flips[i + 1]!;
-      const startDate = dayjs(currentFlip.timestamp)
-        .subtract(1, duration)
-        .format("YYYY-MM-DD");
-      const endDate = dayjs(nextFlip.timestamp)
-        .subtract(1, duration)
-        .format("YYYY-MM-DD");
+      const startDate = formatDate(dayjs(currentFlip.timestamp).subtract(1, duration).valueOf());
+      const endDate = formatDate(dayjs(nextFlip.timestamp).subtract(1, duration).valueOf());
 
       markAreaData.push([
         {
@@ -104,9 +111,7 @@ const option = computed(() => {
 
     // Final trend from last flip to today
     const lastFlip = props.flips[props.flips.length - 1]!;
-    const lastFlipDate = dayjs(lastFlip.timestamp)
-      .subtract(1, duration)
-      .format("YYYY-MM-DD");
+    const lastFlipDate = formatDate(dayjs(lastFlip.timestamp).subtract(1, duration).valueOf());
 
     markAreaData.push([
       {
@@ -139,9 +144,7 @@ const option = computed(() => {
   const markPointData = props.flips?.map((flip) => {
     // The flip timestamp is the start of the next candle after the flip.
     // To mark the candle that triggered the flip, we subtract one timeframe period.
-    const candleDate = dayjs(flip.timestamp)
-      .subtract(1, duration)
-      .format("YYYY-MM-DD");
+    const candleDate = formatDate(dayjs(flip.timestamp).subtract(1, duration).valueOf());
 
     // Find the candle corresponding to this date to position the tag
     const candleIdx = dates.findIndex((d) => d === candleDate);

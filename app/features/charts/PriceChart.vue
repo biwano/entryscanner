@@ -8,7 +8,7 @@ const props = withDefaults(
   defineProps<{
     coin: string;
     candles: HyperliquidCandle[];
-    timeframe: "D1" | "W1";
+    timeframe: "H1" | "D1" | "W1";
   }>(),
   {
     timeframe: "D1",

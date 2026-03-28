@@ -7,13 +7,16 @@ defineProps<{
   coin: string;
   pair: MonitoredPairWithTrends;
   currentPrice: string;
-  timeframe: "1d" | "1w";
+  timeframe: "1h" | "1d" | "1w";
   backRoute: string;
   percentChangeSinceTrendStart: string | null;
+  statusH1?: TrendStatus;
+  sinceH1?: string;
+  priceAtFlipH1?: number;
 }>();
 
 defineEmits<{
-  (e: "update:timeframe", value: "1d" | "1w"): void;
+  (e: "update:timeframe", value: "1h" | "1d" | "1w"): void;
 }>();
 </script>
 
@@ -45,6 +48,23 @@ defineEmits<{
           <UBadge v-if="!pair.active" color="neutral" variant="solid"
             >INACTIVE</UBadge
           >
+          <div
+            class="flex items-center gap-2 cursor-pointer px-3 py-1.5 rounded-lg border transition-all"
+            :class="
+              timeframe === '1h'
+                ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-200 dark:border-primary-800'
+                : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700'
+            "
+            @click="$emit('update:timeframe', '1h')"
+          >
+            <span class="text-xs font-bold text-gray-500">H1</span>
+            <TrendIndicator
+              :status="statusH1"
+              :since="sinceH1"
+              :price-at-flip="priceAtFlipH1"
+              :current-price="currentPrice"
+            />
+          </div>
           <div
             class="flex items-center gap-2 cursor-pointer px-3 py-1.5 rounded-lg border transition-all"
             :class="

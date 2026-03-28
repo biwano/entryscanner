@@ -20,7 +20,9 @@ export function calculateStartTime(
 ): number {
   const now = dayjs();
 
-  if (timeframe === "D1") {
+  if (timeframe === "H1") {
+    return now.startOf("hour").subtract(candleCount, "hour").valueOf();
+  } else if (timeframe === "D1") {
     return now.startOf("day").subtract(candleCount, "day").valueOf();
   } else if (timeframe === "W1") {
     // Hyperliquid weeks start on Monday
@@ -65,7 +67,7 @@ export function determineTrend(
 
   const flips: TrendFlip[] = [];
   let currentStatus: TrendStatus | null = null;
-  const duration = timeframe === "D1" ? "day" : "week";
+  const duration = timeframe === "H1" ? "hour" : timeframe === "D1" ? "day" : "week";
 
   // Traverse from earliest to latest to find all flips
   for (let i = 0; i < closePrices.length; i++) {
@@ -130,7 +132,12 @@ export function isCandleClosed(
   const now = dayjs();
   const candleStart = dayjs(candleTimestamp);
 
-  if (timeframe === "D1") {
+  if (timeframe === "H1") {
+    return (
+      now.isAfter(candleStart.add(1, "hour")) ||
+      now.isSame(candleStart.add(1, "hour"))
+    );
+  } else if (timeframe === "D1") {
     return (
       now.isAfter(candleStart.add(1, "day")) ||
       now.isSame(candleStart.add(1, "day"))
