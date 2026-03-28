@@ -10,6 +10,7 @@ import {
 import type { Database, Tables } from "~/types/database.types";
 import RecentBearishFlipsTable from "~/features/dashboard/RecentBearishFlipsTable.vue";
 import ActiveTrade from "~/features/trading/ActiveTrade.vue";
+import BullishnessChart from "~/features/dashboard/BullishnessChart.vue";
 
 const { useAllMids } = useHyperliquid();
 const { data: allMids } = useAllMids();
@@ -119,6 +120,22 @@ const { data: dailyTrends } = useQuery({
           :loading="isLoadingDaily"
           :trend-percentages="dailyTrends"
         />
+      </div>
+    </section>
+
+    <section>
+      <div class="mb-6">
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
+          Bullishness Evolution
+        </h2>
+        <p class="text-gray-500 dark:text-gray-400">
+          Historical overview of market sentiment (percentage of bullish pairs).
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <BullishnessChart title="Daily Bullishness (%)" timeframe="D1" />
+        <BullishnessChart title="Weekly Bullishness (%)" timeframe="W1" />
       </div>
     </section>
 

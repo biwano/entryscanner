@@ -38,6 +38,9 @@ The Dashboard provides a high-level overview of the most recent significant mark
 - **Trend Flip Tables**: Two primary tables showing recent market shifts:
   - **Last 5 Weekly Flips**: Shows the 5 most recent pairs that flipped to either bullish or bearish trend on the Weekly (W1) timeframe (one flip per coin). Display the percentage of all monitored pairs that are currently bullish/bearish with a small visual indicator.
   - **Last 5 Daily Flips**: Shows the 5 most recent pairs that flipped to either bullish or bearish trend on the Daily (D1) timeframe (one flip per coin). Display the percentage of all monitored pairs that are currently bullish/bearish with a small visual indicator.
+- **Bullishness Evolution Graphs**: Two area charts showing the historical evolution of the percentage of bullish pairs for both Daily and Weekly timeframes.
+  - **Data Source**: Fetched from the `stats` table (last 365 days).
+  - **Visuals**: The chart background (area under the curve) is colored green when the bullish percentage is above the current value and red below (or a similar visual representation of market sentiment).
 
 **Table Columns (Trend Flips)**:
 

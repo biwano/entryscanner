@@ -42,8 +42,6 @@ const openEditModal = () => {
   const position = positions.value.find(
     (p) => p.asset === activeTrade.value?.coin
   );
-  console.log(coinOrders);
-  console.log(position);
 
   if (position) {
     const entryPx = position.entryPx;
@@ -116,7 +114,6 @@ const orders = computed(() => {
     // Identify TP/SL type if there's an open position for this coin
     let type: "tp" | "sl" | undefined = undefined;
     const position = positions.value.find((p) => p.asset === o.coin);
-    console.log(position, activeTrade.value?.coin);
 
     if (
       position &&
