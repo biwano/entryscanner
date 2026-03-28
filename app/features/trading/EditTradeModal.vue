@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { ref, watch, computed } from "vue";
 import { useActiveTrade } from "~/composables/useActiveTrade";
 import { useTraderHook } from "~/composables/useTraderHook";
 import { useTrading } from "~/composables/useTrading";
@@ -15,7 +15,7 @@ const props = defineProps<{
 
 const emit = defineEmits(["update:open", "saved"]);
 
-const { address, wallet, hlClient } = useTrading();
+const { address, wallet, hlClient, clearinghouse } = useTrading();
 const { useMetaAndAssetCtxs, useAllMids } = useHyperliquid();
 const { data: metaAndAssetCtxs } = useMetaAndAssetCtxs();
 const { data: allMids } = useAllMids();
@@ -26,6 +26,14 @@ const toast = useToast();
 const localTpPrice = ref<number | undefined>(props.tpPrice);
 const localSlPrice = ref<number | undefined>(props.slPrice);
 const isSaving = ref(false);
+
+const position = computed(() => {
+  const ch = clearinghouse.value;
+  if (!ch || !("assetPositions" in ch) || !Array.isArray(ch.assetPositions)) return null;
+  return ch.assetPositions.find(
+    (p) => p?.position?.coin === props.coin
+  );
+});
 
 watch(
   () => props.open,
@@ -118,6 +126,13 @@ const closeNow = async () => {
 
   await saveEdit();
 };
+
+const breakEvenNow = async () => {
+  if (!position.value) return;
+  const entryPx = parseFloat(position.value.position.entryPx);
+  localSlPrice.value = entryPx;
+  await saveEdit();
+};
 </script>
 
 <template>
@@ -164,15 +179,30 @@ const closeNow = async () => {
 
     <template #footer>
       <div class="flex items-center justify-between w-full">
-        <UButton
-          color="error"
-          variant="soft"
-          icon="i-lucide-x-circle"
-          :loading="isSaving"
-          @click="closeNow"
-        >
-          Close Position
-        </UButton>
+        <div class="flex flex-col gap-2">
+          <UButton
+            color="warning"
+            variant="soft"
+            icon="i-lucide-shield-check"
+            block
+            :loading="isSaving"
+            :disabled="!position"
+            @click="breakEvenNow"
+          >
+            Break Even
+          </UButton>
+          <UButton
+            color="error"
+            variant="soft"
+            icon="i-lucide-x-circle"
+            block
+            :loading="isSaving"
+            :disabled="!position"
+            @click="closeNow"
+          >
+            Close Position
+          </UButton>
+        </div>
         <div class="flex items-center gap-3">
           <UButton
             variant="ghost"
