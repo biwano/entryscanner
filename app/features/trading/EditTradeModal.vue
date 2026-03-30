@@ -29,10 +29,9 @@ const isSaving = ref(false);
 
 const position = computed(() => {
   const ch = clearinghouse.value;
-  if (!ch || !("assetPositions" in ch) || !Array.isArray(ch.assetPositions)) return null;
-  return ch.assetPositions.find(
-    (p) => p?.position?.coin === props.coin
-  );
+  if (!ch || !("assetPositions" in ch) || !Array.isArray(ch.assetPositions))
+    return null;
+  return ch.assetPositions.find((p) => p?.position?.coin === props.coin);
 });
 
 watch(
@@ -133,6 +132,23 @@ const breakEvenNow = async () => {
   localSlPrice.value = entryPx;
   await saveEdit();
 };
+
+const saveHalfNow = async () => {
+  if (!position.value) return;
+  const mid = allMids.value?.[props.coin];
+  if (!mid) {
+    toast.add({
+      title: "Error",
+      description: `Could not get current price for ${props.coin}`,
+      color: "error",
+    });
+    return;
+  }
+  const currentMid = parseFloat(mid);
+  const entryPx = parseFloat(position.value.position.entryPx);
+  localSlPrice.value = (currentMid + entryPx) / 2;
+  await saveEdit();
+};
 </script>
 
 <template>
@@ -190,6 +206,17 @@ const breakEvenNow = async () => {
             @click="breakEvenNow"
           >
             Break Even
+          </UButton>
+          <UButton
+            color="warning"
+            variant="soft"
+            icon="i-lucide-divide"
+            block
+            :loading="isSaving"
+            :disabled="!position"
+            @click="saveHalfNow"
+          >
+            Save half
           </UButton>
           <UButton
             color="error"

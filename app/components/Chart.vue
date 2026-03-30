@@ -72,8 +72,11 @@ const option = computed(() => {
   if (props.flips && props.flips.length > 0) {
     // Initial trend before the first flip
     const firstFlip = props.flips[0]!;
-    const initialStatus = firstFlip.status === TREND_BULLISH ? TREND_BEARISH : TREND_BULLISH;
-    const firstFlipDate = formatDate(dayjs(firstFlip.timestamp).subtract(1, duration).valueOf());
+    const initialStatus =
+      firstFlip.status === TREND_BULLISH ? TREND_BEARISH : TREND_BULLISH;
+    const firstFlipDate = formatDate(
+      dayjs(firstFlip.timestamp).subtract(1, duration).valueOf()
+    );
 
     markAreaData.push([
       {
@@ -92,8 +95,12 @@ const option = computed(() => {
     for (let i = 0; i < props.flips.length - 1; i++) {
       const currentFlip = props.flips[i]!;
       const nextFlip = props.flips[i + 1]!;
-      const startDate = formatDate(dayjs(currentFlip.timestamp).subtract(1, duration).valueOf());
-      const endDate = formatDate(dayjs(nextFlip.timestamp).subtract(1, duration).valueOf());
+      const startDate = formatDate(
+        dayjs(currentFlip.timestamp).subtract(1, duration).valueOf()
+      );
+      const endDate = formatDate(
+        dayjs(nextFlip.timestamp).subtract(1, duration).valueOf()
+      );
 
       markAreaData.push([
         {
@@ -111,7 +118,9 @@ const option = computed(() => {
 
     // Final trend from last flip to today
     const lastFlip = props.flips[props.flips.length - 1]!;
-    const lastFlipDate = formatDate(dayjs(lastFlip.timestamp).subtract(1, duration).valueOf());
+    const lastFlipDate = formatDate(
+      dayjs(lastFlip.timestamp).subtract(1, duration).valueOf()
+    );
 
     markAreaData.push([
       {
@@ -144,7 +153,9 @@ const option = computed(() => {
   const markPointData = props.flips?.map((flip) => {
     // The flip timestamp is the start of the next candle after the flip.
     // To mark the candle that triggered the flip, we subtract one timeframe period.
-    const candleDate = formatDate(dayjs(flip.timestamp).subtract(1, duration).valueOf());
+    const candleDate = formatDate(
+      dayjs(flip.timestamp).subtract(1, duration).valueOf()
+    );
 
     // Find the candle corresponding to this date to position the tag
     const candleIdx = dates.findIndex((d) => d === candleDate);
@@ -194,7 +205,9 @@ const option = computed(() => {
       formatter: (params: any) => {
         let res = "";
         params.forEach((item: any) => {
-          const val = Array.isArray(item.value) ? item.value : [null, item.value];
+          const val = Array.isArray(item.value)
+            ? item.value
+            : [null, item.value];
           if (item.seriesName === "Price") {
             res += `<div class="font-bold mb-1">${item.name}</div>`;
             res += `<div class="grid grid-cols-2 gap-x-4 text-xs">
@@ -215,7 +228,9 @@ const option = computed(() => {
             const vol = Array.isArray(item.value) ? item.value[1] : item.value;
             res += `<div class="text-xs mt-1 text-gray-500">Volume: <span class="font-mono text-gray-200 ml-1">${vol}</span></div>`;
           } else {
-            const price = Array.isArray(item.value) ? item.value[1] : item.value;
+            const price = Array.isArray(item.value)
+              ? item.value[1]
+              : item.value;
             res += `<div class="text-xs mt-1 text-gray-500">${
               item.seriesName
             }: <span class="font-mono text-gray-200 ml-1">${formatPriceNumber(
