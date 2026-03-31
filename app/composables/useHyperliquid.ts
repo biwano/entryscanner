@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/vue-query";
+import { toValue, type MaybeRefOrGetter } from "vue";
 import {
   HyperliquidClient,
   type CandleInterval,
@@ -25,19 +26,19 @@ export const useHyperliquid = () => {
   };
 
   const useCandles = (
-    coin: string,
-    interval: CandleInterval,
-    startTime: number,
-    endTime?: number
+    coin: MaybeRefOrGetter<string>,
+    interval: MaybeRefOrGetter<CandleInterval>,
+    startTime: MaybeRefOrGetter<number>,
+    endTime?: MaybeRefOrGetter<number | undefined>
   ) => {
     return useQuery({
       queryKey: ["candles", coin, interval, startTime, endTime],
       queryFn: async (): Promise<HyperliquidCandle[]> => {
         const response = await client.fetchCandles(
-          coin,
-          interval,
-          startTime,
-          endTime
+          toValue(coin),
+          toValue(interval),
+          toValue(startTime),
+          toValue(endTime)
         );
         return response;
       },

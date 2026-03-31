@@ -57,7 +57,10 @@ watch(
   { immediate: true }
 );
 
-const startTrade = async (direction: "long" | "short") => {
+const startTrade = async (
+  direction: "long" | "short",
+  status: "requested" | "auto_entry" = "requested"
+) => {
   if (!user.value || !clearinghouse.value) return;
 
   isSubmitting.value = true;
@@ -65,7 +68,7 @@ const startTrade = async (direction: "long" | "short") => {
     const { error } = await updateTrade({
       coin: props.coin,
       direction,
-      status: "requested",
+      status,
       take_profit_price: tpPrice.value || null,
       stop_loss_price: slPrice.value || null,
       take_profit_pct: tpPct.value,
@@ -76,8 +79,11 @@ const startTrade = async (direction: "long" | "short") => {
     if (error) throw error;
 
     toast.add({
-      title: "Trade Requested",
-      description: `Starting ${direction} trade for ${props.coin}...`,
+      title: status === "auto_entry" ? "Auto Entry Requested" : "Trade Requested",
+      description:
+        status === "auto_entry"
+          ? `Monitoring ${props.coin} for auto ${direction} entry...`
+          : `Starting ${direction} trade for ${props.coin}...`,
       color: "success",
     });
 
@@ -209,6 +215,19 @@ const startTrade = async (direction: "long" | "short") => {
         @click="startTrade('short')"
       >
         Sell (Short)
+      </UButton>
+    </div>
+
+    <div class="pt-2">
+      <UButton
+        class="w-full justify-center"
+        color="primary"
+        variant="outline"
+        icon="i-heroicons-bolt"
+        :loading="isSubmitting"
+        @click="startTrade(isBullish ? 'long' : 'short', 'auto_entry')"
+      >
+        Auto {{ isBullish ? "Buy" : "Sell" }} (Hourly SMA 50)
       </UButton>
     </div>
 

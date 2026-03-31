@@ -1,16 +1,36 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import { useActiveTrade } from "~/composables/useActiveTrade";
 import { useTraderStore } from "~/composables/useTraderStore";
+import { useHyperliquid } from "~/composables/useHyperliquid";
 import { formatTime } from "~/utils/format";
+import PriceChart from "~/features/charts/PriceChart.vue";
+import { CANDLE_COUNT } from "~~shared/constants";
+import { calculateStartTime } from "~~shared/trends";
 
 const { activeTrade } = useActiveTrade();
 const traderStore = useTraderStore();
+const { useCandles } = useHyperliquid();
 
 const logs = computed(() => traderStore.logs.value || []);
 
+const timeframe = ref<"1h" | "1d" | "1w">("1h");
+
+const startTime = computed(() => {
+  const tf = timeframe.value === "1h" ? "H1" : timeframe.value === "1d" ? "D1" : "W1";
+  return calculateStartTime(tf, CANDLE_COUNT);
+});
+
+const { data: candles } = useCandles(
+  () => activeTrade.value?.coin || "",
+  () => timeframe.value,
+  () => startTime.value
+);
+
 const statusColor = computed(() => {
   switch (activeTrade.value?.status) {
+    case "auto_entry":
+      return "info";
     case "requested":
       return "primary";
     case "entry_setup":
@@ -88,7 +108,7 @@ const statusColor = computed(() => {
           </div>
         </div>
 
-        <div class="space-y-2">
+        <div class="space-y-4">
           <div class="flex items-center justify-between">
             <h4
               class="text-sm font-bold uppercase text-gray-500 tracking-widest"
@@ -122,6 +142,50 @@ const statusColor = computed(() => {
                 }"
                 >{{ log.message }}</span
               >
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-4 pt-4 border-t border-gray-100 dark:border-gray-800">
+          <div class="flex items-center justify-between">
+            <h4
+              class="text-sm font-bold uppercase text-gray-500 tracking-widest"
+            >
+              Live Chart
+            </h4>
+            <UButtonGroup size="xs" variant="ghost">
+              <UButton
+                :color="timeframe === '1h' ? 'primary' : 'neutral'"
+                @click="timeframe = '1h'"
+                >H1</UButton
+              >
+              <UButton
+                :color="timeframe === '1d' ? 'primary' : 'neutral'"
+                @click="timeframe = '1d'"
+                >D1</UButton
+              >
+              <UButton
+                :color="timeframe === '1w' ? 'primary' : 'neutral'"
+                @click="timeframe = '1w'"
+                >W1</UButton
+              >
+            </UButtonGroup>
+          </div>
+          <div class="min-h-[300px]">
+            <PriceChart
+              v-if="activeTrade?.coin && candles && candles.length > 0"
+              :coin="activeTrade.coin"
+              :candles="candles"
+              :timeframe="
+                timeframe === '1h' ? 'H1' : timeframe === '1d' ? 'D1' : 'W1'
+              "
+              no-card
+            />
+            <div
+              v-else
+              class="h-[300px] flex items-center justify-center text-gray-500 italic"
+            >
+              Loading chart data...
             </div>
           </div>
         </div>

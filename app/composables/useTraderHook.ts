@@ -8,6 +8,7 @@ import { HyperliquidClient } from "~~shared/hyperliquid";
 import { handleRequested } from "~/utils/trader/handlers/requested";
 import { handleEntrySetup } from "~/utils/trader/handlers/entrySetup";
 import { handleExitSetup } from "~/utils/trader/handlers/exitSetup";
+import { handleAutoEntry } from "~/utils/trader/handlers/autoEntry";
 import type { TraderContext } from "~/utils/trader/types";
 
 /** Shared across all `useTraderHook()` instances so interval + UI never overlap. */
@@ -79,7 +80,9 @@ export const useTraderHook = () => {
           toast,
         };
 
-        if (trade.status === "requested") {
+        if (trade.status === "auto_entry") {
+          await handleAutoEntry(ctx);
+        } else if (trade.status === "requested") {
           await handleRequested(ctx);
         } else if (trade.status === "entry_setup") {
           await handleEntrySetup(ctx);
@@ -102,7 +105,7 @@ export const useTraderHook = () => {
     });
   };
 
-  const { pause, resume, isActive } = useIntervalFn(processTrade, 10000, {
+  const { pause, resume, isActive } = useIntervalFn(processTrade, 60000, {
     immediate: false,
   });
 

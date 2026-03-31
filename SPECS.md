@@ -81,6 +81,7 @@ This page provides a comprehensive view of all active assets being tracked by th
 - **Header Section**: Displays the asset name (with icon), current live price, and a title that includes the **% price change since the current trend started** for daily and weekly timeframes.
 - **Trading Controls**: If the user has a valid Hyperliquid API key configured, and has no open position for the current coin, display trading controls:
   - **Directional Buttons**: "Buy" or "Sell" buttons. The default recommendation (visual emphasis) is based on whether the current timeframe trend is bullish (Buy) or bearish (Sell).
+  - **Auto Button**: An "Auto" button displayed under the "Buy" and "Sell" buttons. It functions identically to the Buy/Sell buttons (using the recommended direction based on the current trend) but sets the trade status to `auto_entry` instead of `requested`.
   - **Take Profit Price Input**: An optional numerical input field for the `take_profit_price`.
   - **Take Profit % Input**: A numerical input field for the `take_profit_pct` (default: **50**).
   - **Stop Loss % Input**: A numerical input field for the `stop_loss_pct` (default: **10**).
@@ -141,6 +142,7 @@ A dedicated view for managing personal Hyperliquid assets and trades, accessible
 - **Trader Status & Logs**: If the user has an active trade (status is not `sleeping` in `user_trades`), display:
   - **Current Status**: The status from the `user_trades` table.
   - **Activity Logs**: A scrollable log of recent activities from the **Trader Hook** (persisted in `localStorage`).
+  - **Live Chart**: A real-time price chart (reusing the component from Pair Analysis) for the traded asset, displayed below the logs.
   - **Account Performance**: Overview of the total account value, equity, and maintenance margin.
     - **Active Trade Card**: A summary card showing the current state of active perpetual positions and open orders, including the **real-time price** of the traded coin(s). The "Full View" button is hidden on this page as it's the target destination. Each open position in the card includes a **"Close" button** to manually exit the position.
     - **Close Position Action**: Clicking "Close" is a shortcut for editing the trade. It updates the `user_trades` record by setting both `take_profit_price` and `stop_loss_price` to values very close to the current market price (e.g., +/- 0.01% offset) and resets the status to `entry_setup`. This triggers the Trader Hook to cancel existing trigger orders and place a new TP/SL pair that will execute almost immediately, effectively closing the position.
@@ -234,6 +236,12 @@ All server-side workers (Trend Worker, Notification Dispatcher) can be triggered
 - **State Management**: The hook provides the handlers with all necessary real-time market data (Meta, Prices) and account states (Clearinghouse, Positions) via the context. Handlers do not fetch these states independently.
 - **Modular Logic**: The logic for each trade status is decoupled into individual handler files for better maintainability and testability.
 - **Logic Strategy**: Processes records in the `user_trades` table for the authenticated user based on their `status`:
+  - **`auto_entry`** (Handled in `autoEntry.ts`):
+    - Periodically checks the **Hourly (H1)** timeframe SMA 50 for the traded coin.
+    - If the trade direction is **long**: waits for the price to **cross up** the SMA 50.
+    - If the trade direction is **short**: waits for the price to **cross down** the SMA 50.
+    - Once the condition is met, updates status to **`requested`** in Supabase and refreshes the active trade state.
+    - Decision-making logic and price/SMA values are logged via `useTraderStore`.
   - **`requested`** (Handled in `requested.ts`):
     - Sets leverage for the specific coin based on the `leverage` value in `user_trades`.
     - Places a limit order very close to the current market price (calculated using `allMids` from the context).
@@ -377,7 +385,7 @@ Tables use **Row Level Security (RLS)** to ensure appropriate data access. User-
 - `stop_loss_price`: decimal (nullable)
 - `take_profit_pct`: decimal (default: 50)
 - `stop_loss_pct`: decimal (default: 10)
-- `status`: enum ("requested", "entry_setup", "exit_setup", "sleeping")
+- `status`: enum ("requested", "entry_setup", "exit_setup", "sleeping", "auto_entry")
 - `direction`: string ("long", "short", nullable)
 - `leverage`: decimal (default: 10)
 - `created_at`: timestamp

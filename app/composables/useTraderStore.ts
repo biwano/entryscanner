@@ -12,8 +12,21 @@ const logs = useLocalStorage<TraderLog[]>("trader_logs", []);
 export const useTraderStore = () => {
   function addLog(
     message: string,
-    type: "info" | "success" | "warning" | "error" = "info"
+    type: "info" | "success" | "warning" | "error" = "info",
+    replacePrefix?: string
   ) {
+    if (
+      replacePrefix &&
+      logs.value[0] &&
+      logs.value[0].message.startsWith(replacePrefix)
+    ) {
+      logs.value[0] = {
+        timestamp: new Date().toISOString(),
+        message,
+        type,
+      };
+      return;
+    }
     logs.value.unshift({
       timestamp: new Date().toISOString(),
       message,

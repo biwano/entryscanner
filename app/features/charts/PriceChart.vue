@@ -9,9 +9,11 @@ const props = withDefaults(
     coin: string;
     candles: HyperliquidCandle[];
     timeframe: "H1" | "D1" | "W1";
+    noCard?: boolean;
   }>(),
   {
     timeframe: "D1",
+    noCard: false,
   }
 );
 
@@ -36,8 +38,8 @@ const flips = computed(() => trendAnalysis.value?.flips || []);
 </script>
 
 <template>
-  <UCard class="shadow-sm">
-    <template #header>
+  <component :is="noCard ? 'div' : 'UCard'" :class="!noCard ? 'shadow-sm' : ''">
+    <template v-if="!noCard" #header>
       <div class="flex items-center justify-between">
         <h2 class="text-xl font-bold">Price Action ({{ timeframe }})</h2>
         <div class="flex gap-4">
@@ -61,5 +63,5 @@ const flips = computed(() => trendAnalysis.value?.flips || []);
       :flips="flips"
       :current-status="trendAnalysis?.status"
     />
-  </UCard>
+  </component>
 </template>
