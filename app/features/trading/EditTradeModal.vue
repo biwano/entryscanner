@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { ref, watch, computed } from "vue";
 import { useActiveTrade } from "~/composables/useActiveTrade";
+import { useTraderStore } from "~/composables/useTraderStore";
 import { useTraderHook } from "~/composables/useTraderHook";
 import { useTrading } from "~/composables/useTrading";
 import { useHyperliquid } from "~/composables/useHyperliquid";
+import { useTradeLinkage } from "~/composables/useTradeLinkage";
 import { useToast } from "#imports";
 
 const props = defineProps<{
@@ -21,11 +23,15 @@ const { data: metaAndAssetCtxs } = useMetaAndAssetCtxs();
 const { data: allMids } = useAllMids();
 const { activeTrade, updateTrade } = useActiveTrade();
 const { processTrade } = useTraderHook();
+const { addLog } = useTraderStore();
 const toast = useToast();
 
-const localTpPrice = ref<number | undefined>(props.tpPrice);
-const localSlPrice = ref<number | undefined>(props.slPrice);
+const localLeverage = ref<number>(10);
 const isSaving = ref(false);
+
+const direction = computed(
+  () => (activeTrade.value?.direction as "long" | "short") || "long"
+);
 
 const position = computed(() => {
   const ch = clearinghouse.value;
@@ -34,12 +40,53 @@ const position = computed(() => {
   return ch.assetPositions.find((p) => p?.position?.coin === props.coin);
 });
 
+const entryPrice = computed(() => {
+  if (!position.value) return 0;
+  return parseFloat(position.value.position.entryPx);
+});
+
+const {
+  tpPrice: localTpPrice,
+  slPrice: localSlPrice,
+  tpPct: localTpPct,
+  slPct: localSlPct,
+  activeInput,
+  updatePctsFromPrices,
+} = useTradeLinkage({
+  basePrice: entryPrice,
+  leverage: localLeverage,
+  direction,
+  initialTpPrice: props.tpPrice,
+  initialSlPrice: props.slPrice,
+  initialTpPct: activeTrade.value?.take_profit_pct || 50,
+  initialSlPct: activeTrade.value?.stop_loss_pct || 10,
+});
+
+const maxLeverage = computed(() => {
+  if (!metaAndAssetCtxs.value) return 50;
+  const universe = metaAndAssetCtxs.value[0].universe;
+  const asset = universe.find((u: any) => u.name === props.coin);
+  return asset?.maxLeverage ?? 50;
+});
+
+// Linkage logic
+// ... (useTradeLinkage handles this)
+
 watch(
   () => props.open,
   (newVal) => {
     if (newVal) {
       localTpPrice.value = props.tpPrice;
       localSlPrice.value = props.slPrice;
+      localTpPct.value = activeTrade.value?.take_profit_pct || 50;
+      localSlPct.value = activeTrade.value?.stop_loss_pct || 10;
+      localLeverage.value = activeTrade.value?.leverage || 10;
+      activeInput.value = "price";
+
+      // If prices were provided from orders, update %
+      if (props.tpPrice || props.slPrice) {
+        updatePctsFromPrices();
+      }
     }
   }
 );
@@ -79,9 +126,20 @@ const saveEdit = async () => {
       status: "entry_setup",
       take_profit_price: localTpPrice.value || null,
       stop_loss_price: localSlPrice.value || null,
+      take_profit_pct: localTpPct.value,
+      stop_loss_pct: localSlPct.value,
+      leverage: localLeverage.value,
     });
 
+
     if (error) throw error;
+
+    addLog(
+      `Trade for ${props.coin} updated: TP=${localTpPrice.value || "None"}, SL=${
+        localSlPrice.value || "None"
+      }. Status reset to entry_setup.`,
+      "success"
+    );
 
     toast.add({
       title: "Trade Updated",
@@ -95,6 +153,7 @@ const saveEdit = async () => {
     await processTrade();
   } catch (e: any) {
     console.error("Error saving trade:", e);
+    addLog(`Failed to update trade for ${props.coin}: ${e.message}`, "error");
     toast.add({
       title: "Error",
       description: e.message || "Failed to update trade",
@@ -165,28 +224,74 @@ const saveHalfNow = async () => {
     </template>
 
     <template #body>
-      <div class="grid grid-cols-2 gap-4">
-        <div class="space-y-2">
-          <label class="text-xs font-medium text-gray-500 uppercase"
-            >TP Price</label
-          >
-          <UInput
-            v-model="localTpPrice"
-            type="number"
-            step="any"
-            placeholder="Manual TP"
-            color="neutral"
-          />
+      <div class="space-y-4">
+        <div class="grid grid-cols-2 gap-4">
+          <div class="space-y-2">
+            <label class="text-xs font-medium text-gray-500 uppercase"
+              >TP Price</label
+            >
+            <UInput
+              v-model="localTpPrice"
+              type="number"
+              step="any"
+              placeholder="Manual TP"
+              color="neutral"
+              @focus="activeInput = 'price'"
+            />
+          </div>
+          <div class="space-y-2">
+            <label class="text-xs font-medium text-gray-500 uppercase"
+              >TP %</label
+            >
+            <UInput
+              v-model="localTpPct"
+              type="number"
+              step="any"
+              placeholder="TP %"
+              color="neutral"
+              @focus="activeInput = 'pct'"
+            />
+          </div>
         </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div class="space-y-2">
+            <label class="text-xs font-medium text-gray-500 uppercase"
+              >SL Price</label
+            >
+            <UInput
+              v-model="localSlPrice"
+              type="number"
+              step="any"
+              placeholder="Manual SL"
+              color="neutral"
+              @focus="activeInput = 'price'"
+            />
+          </div>
+          <div class="space-y-2">
+            <label class="text-xs font-medium text-gray-500 uppercase"
+              >SL %</label
+            >
+            <UInput
+              v-model="localSlPct"
+              type="number"
+              step="any"
+              placeholder="SL %"
+              color="neutral"
+              @focus="activeInput = 'pct'"
+            />
+          </div>
+        </div>
+
         <div class="space-y-2">
           <label class="text-xs font-medium text-gray-500 uppercase"
-            >SL Price</label
+            >Leverage</label
           >
           <UInput
-            v-model="localSlPrice"
+            v-model="localLeverage"
             type="number"
             step="any"
-            placeholder="Manual SL"
+            :max="maxLeverage"
             color="neutral"
           />
         </div>

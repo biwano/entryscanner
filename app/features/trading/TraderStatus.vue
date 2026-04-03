@@ -7,17 +7,38 @@ import { formatTime } from "~/utils/format";
 import PriceChart from "~/features/charts/PriceChart.vue";
 import { CANDLE_COUNT } from "~~shared/constants";
 import { calculateStartTime } from "~~shared/trends";
+import { useToast } from "#imports";
 
-const { activeTrade } = useActiveTrade();
+const { activeTrade, updateTrade } = useActiveTrade();
 const traderStore = useTraderStore();
 const { useCandles } = useHyperliquid();
+const toast = useToast();
 
 const logs = computed(() => traderStore.logs.value || []);
 
 const timeframe = ref<"1h" | "1d" | "1w">("1h");
+const isSleeping = ref(false);
+
+const setSleeping = async () => {
+  isSleeping.value = true;
+  try {
+    const { error } = await updateTrade({ status: "sleeping" });
+    if (!error) {
+      traderStore.addLog("Manual reset to sleeping", "info");
+      toast.add({
+        title: "Status Updated",
+        description: "Trader status set to sleeping",
+        color: "success",
+      });
+    }
+  } finally {
+    isSleeping.value = false;
+  }
+};
 
 const startTime = computed(() => {
-  const tf = timeframe.value === "1h" ? "H1" : timeframe.value === "1d" ? "D1" : "W1";
+  const tf =
+    timeframe.value === "1h" ? "H1" : timeframe.value === "1d" ? "D1" : "W1";
   return calculateStartTime(tf, CANDLE_COUNT);
 });
 
@@ -55,9 +76,21 @@ const statusColor = computed(() => {
             <UIcon name="i-lucide-bot" class="w-6 h-6 text-primary" />
             <h3 class="text-lg font-bold">Active Trader Hook</h3>
           </div>
-          <UBadge :color="statusColor" variant="solid" class="uppercase">
-            {{ activeTrade.status.replace(/_/g, " ") }}
-          </UBadge>
+          <div class="flex items-center gap-2">
+            <UBadge :color="statusColor" variant="solid" class="uppercase">
+              {{ activeTrade.status.replace(/_/g, " ") }}
+            </UBadge>
+            <UButton
+              v-if="activeTrade.status === 'auto_entry'"
+              icon="i-lucide-bed-double"
+              size="xs"
+              variant="soft"
+              color="warning"
+              label="Sleep"
+              :loading="isSleeping"
+              @click="setSleeping"
+            />
+          </div>
         </div>
       </template>
 
@@ -146,7 +179,9 @@ const statusColor = computed(() => {
           </div>
         </div>
 
-        <div class="space-y-4 pt-4 border-t border-gray-100 dark:border-gray-800">
+        <div
+          class="space-y-4 pt-4 border-t border-gray-100 dark:border-gray-800"
+        >
           <div class="flex items-center justify-between">
             <h4
               class="text-sm font-bold uppercase text-gray-500 tracking-widest"

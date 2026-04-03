@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import { useTrading } from "~/composables/useTrading";
 import { useSupabaseUser, useToast } from "#imports";
 import { useActiveTrade } from "~/composables/useActiveTrade";
 import { useTraderHook } from "~/composables/useTraderHook";
 import { useHyperliquid } from "~/composables/useHyperliquid";
+import { useTradeLinkage } from "~/composables/useTradeLinkage";
 import { formatPrice } from "~/utils/format";
 
 const props = defineProps<{
@@ -16,10 +17,11 @@ const { wallet, address, clearinghouse } = useTrading();
 const { updateTrade, activeTrade } = useActiveTrade();
 const user = useSupabaseUser();
 const { processTrade } = useTraderHook();
-const { useMetaAndAssetCtxs } = useHyperliquid();
+const { useMetaAndAssetCtxs, useAllMids } = useHyperliquid();
 const toast = useToast();
 
 const { data: metaAndAssetCtxs } = useMetaAndAssetCtxs();
+const { data: allMids } = useAllMids();
 
 const maxLeverage = computed(() => {
   if (!metaAndAssetCtxs.value) return 50;
@@ -42,17 +44,35 @@ const hasOpenPosition = computed(() => {
   );
 });
 
-const tpPrice = ref<number | undefined>();
-const slPrice = ref<number | undefined>();
-const tpPct = ref(50);
-const slPct = ref(10);
 const leverage = ref(9.5);
 const isSubmitting = ref(false);
+
+const currentMidPrice = computed(() => {
+  const mid = allMids.value?.[props.coin];
+  return mid ? parseFloat(mid) : 0;
+});
+
+const direction = computed(() => (props.isBullish ? "long" : "short"));
+
+const {
+  tpPrice,
+  slPrice,
+  tpPct,
+  slPct,
+  activeInput,
+  updatePricesFromPcts,
+} = useTradeLinkage({
+  basePrice: currentMidPrice,
+  leverage,
+  direction,
+});
 
 watch(
   maxLeverage,
   (max) => {
     leverage.value = max >= 10 ? 9.5 : max * 0.95;
+    // Recalculate % based on new default leverage and current (empty) prices
+    if (currentMidPrice.value) updatePricesFromPcts();
   },
   { immediate: true }
 );
@@ -138,6 +158,7 @@ const startTrade = async (
           step="0.5"
           min="0.5"
           color="neutral"
+          @focus="activeInput = 'pct'"
         />
       </div>
       <div class="space-y-2">
@@ -150,6 +171,7 @@ const startTrade = async (
           step="1"
           min="1"
           color="neutral"
+          @focus="activeInput = 'pct'"
         />
       </div>
     </div>
@@ -166,6 +188,7 @@ const startTrade = async (
           step="any"
           placeholder="Manual SL"
           color="neutral"
+          @focus="activeInput = 'price'"
         />
       </div>
       <div class="space-y-2">
@@ -179,6 +202,7 @@ const startTrade = async (
           step="any"
           placeholder="Manual TP"
           color="neutral"
+          @focus="activeInput = 'price'"
         />
       </div>
     </div>

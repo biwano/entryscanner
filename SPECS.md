@@ -85,6 +85,11 @@ This page provides a comprehensive view of all active assets being tracked by th
   - **Take Profit Price Input**: An optional numerical input field for the `take_profit_price`.
   - **Take Profit % Input**: A numerical input field for the `take_profit_pct` (default: **50**).
   - **Stop Loss % Input**: A numerical input field for the `stop_loss_pct` (default: **10**).
+  - **Stop Loss Price Input**: An optional numerical input field for the `stop_loss_price`.
+  - **Input Linkage**: The TP/SL Price and % inputs are reciprocally linked. Updating one automatically updates the other based on the current market price (as entry price) and the entered leverage.
+    - **ROI % Calculation**: `ROI % = ((Target Price - Entry Price) / Entry Price) * Leverage * 100` (Long) or `((Entry Price - Target Price) / Entry Price) * Leverage * 100` (Short).
+    - **Target Price Calculation**: `Target Price = Entry Price * (1 + (ROI % / 100 / Leverage))` (Long) or `Entry Price * (1 - (ROI % / 100 / Leverage))` (Short).
+    - Changing the **Leverage** input also recalculates the TP/SL % values based on the current TP/SL prices.
   - **Action**: Clicking "Buy" or "Sell" validates the inputs, automatically calculates the **Notional Size** based on the account value and the configured **leverage**, creates or updates a record in the `user_trades` table (setting status to `requested`), and triggers the **Trader Hook**.
   - **Leverage Rules**:
     - **Default Leverage**: 9.5x (or 95% of max if max < 10x).
@@ -140,7 +145,7 @@ A dedicated view for managing personal Hyperliquid assets and trades, accessible
 
 - **Access Restriction**: This page is hidden in the main navigation and restricted via a redirect if the user has not entered their Hyperliquid API key in the Profile Settings. If an API key is present but a wallet address is missing, a message is displayed to the user.
 - **Trader Status & Logs**: If the user has an active trade (status is not `sleeping` in `user_trades`), display:
-  - **Current Status**: The status from the `user_trades` table.
+  - **Current Status**: The status from the `user_trades` table. If the status is `auto_entry`, a "Set to Sleeping" button is displayed to the right of the status indicator to manually reset the status to `sleeping`. This action is logged.
   - **Activity Logs**: A scrollable log of recent activities from the **Trader Hook** (persisted in `localStorage`).
   - **Live Chart**: A real-time price chart (reusing the component from Pair Analysis) for the traded asset, displayed below the logs.
   - **Account Performance**: Overview of the total account value, equity, and maintenance margin.
@@ -148,7 +153,12 @@ A dedicated view for managing personal Hyperliquid assets and trades, accessible
     - **Close Position Action**: Clicking "Close" is a shortcut for editing the trade. It updates the `user_trades` record by setting both `take_profit_price` and `stop_loss_price` to values very close to the current market price (e.g., +/- 0.01% offset) and resets the status to `entry_setup`. This triggers the Trader Hook to cancel existing trigger orders and place a new TP/SL pair that will execute almost immediately, effectively closing the position.
     - **Detailed Asset Breakdown**:
     - **Open Positions**: Comprehensive table of all active perpetual positions with real-time PnL calculation and **Actual Leverage** (size * price / account value). Includes a "Close" button for each position.
-    - **Open Orders**: Detailed list of pending orders with the ability to see status and types. When an active position is present, pending orders are annotated with "TP" (Take Profit) or "SL" (Stop Loss) indicators by matching their trigger price against the configured trade parameters. Users can edit a trade's parameters (Take Profit and Stop Loss prices) via a pen icon in the open orders table header (only visible when in `exit_setup` status). The edit modal is pre-filled with the actual trigger prices from the open orders on Hyperliquid, falling back to the values stored in the database if no orders are found. 
+    - **Open Orders**: Detailed list of pending orders with the ability to see status and types. When an active position is present, pending orders are annotated with "TP" (Take Profit) or "SL" (Stop Loss) indicators by matching their trigger price against the configured trade parameters. Users can edit a trade's parameters (Take Profit and Stop Loss prices) via a pen icon in the open orders table header (only visible when in `exit_setup` status). The edit modal is pre-filled with the actual trigger prices from the open orders on Hyperliquid, falling back to the values stored in the database if no orders are found.
+    - **Edit Trade Modal**: Allows users to update the Take Profit and Stop Loss parameters for an active position.
+      - **Inputs**: Numerical inputs for TP Price, TP %, SL Price, SL %, and Leverage.
+      - **Input Linkage**: The TP/SL Price and % inputs are reciprocally linked. Updating one automatically updates the other based on the position's entry price and the entered leverage.
+      - **ROI % Calculation**: Matches the logic used in the trading controls, but uses the actual position's **Entry Price** instead of the current market price.
+      - Changing the **Leverage** input also recalculates the TP/SL % values based on the current TP/SL prices.
     - **Close Position Action**: A "Close Position" button is available inside the **Edit Trade Modal**. Clicking it is a shortcut for editing the trade: it calculates Take Profit and Stop Loss prices very close to the current market price (e.g., +/- 0.01% offset), updates the local form, and triggers the save action. This updates the `user_trades` record and resets the status to `entry_setup`, which triggers the Trader Hook to cancel existing trigger orders and place a new TP/SL pair that will execute almost immediately, effectively closing the position.
     - **Break Even Action**: A "Break Even" button is available inside the **Edit Trade Modal**. Clicking it sets the `stop_loss_price` to the position's entry price, updates the local form, and triggers the save action. This uses the same pattern as "Close Position" to update the trade and trigger the Trader Hook to re-place the orders.
     - **Save Half Action**: A "Save half" button is available inside the **Edit Trade Modal**. Clicking it sets the `stop_loss_price` to the average of the current price and the entry price, updates the local form, and triggers the save action. This uses the same pattern as "Close Position" to update the trade and trigger the Trader Hook to re-place the orders.
