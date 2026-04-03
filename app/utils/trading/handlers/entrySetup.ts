@@ -38,35 +38,48 @@ export const handleEntrySetup = async (ctx: TraderContext) => {
     // 1. Use leverage from trade record for calculations
     const leverage = trade.leverage || 10;
 
-    // Calculate SL
-    let slPrice = trade.stop_loss_price;
-    if (!slPrice) {
-      const priceMovePct = trade.stop_loss_pct / 100 / leverage;
-      slPrice =
-        trade.direction === "long"
-          ? entryPrice * (1 - priceMovePct)
-          : entryPrice * (1 + priceMovePct);
-    }
-
-    // Calculate TP
-    let tpPrice = trade.take_profit_price;
-    if (!tpPrice) {
-      const tpPricePct = trade.take_profit_pct / 100 / leverage;
-      tpPrice =
-        trade.direction === "long"
-          ? entryPrice * (1 + tpPricePct)
-          : entryPrice * (1 - tpPricePct);
-    }
+    // Use prices from trade record
+    const slPrice = trade.stop_loss_price;
+    const tpPrice = trade.take_profit_price;
 
     const szDecimals = assetInfo.szDecimals;
-    const formattedSL = formatPriceForHL(slPrice, szDecimals);
-    const formattedTP = formatPriceForHL(tpPrice, szDecimals);
     const posSize = Math.abs(parseFloat(position.position.szi)).toString();
 
-    traderStore.addLog(
-      `Setting SL at ${formattedSL} and TP at ${formattedTP}`,
-      "info"
-    );
+    const orders: any[] = [];
+
+    if (slPrice > 0) {
+      const formattedSL = formatPriceForHL(slPrice, szDecimals);
+      orders.push({
+        a: assetIndex,
+        b: trade.direction !== "long",
+        p: formattedSL,
+        s: posSize,
+        r: true,
+        t: {
+          trigger: { isMarket: true, triggerPx: formattedSL, tpsl: "sl" },
+        },
+      });
+      traderStore.addLog(`Setting SL at ${formattedSL}`, "info");
+    } else {
+      traderStore.addLog(`No SL price set for ${trade.coin}, skipping SL order`, "warning");
+    }
+
+    if (tpPrice > 0) {
+      const formattedTP = formatPriceForHL(tpPrice, szDecimals);
+      orders.push({
+        a: assetIndex,
+        b: trade.direction !== "long",
+        p: formattedTP,
+        s: posSize,
+        r: true,
+        t: {
+          trigger: { isMarket: true, triggerPx: formattedTP, tpsl: "tp" },
+        },
+      });
+      traderStore.addLog(`Setting TP at ${formattedTP}`, "info");
+    } else {
+      traderStore.addLog(`No TP price set for ${trade.coin}, skipping TP order`, "warning");
+    }
 
     // Cancel existing trigger orders for this coin before placing new ones
     const openOrders = await hlClient.fetchOpenOrders(address);
@@ -91,32 +104,13 @@ export const handleEntrySetup = async (ctx: TraderContext) => {
       }
     }
 
-    // Place SL and TP trigger orders
-    await exchangeClient.order({
-      orders: [
-        {
-          a: assetIndex,
-          b: trade.direction !== "long",
-          p: formattedSL,
-          s: posSize,
-          r: true,
-          t: {
-            trigger: { isMarket: true, triggerPx: formattedSL, tpsl: "sl" },
-          },
-        },
-        {
-          a: assetIndex,
-          b: trade.direction !== "long",
-          p: formattedTP,
-          s: posSize,
-          r: true,
-          t: {
-            trigger: { isMarket: true, triggerPx: formattedTP, tpsl: "tp" },
-          },
-        },
-      ],
-      grouping: "na",
-    });
+    // Place SL and TP trigger orders if any
+    if (orders.length > 0) {
+      await exchangeClient.order({
+        orders,
+        grouping: "na",
+      });
+    }
 
     const { error: statusError } = await supabase
       .from("user_trades")

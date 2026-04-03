@@ -119,10 +119,7 @@ const statusColor = computed(() => {
               Take Profit
             </div>
             <div class="text-lg font-black">
-              {{
-                activeTrade.take_profit_price ||
-                activeTrade.take_profit_pct + "%"
-              }}
+              {{ activeTrade.take_profit_price }}
             </div>
           </div>
           <div
@@ -134,9 +131,7 @@ const statusColor = computed(() => {
               Stop Loss
             </div>
             <div class="text-lg font-black">
-              {{
-                activeTrade.stop_loss_price || activeTrade.stop_loss_pct + "%"
-              }}
+              {{ activeTrade.stop_loss_price }}
             </div>
           </div>
         </div>

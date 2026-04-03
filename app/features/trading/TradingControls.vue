@@ -89,10 +89,8 @@ const startTrade = async (
       coin: props.coin,
       direction,
       status,
-      take_profit_price: tpPrice.value || null,
-      stop_loss_price: slPrice.value || null,
-      take_profit_pct: tpPct.value,
-      stop_loss_pct: slPct.value,
+      take_profit_price: tpPrice.value || 0,
+      stop_loss_price: slPrice.value || 0,
       leverage: leverage.value,
     });
 

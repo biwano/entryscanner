@@ -6,6 +6,7 @@ import { useTraderHook } from "~/composables/useTraderHook";
 import { useTrading } from "~/composables/useTrading";
 import { useHyperliquid } from "~/composables/useHyperliquid";
 import { useTradeLinkage } from "~/composables/useTradeLinkage";
+import { calculateROI } from "~/utils/trading/trading";
 import { useToast } from "#imports";
 
 const props = defineProps<{
@@ -56,10 +57,8 @@ const {
   basePrice: entryPrice,
   leverage: localLeverage,
   direction,
-  initialTpPrice: props.tpPrice,
-  initialSlPrice: props.slPrice,
-  initialTpPct: activeTrade.value?.take_profit_pct || 50,
-  initialSlPct: activeTrade.value?.stop_loss_pct || 10,
+  initialTpPrice: props.tpPrice || activeTrade.value?.take_profit_price,
+  initialSlPrice: props.slPrice || activeTrade.value?.stop_loss_price,
 });
 
 const maxLeverage = computed(() => {
@@ -76,17 +75,13 @@ watch(
   () => props.open,
   (newVal) => {
     if (newVal) {
-      localTpPrice.value = props.tpPrice;
-      localSlPrice.value = props.slPrice;
-      localTpPct.value = activeTrade.value?.take_profit_pct || 50;
-      localSlPct.value = activeTrade.value?.stop_loss_pct || 10;
+      localTpPrice.value = props.tpPrice || activeTrade.value?.take_profit_price || 0;
+      localSlPrice.value = props.slPrice || activeTrade.value?.stop_loss_price || 0;
       localLeverage.value = activeTrade.value?.leverage || 10;
-      activeInput.value = "price";
+      activeInput.value = (localTpPrice.value > 0 || localSlPrice.value > 0) ? "price" : "pct";
 
       // If prices were provided from orders, update %
-      if (props.tpPrice || props.slPrice) {
-        updatePctsFromPrices();
-      }
+      updatePctsFromPrices();
     }
   }
 );
@@ -124,20 +119,17 @@ const saveEdit = async () => {
     const { error } = await updateTrade({
       coin: props.coin,
       status: "entry_setup",
-      take_profit_price: localTpPrice.value || null,
-      stop_loss_price: localSlPrice.value || null,
-      take_profit_pct: localTpPct.value,
-      stop_loss_pct: localSlPct.value,
+      take_profit_price: localTpPrice.value || 0,
+      stop_loss_price: localSlPrice.value || 0,
       leverage: localLeverage.value,
     });
-
 
     if (error) throw error;
 
     addLog(
-      `Trade for ${props.coin} updated: TP=${localTpPrice.value || "None"}, SL=${
-        localSlPrice.value || "None"
-      }. Status reset to entry_setup.`,
+      `Trade for ${props.coin} updated: TP=${
+        localTpPrice.value || "None"
+      }, SL=${localSlPrice.value || "None"}. Status reset to entry_setup.`,
       "success"
     );
 

@@ -308,10 +308,8 @@ export type Database = {
           id: string
           leverage: number | null
           status: string
-          stop_loss_pct: number
-          stop_loss_price: number | null
-          take_profit_pct: number
-          take_profit_price: number | null
+          stop_loss_price: number
+          take_profit_price: number
           updated_at: string | null
         }
         Insert: {
@@ -321,10 +319,8 @@ export type Database = {
           id: string
           leverage?: number | null
           status?: string
-          stop_loss_pct?: number
-          stop_loss_price?: number | null
-          take_profit_pct?: number
-          take_profit_price?: number | null
+          stop_loss_price?: number
+          take_profit_price?: number
           updated_at?: string | null
         }
         Update: {
@@ -334,10 +330,8 @@ export type Database = {
           id?: string
           leverage?: number | null
           status?: string
-          stop_loss_pct?: number
-          stop_loss_price?: number | null
-          take_profit_pct?: number
-          take_profit_price?: number | null
+          stop_loss_price?: number
+          take_profit_price?: number
           updated_at?: string | null
         }
         Relationships: []

@@ -5,11 +5,11 @@ import { useActiveTrade } from "~/composables/useActiveTrade";
 import { useHyperliquid } from "~/composables/useHyperliquid";
 import { useSupabaseClient, useToast } from "#imports";
 import { HyperliquidClient } from "~~shared/hyperliquid";
-import { handleRequested } from "~/utils/trader/handlers/requested";
-import { handleEntrySetup } from "~/utils/trader/handlers/entrySetup";
-import { handleExitSetup } from "~/utils/trader/handlers/exitSetup";
-import { handleAutoEntry } from "~/utils/trader/handlers/autoEntry";
-import type { TraderContext } from "~/utils/trader/types";
+import { handleRequested } from "~/utils/trading/handlers/requested";
+import { handleEntrySetup } from "~/utils/trading/handlers/entrySetup";
+import { handleExitSetup } from "~/utils/trading/handlers/exitSetup";
+import { handleAutoEntry } from "~/utils/trading/handlers/autoEntry";
+import type { TraderContext } from "~/utils/trading/types";
 
 /** Shared across all `useTraderHook()` instances so interval + UI never overlap. */
 let processTradeMutex = Promise.resolve();

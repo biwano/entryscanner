@@ -82,10 +82,10 @@ This page provides a comprehensive view of all active assets being tracked by th
 - **Trading Controls**: If the user has a valid Hyperliquid API key configured, and has no open position for the current coin, display trading controls:
   - **Directional Buttons**: "Buy" or "Sell" buttons. The default recommendation (visual emphasis) is based on whether the current timeframe trend is bullish (Buy) or bearish (Sell).
   - **Auto Button**: An "Auto" button displayed under the "Buy" and "Sell" buttons. It functions identically to the Buy/Sell buttons (using the recommended direction based on the current trend) but sets the trade status to `auto_entry` instead of `requested`.
-  - **Take Profit Price Input**: An optional numerical input field for the `take_profit_price`.
-  - **Take Profit % Input**: A numerical input field for the `take_profit_pct` (default: **50**).
-  - **Stop Loss % Input**: A numerical input field for the `stop_loss_pct` (default: **10**).
-  - **Stop Loss Price Input**: An optional numerical input field for the `stop_loss_price`.
+  - **Take Profit Price Input**: A numerical input field for the `take_profit_price`.
+  - **Take Profit % Input**: A numerical input field for calculating the `take_profit_price`.
+  - **Stop Loss Price Input**: A numerical input field for the `stop_loss_price`.
+  - **Stop Loss % Input**: A numerical input field for calculating the `stop_loss_price`.
   - **Input Linkage**: The TP/SL Price and % inputs are reciprocally linked. Updating one automatically updates the other based on the current market price (as entry price) and the entered leverage.
     - **ROI % Calculation**: `ROI % = ((Target Price - Entry Price) / Entry Price) * Leverage * 100` (Long) or `((Entry Price - Target Price) / Entry Price) * Leverage * 100` (Short).
     - **Target Price Calculation**: `Target Price = Entry Price * (1 + (ROI % / 100 / Leverage))` (Long) or `Entry Price * (1 - (ROI % / 100 / Leverage))` (Short).
@@ -261,8 +261,8 @@ All server-side workers (Trend Worker, Notification Dispatcher) can be triggered
     - The **Edit Trade** flow (`EditTradeModal.vue`) and the **Close Position** action also cancel **all** open orders for that coin before resetting the row to `entry_setup` and **awaiting** `processTrade()`, so entry limits are cleared before SL/TP are re-placed.
     - Checks if the user has an open position for the coin via the account state provided in the context.
     - If a position is found:
-      - Creates a **Stop Loss** order (manual `stop_loss_price` if set; otherwise from `stop_loss_pct` and the **actual position leverage**).
-      - Creates a **Take Profit** order using `take_profit_price` when set; otherwise from `take_profit_pct` and the **actual position leverage**.
+      - Creates a **Stop Loss** order using `stop_loss_price`.
+      - Creates a **Take Profit** order using `take_profit_price`.
       - Updates status to **`exit_setup`** in Supabase and refreshes the active trade state.
   - **`exit_setup`** (Handled in `exitSetup.ts`):
     - Checks if the position has been closed (using the account state from the context).
@@ -391,10 +391,8 @@ Tables use **Row Level Security (RLS)** to ensure appropriate data access. User-
 
 - `id`: uuid (references auth.users, primary key)
 - `coin`: string (nullable)
-- `take_profit_price`: decimal (nullable)
-- `stop_loss_price`: decimal (nullable)
-- `take_profit_pct`: decimal (default: 50)
-- `stop_loss_pct`: decimal (default: 10)
+- `take_profit_price`: decimal (NOT NULL)
+- `stop_loss_price`: decimal (NOT NULL)
 - `status`: enum ("requested", "entry_setup", "exit_setup", "sleeping", "auto_entry")
 - `direction`: string ("long", "short", nullable)
 - `leverage`: decimal (default: 10)

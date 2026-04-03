@@ -1,4 +1,5 @@
 import { ref, watch, type Ref } from "vue";
+import { calculateROI } from "~/utils/trading/trading";
 
 export interface TradeLinkageOptions {
   basePrice: Ref<number>;
@@ -10,21 +11,24 @@ export interface TradeLinkageOptions {
   initialSlPrice?: number;
 }
 
-export function useTradeLinkage(options: TradeLinkageOptions) {
-  const tpPrice = ref<number | undefined>(options.initialTpPrice);
-  const slPrice = ref<number | undefined>(options.initialSlPrice);
-  const tpPct = ref(options.initialTpPct ?? 50);
-  const slPct = ref(options.initialSlPct ?? 10);
+export function useTradeLinkage(linkageOptions: TradeLinkageOptions) {
+  const tpPrice = ref<number | undefined>(linkageOptions.initialTpPrice || 0);
+  const slPrice = ref<number | undefined>(linkageOptions.initialSlPrice || 0);
+  const tpPct = ref(linkageOptions.initialTpPct ?? 50);
+  const slPct = ref(linkageOptions.initialSlPct ?? 10);
   const activeInput = ref<"pct" | "price">(
-    options.initialTpPrice || options.initialSlPrice ? "price" : "pct"
+    (linkageOptions.initialTpPrice && linkageOptions.initialTpPrice > 0) ||
+      (linkageOptions.initialSlPrice && linkageOptions.initialSlPrice > 0)
+      ? "price"
+      : "pct"
   );
 
   const updatePricesFromPcts = () => {
-    const base = options.basePrice.value;
+    const base = linkageOptions.basePrice.value;
     if (!base) return;
 
-    const lev = options.leverage.value;
-    const dir = options.direction.value;
+    const lev = linkageOptions.leverage.value;
+    const dir = linkageOptions.direction.value;
 
     const tpMove = tpPct.value / 100 / (lev || 1);
     tpPrice.value = dir === "long" ? base * (1 + tpMove) : base * (1 - tpMove);
@@ -34,26 +38,18 @@ export function useTradeLinkage(options: TradeLinkageOptions) {
   };
 
   const updatePctsFromPrices = () => {
-    const base = options.basePrice.value;
-    if (!base || !options.leverage.value) return;
+    const base = linkageOptions.basePrice.value;
+    if (!base || !linkageOptions.leverage.value) return;
 
-    const lev = options.leverage.value;
-    const dir = options.direction.value;
+    const lev = linkageOptions.leverage.value;
+    const dir = linkageOptions.direction.value;
 
     if (tpPrice.value) {
-      const tpMove =
-        dir === "long"
-          ? (tpPrice.value - base) / base
-          : (base - tpPrice.value) / base;
-      tpPct.value = Math.max(0, tpMove * lev * 100);
+      tpPct.value = calculateROI(tpPrice.value, base, lev, dir, "tp");
     }
 
     if (slPrice.value) {
-      const slMove =
-        dir === "long"
-          ? (base - slPrice.value) / base
-          : (slPrice.value - base) / base;
-      slPct.value = Math.max(0, slMove * lev * 100);
+      slPct.value = calculateROI(slPrice.value, base, lev, dir, "sl");
     }
   };
 
@@ -65,12 +61,12 @@ export function useTradeLinkage(options: TradeLinkageOptions) {
     if (activeInput.value === "price") updatePctsFromPrices();
   });
 
-  watch(options.leverage, () => {
+  watch(linkageOptions.leverage, () => {
     updatePctsFromPrices();
   });
 
   // Watch basePrice for initial setup in TradingControls
-  watch(options.basePrice, (newBase, oldBase) => {
+  watch(linkageOptions.basePrice, (newBase, oldBase) => {
     if (newBase && !oldBase && activeInput.value === "pct") {
       updatePricesFromPcts();
     }
