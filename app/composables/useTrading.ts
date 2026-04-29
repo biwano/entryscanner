@@ -1,9 +1,9 @@
 import { computed } from "vue";
-import { useProfile } from "~/composables/useProfile.js";
 import { privateKeyToAccount } from "viem/accounts";
 import type { UserFillsResponse } from "@nktkas/hyperliquid/api/info";
 import { HyperliquidClient } from "~~shared/hyperliquid.js";
 import { useAsyncData } from "#app";
+import { useSubAccounts } from "~/composables/useSubAccounts.js";
 
 type UserFill = UserFillsResponse[number];
 type FillSide = UserFill["side"];
@@ -24,13 +24,13 @@ const isHexPrivateKey = (value: string): value is `0x${string}` => {
 };
 
 export const useTrading = () => {
-  const { profile } = useProfile();
+  const { activeSubAccount } = useSubAccounts();
   const hlClient = new HyperliquidClient();
 
   const wallet = computed(() => {
-    if (!profile.value?.hl_api_key) return null;
+    if (!activeSubAccount.value?.hl_api_key) return null;
     try {
-      const key = profile.value.hl_api_key;
+      const key = activeSubAccount.value.hl_api_key;
       const hexKey = key.startsWith("0x") ? key : `0x${key}`;
       if (!isHexPrivateKey(hexKey)) {
         throw new Error("Invalid private key format");
@@ -43,7 +43,7 @@ export const useTrading = () => {
   });
 
   const address = computed(() => {
-    return profile?.value?.hl_wallet_address ?? null;
+    return activeSubAccount.value?.hl_wallet_address ?? null;
   });
 
   const {

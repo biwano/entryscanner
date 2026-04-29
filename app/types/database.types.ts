@@ -163,22 +163,16 @@ export type Database = {
         Row: {
           created_at: string | null
           discord_webhook_url: string | null
-          hl_api_key: string | null
-          hl_wallet_address: string | null
           id: string
         }
         Insert: {
           created_at?: string | null
           discord_webhook_url?: string | null
-          hl_api_key?: string | null
-          hl_wallet_address?: string | null
           id: string
         }
         Update: {
           created_at?: string | null
           discord_webhook_url?: string | null
-          hl_api_key?: string | null
-          hl_wallet_address?: string | null
           id?: string
         }
         Relationships: []
@@ -272,6 +266,44 @@ export type Database = {
           },
           {
             foreignKeyName: "user_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_sub_accounts: {
+        Row: {
+          created_at: string | null
+          hl_api_key: string
+          hl_wallet_address: string
+          id: string
+          label: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          hl_api_key: string
+          hl_wallet_address: string
+          id?: string
+          label: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          hl_api_key?: string
+          hl_wallet_address?: string
+          id?: string
+          label?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_sub_accounts_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"

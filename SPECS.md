@@ -28,7 +28,7 @@ Entry scanner is a web-based application that monitors real-time market data on 
 
 The Dashboard provides a high-level overview of the most recent significant market shifts and the user's personal trading status if connected.
 
-- **Personal Trading Summary**: If the user has configured their Hyperliquid API key and wallet address, display a summary card at the top of the dashboard containing:
+- **Personal Trading Summary**: If the user has selected a Hyperliquid sub-account with configured credentials, display a summary card at the top of the dashboard containing:
   - **Account Value**: Total equity in USD.
   - **Open Positions**: A table showing active perpetual positions (Asset, Side, Actual Leverage, Size, Entry Price, Mark Price, PnL). This table is only displayed if the user has active positions.
     - **Actual Leverage**: Calculated as `(position size * price) / account value` for real-time risk assessment.
@@ -123,8 +123,23 @@ This page provides a comprehensive view of all active assets being tracked by th
 - **Supabase Auth**: Secure authentication flow for managing personal settings, subscriptions, and webhooks.
 - **Subscription Overview**: View and manage all active pair/timeframe subscriptions from the profile or dashboard.
 - **Notification History**: View a personal log of past automated alerts triggered by trend flips for subscribed pairs.
-- **Profile Settings**: Configure the Discord Webhook URL for personal notifications and manage Hyperliquid credentials.
-- **Hyperliquid Integration**: Allow users to securely save their Hyperliquid wallet address (for read-only info requests) and their Hyperliquid API key (private key) for more advanced monitoring and potentially trading actions. These fields are accessible in the profile settings and allow displaying account info in the header and dashboard.
+- **Profile Settings**: Configure the Discord Webhook URL for personal notifications and manage Hyperliquid sub-accounts.
+- **Hyperliquid Sub-Accounts**:
+  - Users can create, update, delete, and select multiple personal sub-accounts.
+  - Each sub-account stores the Hyperliquid wallet address (for read-only info requests) and Hyperliquid API key (private key) used for trading/account actions.
+  - One sub-account is selected at a time and acts as the active context for wallet info, trading controls, and trading automation.
+  - The ID of the last selected sub-account is persisted in browser `localStorage` and restored on reload if the sub-account still exists.
+  - If no sub-account exists, trading-specific UI is hidden/disabled and the user is prompted to create one.
+- **Sub-Account Management UI**:
+  - Provide an account selector in authenticated UI (header and/or profile) showing the active sub-account.
+  - Provide CRUD actions in Profile Settings:
+    - **Create** a new sub-account (label, wallet address, API key) from a dedicated modal dialog opened from the settings page.
+    - The create modal enforces required validation for both `hl_wallet_address` and `hl_api_key` before submit.
+    - **Update** an existing sub-account (label, wallet address, API key) from a dedicated edit modal dialog.
+    - The update modal enforces required validation for both `hl_wallet_address` and `hl_api_key` before submit.
+    - **Delete** an existing sub-account with confirmation.
+    - **Select** an account as active for the current session.
+  - Deleting the currently selected sub-account clears the localStorage key and falls back to another existing sub-account (or no selection if none remain).
 
 #### 3.1.5. Global Navigation & Search
 
@@ -141,9 +156,9 @@ This page provides a comprehensive view of all active assets being tracked by th
 
 #### 3.1.7. Trading Page
 
-A dedicated view for managing personal Hyperliquid assets and trades, accessible via the main navigation only if the user has a valid Hyperliquid API key configured.
+A dedicated view for managing personal Hyperliquid assets and trades, accessible via the main navigation only if the user has selected a valid Hyperliquid sub-account with an API key configured.
 
-- **Access Restriction**: This page is hidden in the main navigation and restricted via a redirect if the user has not entered their Hyperliquid API key in the Profile Settings. If an API key is present but a wallet address is missing, a message is displayed to the user.
+- **Access Restriction**: This page is hidden in the main navigation and restricted via a redirect if the user has no selected sub-account. A selected sub-account must always provide both API key and wallet address.
 - **Trader Status & Logs**: If the user has an active trade (status is not `sleeping` in `user_trades`), display:
   - **Current Status**: The status from the `user_trades` table. If the status is `auto_entry`, a "Set to Sleeping" button is displayed to the right of the status indicator to manually reset the status to `sleeping`. This action is logged.
   - **Activity Logs**: A scrollable log of recent activities from the **Trader Hook** (persisted in `localStorage`).
@@ -319,10 +334,22 @@ Tables use **Row Level Security (RLS)** to ensure appropriate data access. User-
 
 - `id`: uuid (references auth.users, primary key)
 - `discord_webhook_url`: string (optional, for notifications)
-- `hl_api_key`: string (optional, for wallet actions)
-- `hl_wallet_address`: string (optional, for wallet info requests)
 - `created_at`: timestamp
 - **RLS Policy**: Users can only read/update their own profile.
+
+### `user_sub_accounts`
+
+- `id`: uuid (primary key)
+- `user_id`: uuid (foreign key to `profiles.id`)
+- `label`: string (user-defined display name, e.g. "Main", "Swing", "Scalping")
+- `hl_api_key`: string (required, for wallet/trading actions)
+- `hl_wallet_address`: string (required, for wallet info requests)
+- `created_at`: timestamp
+- `updated_at`: timestamp
+- **Constraints**:
+  - A user can own multiple sub-accounts.
+  - `label` should be unique per user to avoid duplicates in the selector UI.
+- **RLS Policy**: Users can only manage (read/insert/update/delete) their own sub-accounts (`user_id = auth.uid()`).
 
 ### `user_system`
 
