@@ -3,10 +3,21 @@ import { computed } from "vue";
 import { useUser } from "~/composables/useUser";
 import { useTrading } from "~/composables/useTrading";
 import { useUIStore } from "~/composables/useUIStore";
+import { useSubAccounts } from "~/composables/useSubAccounts";
+
+type ProfileDropdownItem = {
+  label: string;
+  icon?: string;
+  class?: string;
+  to?: string;
+  type?: "label";
+  onSelect?: () => void;
+};
 
 const { isAdmin, user } = useUser();
 const { wallet } = useTrading();
 const { isPrivacyMode, togglePrivacyMode } = useUIStore();
+const { subAccounts, activeSubAccount, setActiveSubAccount } = useSubAccounts();
 
 const menuItems = computed(() => {
   const baseItems = [
@@ -38,16 +49,43 @@ const menuItems = computed(() => {
     });
   }
 
-  return [
-    baseItems,
+  return baseItems;
+});
+
+const switchableSubAccounts = computed(() => {
+  const accounts = subAccounts.value ?? [];
+  if (accounts.length <= 1) return [];
+  return accounts;
+});
+
+const profileDropdownItems = computed<ProfileDropdownItem[][]>(() => {
+  const items: ProfileDropdownItem[][] = [
     [
       {
-        label: user.value ? "Profile" : "Login",
-        icon: user.value ? "i-lucide-user" : "i-lucide-log-in",
+        label: "Profile",
+        icon: "i-lucide-user",
         to: "/profile",
       },
     ],
   ];
+
+  if (switchableSubAccounts.value.length > 0) {
+    items.push([
+      {
+        label: "Switch account",
+        type: "label",
+      },
+      ...switchableSubAccounts.value.map((account) => ({
+        label: account.label,
+        icon: "i-lucide-user",
+        class:
+          activeSubAccount.value?.id === account.id ? "text-primary" : undefined,
+        onSelect: () => setActiveSubAccount(account.id),
+      })),
+    ]);
+  }
+
+  return items;
 });
 </script>
 
@@ -61,7 +99,7 @@ const menuItems = computed(() => {
       <div class="flex items-center gap-4">
         <h1 class="text-xl font-bold text-primary shrink-0">Entry scanner</h1>
         <UNavigationMenu
-          :items="menuItems[0]"
+          :items="menuItems"
           orientation="horizontal"
           class="hidden md:flex"
         />
@@ -70,7 +108,6 @@ const menuItems = computed(() => {
         </div>
       </div>
       <div class="flex items-center gap-2">
-        <SubAccountSelector v-if="user" />
         <WalletInfo />
         <UButton
           :icon="isPrivacyMode ? 'i-lucide-eye-off' : 'i-lucide-eye'"
@@ -79,7 +116,30 @@ const menuItems = computed(() => {
           @click="togglePrivacyMode"
         />
         <UColorModeButton />
-        <UNavigationMenu :items="menuItems[1]" orientation="horizontal" />
+        <UDropdownMenu
+          v-if="user"
+          :items="profileDropdownItems"
+          :content="{ align: 'end' }"
+          :ui="{ content: 'w-64' }"
+        >
+          <UButton
+            icon="i-lucide-user"
+            color="neutral"
+            variant="ghost"
+            trailing-icon="i-lucide-chevron-down"
+          >
+            Profile
+          </UButton>
+        </UDropdownMenu>
+        <UButton
+          v-else
+          to="/profile"
+          icon="i-lucide-log-in"
+          color="neutral"
+          variant="ghost"
+        >
+          Login
+        </UButton>
       </div>
     </div>
   </header>

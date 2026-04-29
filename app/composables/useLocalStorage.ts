@@ -1,5 +1,7 @@
 import { ref, watch } from "#imports";
 
+const localStorageRefs = new Map<string, ReturnType<typeof ref>>();
+
 /**
  * A simple hook for persisting a value to localStorage.
  * Only works on the client-side.
@@ -9,6 +11,11 @@ import { ref, watch } from "#imports";
  * @returns A reactive ref containing the persisted value.
  */
 export const useLocalStorage = <T>(key: string, initialValue: T) => {
+  const existingRef = localStorageRefs.get(key);
+  if (existingRef) {
+    return existingRef;
+  }
+
   const storedValue = ref<T>(initialValue);
 
   // Initialize from localStorage immediately if on client-side
@@ -36,6 +43,8 @@ export const useLocalStorage = <T>(key: string, initialValue: T) => {
     },
     { deep: true }
   );
+
+  localStorageRefs.set(key, storedValue);
 
   return storedValue;
 };

@@ -8,7 +8,7 @@ import RecentTrades from "~/features/trading/RecentTrades.vue";
 
 import AccountSummary from "~/features/trading/AccountSummary.vue";
 
-const { wallet, isLoading, refreshTrading: refresh } = useTrading();
+const { wallet, isLoading } = useTrading();
 const router = useRouter();
 
 // Redirect to profile when no active trading account is selected
@@ -30,19 +30,7 @@ useHead({
 <template>
   <div class="space-y-8">
     <div v-if="wallet" class="space-y-8">
-      <div class="flex items-center justify-between">
-        <div>
-          <h1 class="text-3xl font-bold">Trading Status</h1>
-        </div>
-        <UButton
-          color="primary"
-          icon="i-lucide-refresh-cw"
-          :loading="isLoading"
-          @click="refresh"
-        >
-          Refresh Data
-        </UButton>
-      </div>
+      <h1 class="text-3xl font-bold">Trading Status</h1>
 
       <AccountSummary />
 

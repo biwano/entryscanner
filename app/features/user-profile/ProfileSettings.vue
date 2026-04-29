@@ -73,6 +73,7 @@ const saveProfile = async () => {
         >
           <UInput
             v-model="discordWebhookUrl"
+            class="w-full"
             placeholder="https://discord.com/api/webhooks/..."
           />
         </UFormField>
