@@ -85,7 +85,7 @@ const resetPassword = async () => {
       <p class="text-gray-500">Enter your new password below.</p>
     </div>
     <UCard class="w-full max-w-sm text-left">
-      <form @submit.prevent="resetPassword" class="space-y-4">
+      <form class="space-y-4" @submit.prevent="resetPassword">
         <UFormField label="New Password">
           <UInput
             v-model="password"

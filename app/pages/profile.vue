@@ -5,7 +5,6 @@ import { Auth } from "@supa-kit/auth-ui-vue";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import type { Database } from "~/types/database.types";
 import type {
-  Profile,
   UserSubscription,
   NotificationHistory,
 } from "~/types/database.friendly.types.js";

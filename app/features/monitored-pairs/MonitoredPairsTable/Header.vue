@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import dayjs from "dayjs";
+defineOptions({ name: "MonitoredPairsHeader" });
 
-const props = defineProps<{
+defineProps<{
   lastUpdated?: number;
   userId?: string;
   isAdmin: boolean;

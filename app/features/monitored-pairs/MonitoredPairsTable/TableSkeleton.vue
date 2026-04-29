@@ -1,6 +1,7 @@
 <script setup lang="ts">
-const props = defineProps<{
-  columns: any[];
+type SkeletonColumn = { id: string };
+defineProps<{
+  columns: SkeletonColumn[];
 }>();
 </script>
 

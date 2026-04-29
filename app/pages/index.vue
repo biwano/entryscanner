@@ -4,7 +4,6 @@ import { useQuery } from "@tanstack/vue-query";
 import { useHyperliquid } from "~/composables/useHyperliquid";
 import {
   REFRESH_INTERVAL,
-  TREND_BEARISH,
   TREND_BULLISH,
 } from "~~/shared/constants";
 import type { Database, Tables } from "~/types/database.types";

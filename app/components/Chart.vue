@@ -32,6 +32,10 @@ use([
   VisualMapComponent,
 ]);
 
+defineOptions({
+  name: "CandlestickChart",
+});
+
 const props = defineProps<{
   candles: HyperliquidCandle[];
   coin: string;
@@ -53,6 +57,8 @@ const option = computed(() => {
   };
 
   const dates = props.candles.map((c) => formatDate(c.t));
+  const firstDate = dates[0] ?? "";
+  const lastDate = dates[dates.length - 1] ?? firstDate;
   const data = props.candles.map((c) => [
     parseFloat(c.o),
     parseFloat(c.c),
@@ -68,7 +74,8 @@ const option = computed(() => {
       ? "hour"
       : "day";
 
-  const markAreaData: any[] = [];
+  type MarkAreaItem = { xAxis: string; itemStyle?: { color: string } };
+  const markAreaData: [MarkAreaItem, MarkAreaItem][] = [];
   if (props.flips && props.flips.length > 0) {
     // Initial trend before the first flip
     const firstFlip = props.flips[0]!;
@@ -80,7 +87,7 @@ const option = computed(() => {
 
     markAreaData.push([
       {
-        xAxis: dates[0],
+        xAxis: firstDate,
         itemStyle: {
           color:
             initialStatus === TREND_BULLISH
@@ -132,13 +139,13 @@ const option = computed(() => {
               : "rgba(239, 68, 68, 0.2)",
         },
       },
-      { xAxis: dates[dates.length - 1] },
+      { xAxis: lastDate },
     ]);
   } else if (props.currentStatus) {
     // No flips in the period, just color the whole background
     markAreaData.push([
       {
-        xAxis: dates[0],
+        xAxis: firstDate,
         itemStyle: {
           color:
             props.currentStatus === TREND_BULLISH
@@ -146,7 +153,7 @@ const option = computed(() => {
               : "rgba(239, 68, 68, 0.2)",
         },
       },
-      { xAxis: dates[dates.length - 1] },
+      { xAxis: lastDate },
     ]);
   }
 
@@ -202,9 +209,15 @@ const option = computed(() => {
     tooltip: {
       trigger: "axis",
       axisPointer: { type: "cross" },
-      formatter: (params: any) => {
+      formatter: (
+        params: Array<{
+          value: unknown;
+          seriesName: string;
+          name: string;
+        }>
+      ) => {
         let res = "";
-        params.forEach((item: any) => {
+        params.forEach((item) => {
           const val = Array.isArray(item.value)
             ? item.value
             : [null, item.value];
@@ -307,7 +320,7 @@ const option = computed(() => {
           borderColor0: "#ef4444",
         },
         markPoint: {
-          data: (markPointData as any) || [],
+          data: markPointData || [],
         },
         markArea: {
           data: markAreaData,

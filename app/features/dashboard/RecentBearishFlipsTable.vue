@@ -73,11 +73,11 @@ const getStatus = (event: Tables<"events">): TrendStatus => {
           <div
             class="bg-green-500 h-2 rounded-l-full"
             :style="{ width: `${trendPercentages.bullishPercentage}%` }"
-          ></div>
+          />
           <div
             class="bg-red-500 h-2 rounded-r-full"
             :style="{ width: `${trendPercentages.bearishPercentage}%` }"
-          ></div>
+          />
         </div>
         <div class="flex justify-between text-xs text-gray-500 mt-1">
           <span>Bullish</span>

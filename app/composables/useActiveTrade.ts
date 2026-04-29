@@ -1,4 +1,4 @@
-import { useSupabaseClient, useSupabaseUser } from "#imports";
+import { useSupabaseClient } from "#imports";
 import { useAsyncData } from "#app";
 import type {
   UserTrade,

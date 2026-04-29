@@ -45,9 +45,15 @@ export async function runNotificationDispatcher() {
         const message = `${event.coin} ${
           event.timeframe
         } trend flipped to **${event.status.toUpperCase()}**!`;
-        const notificationsToInsert = (
-          subscriptions as unknown as { user_id: string }[]
-        ).map((sub) => ({
+        const notificationsToInsert = subscriptions
+          .filter(
+            (sub): sub is { user_id: string } =>
+              typeof sub === "object" &&
+              sub !== null &&
+              "user_id" in sub &&
+              typeof sub.user_id === "string"
+          )
+          .map((sub) => ({
           user_id: sub.user_id,
           event_id: event.id,
           message,

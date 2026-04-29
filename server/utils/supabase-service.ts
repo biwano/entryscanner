@@ -4,7 +4,11 @@ import type { Database } from "~/types/database.types.js";
 export const getSupabaseServiceClient = () => {
   const config = useRuntimeConfig();
   const url = config.public.supabase?.url;
-  const serviceKey = (process.env.SUPABASE_SERVICE_KEY as string | undefined) || config.supabase?.serviceKey;
+  const envServiceKey = process.env.SUPABASE_SERVICE_KEY;
+  const serviceKey =
+    typeof envServiceKey === "string" && envServiceKey.length > 0
+      ? envServiceKey
+      : config.supabase?.serviceKey;
 
   if (typeof url !== "string" || typeof serviceKey !== "string") {
     throw new Error("Supabase URL or service key is missing from runtime config");

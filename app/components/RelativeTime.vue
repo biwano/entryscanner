@@ -8,6 +8,7 @@ const props = withDefaults(
     showAgo?: boolean;
   }>(),
   {
+    timestamp: null,
     showAgo: true,
   }
 );

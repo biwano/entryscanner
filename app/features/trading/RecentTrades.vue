@@ -2,7 +2,6 @@
 import { computed, ref } from "vue";
 import { useTrading } from "~/composables/useTrading";
 import { formatPrice, formatTime } from "~/utils/format";
-import dayjs from "dayjs";
 
 const { recentTrades, isLoading, address } = useTrading();
 

@@ -65,8 +65,9 @@ const option = computed(() => {
   return {
     tooltip: {
       trigger: "axis",
-      formatter: (params: any) => {
+      formatter: (params: Array<{ name: string; value: number }>) => {
         const p = params[0];
+        if (!p) return "";
         return `<div class="font-bold mb-1">${p.name}</div>
                 <div class="text-xs">
                   <span class="text-gray-500">Bullish:</span> 

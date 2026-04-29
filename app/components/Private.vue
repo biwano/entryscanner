@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { useUIStore } from "~/composables/useUIStore";
 
+defineOptions({
+  name: "PrivateField",
+});
+
 const { isPrivacyMode } = useUIStore();
 </script>
 

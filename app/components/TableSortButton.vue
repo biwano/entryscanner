@@ -2,9 +2,15 @@
 /**
  * A reusable sort button component for UTable (TanStack Table) headers.
  */
+type SortDirection = "asc" | "desc" | false;
+type SortableColumn = {
+  getIsSorted: () => SortDirection;
+  toggleSorting: (desc: boolean) => void;
+};
+
 defineProps<{
   /** The column object provided by the header slot */
-  column: any;
+  column: SortableColumn;
   /** The text label to display on the button */
   label: string;
 }>();

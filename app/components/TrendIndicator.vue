@@ -13,6 +13,10 @@ const props = withDefaults(
     showPercentChange?: boolean;
   }>(),
   {
+    status: undefined,
+    since: null,
+    priceAtFlip: null,
+    currentPrice: null,
     showPercentChange: true,
   }
 );

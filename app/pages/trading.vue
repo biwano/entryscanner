@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { computed, onMounted, watch } from "vue";
+import { watch } from "vue";
 import { useTrading } from "~/composables/useTrading";
-import { formatPrice } from "~/utils/format";
 import { useRouter } from "vue-router";
 import ActiveTrade from "~/features/trading/ActiveTrade.vue";
 import TraderStatus from "~/features/trading/TraderStatus.vue";

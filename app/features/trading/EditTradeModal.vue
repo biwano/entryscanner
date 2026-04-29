@@ -6,7 +6,6 @@ import { useTraderHook } from "~/composables/useTraderHook";
 import { useTrading } from "~/composables/useTrading";
 import { useHyperliquid } from "~/composables/useHyperliquid";
 import { useTradeLinkage } from "~/composables/useTradeLinkage";
-import { calculateROI } from "~/utils/trading/trading";
 import { useToast } from "#imports";
 
 const props = defineProps<{
@@ -64,7 +63,7 @@ const {
 const maxLeverage = computed(() => {
   if (!metaAndAssetCtxs.value) return 50;
   const universe = metaAndAssetCtxs.value[0].universe;
-  const asset = universe.find((u: any) => u.name === props.coin);
+  const asset = universe.find((u: { name: string; maxLeverage?: number }) => u.name === props.coin);
   return asset?.maxLeverage ?? 50;
 });
 
@@ -92,11 +91,11 @@ const saveEdit = async () => {
     // 1. Cancel existing open orders for this coin
     if (hlClient && address.value && wallet.value && metaAndAssetCtxs.value) {
       const openOrders = await hlClient.fetchOpenOrders(address.value);
-      const coinOrders = openOrders.filter((o: any) => o.coin === props.coin);
+      const coinOrders = openOrders.filter((o: { coin: string; oid: number }) => o.coin === props.coin);
 
       if (coinOrders.length > 0) {
         const meta = metaAndAssetCtxs.value[0];
-        const assetInfo = meta.universe.find((u: any) => u.name === props.coin);
+        const assetInfo = meta.universe.find((u: { name: string }) => u.name === props.coin);
         if (assetInfo) {
           const assetIndex = meta.universe.indexOf(assetInfo);
           const exchangeClient = hlClient.getExchangeClient(wallet.value);
@@ -143,12 +142,13 @@ const saveEdit = async () => {
     emit("saved");
 
     await processTrade();
-  } catch (e: any) {
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : "Failed to update trade";
     console.error("Error saving trade:", e);
-    addLog(`Failed to update trade for ${props.coin}: ${e.message}`, "error");
+    addLog(`Failed to update trade for ${props.coin}: ${message}`, "error");
     toast.add({
       title: "Error",
-      description: e.message || "Failed to update trade",
+      description: message,
       color: "error",
     });
   } finally {
@@ -205,8 +205,8 @@ const saveHalfNow = async () => {
 <template>
   <UModal
     :open="open"
-    @update:open="emit('update:open', $event)"
     description="Updating will submit new open orders"
+    @update:open="emit('update:open', $event)"
   >
     <template #title>
       <div class="flex items-center gap-3">

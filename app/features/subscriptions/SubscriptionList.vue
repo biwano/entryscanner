@@ -3,7 +3,7 @@ import { useSupabaseClient } from "#imports";
 import type { Database } from "~/types/database.types";
 import type { UserSubscription } from "~/types/database.friendly.types";
 
-const props = defineProps<{
+defineProps<{
   subscriptions: UserSubscription[];
 }>();
 

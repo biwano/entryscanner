@@ -12,6 +12,10 @@ import TableHeader from "./TableHeader.vue";
 import TableBody from "./TableBody.vue";
 import TableSkeleton from "./TableSkeleton.vue";
 
+defineOptions({
+  name: "MonitoredPairsTable",
+});
+
 const props = defineProps<{
   pairs: MonitoredPairWithTrends[];
   allMids: Record<string, string> | null;

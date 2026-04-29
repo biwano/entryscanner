@@ -1,5 +1,5 @@
 import type { TraderContext } from "../types";
-import { formatPriceNumber, formatPriceForHL } from "~/utils/format";
+import { formatPriceForHL } from "~/utils/format";
 
 export const handleEntrySetup = async (ctx: TraderContext) => {
   const {
@@ -35,9 +35,6 @@ export const handleEntrySetup = async (ctx: TraderContext) => {
     if (!assetInfo) throw new Error(`Asset ${trade.coin} not found`);
     const assetIndex = meta.universe.indexOf(assetInfo);
 
-    // 1. Use leverage from trade record for calculations
-    const leverage = trade.leverage || 10;
-
     // Use prices from trade record
     const slPrice = trade.stop_loss_price;
     const tpPrice = trade.take_profit_price;
@@ -45,7 +42,22 @@ export const handleEntrySetup = async (ctx: TraderContext) => {
     const szDecimals = assetInfo.szDecimals;
     const posSize = Math.abs(parseFloat(position.position.szi)).toString();
 
-    const orders: any[] = [];
+    type TriggerOrder = {
+      a: number;
+      b: boolean;
+      p: string;
+      s: string;
+      r: true;
+      t: {
+        trigger: {
+          isMarket: true;
+          triggerPx: string;
+          tpsl: "sl" | "tp";
+        };
+      };
+    };
+
+    const orders: TriggerOrder[] = [];
 
     if (slPrice > 0) {
       const formattedSL = formatPriceForHL(slPrice, szDecimals);
@@ -61,7 +73,10 @@ export const handleEntrySetup = async (ctx: TraderContext) => {
       });
       traderStore.addLog(`Setting SL at ${formattedSL}`, "info");
     } else {
-      traderStore.addLog(`No SL price set for ${trade.coin}, skipping SL order`, "warning");
+      traderStore.addLog(
+        `No SL price set for ${trade.coin}, skipping SL order`,
+        "warning"
+      );
     }
 
     if (tpPrice > 0) {
@@ -78,13 +93,19 @@ export const handleEntrySetup = async (ctx: TraderContext) => {
       });
       traderStore.addLog(`Setting TP at ${formattedTP}`, "info");
     } else {
-      traderStore.addLog(`No TP price set for ${trade.coin}, skipping TP order`, "warning");
+      traderStore.addLog(
+        `No TP price set for ${trade.coin}, skipping TP order`,
+        "warning"
+      );
     }
 
     // Cancel existing trigger orders for this coin before placing new ones
     const openOrders = await hlClient.fetchOpenOrders(address);
     const triggerOrders = openOrders.filter(
-      (o: any) => o.coin === trade.coin && o.isTrigger
+      (o) =>
+        o.coin === trade.coin &&
+        o.reduceOnly === true &&
+        typeof o.oid === "number"
     );
 
     if (triggerOrders.length > 0) {

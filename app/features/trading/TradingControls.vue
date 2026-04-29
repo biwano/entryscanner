@@ -26,7 +26,7 @@ const { data: allMids } = useAllMids();
 const maxLeverage = computed(() => {
   if (!metaAndAssetCtxs.value) return 50;
   const universe = metaAndAssetCtxs.value[0].universe;
-  const asset = universe.find((u: any) => u.name === props.coin);
+  const asset = universe.find((u: { name: string; maxLeverage?: number }) => u.name === props.coin);
   return asset?.maxLeverage ?? 50;
 });
 
@@ -106,11 +106,12 @@ const startTrade = async (
     });
 
     await processTrade();
-  } catch (e: any) {
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : "An unknown error occurred";
     console.error("Error starting trade:", e);
     toast.add({
       title: "Error starting trade",
-      description: e.message || "An unknown error occurred",
+      description: message,
       color: "error",
     });
   } finally {

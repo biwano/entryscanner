@@ -89,7 +89,7 @@ async function computeStatsForDay(
     }
   }
 
-  let pairs_total = uniqueCoins.size;
+  const pairs_total = uniqueCoins.size;
   let pairs_bullish_daily = 0;
   let pairs_bearish_daily = 0;
   let pairs_bullish_weekly = 0;
@@ -164,11 +164,12 @@ export async function runStatsWorker() {
 
       processedDays.push({ day: targetDay, stat });
       console.log(`Successfully computed and saved stats for ${targetDay}`);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
       console.error("Error in Stats Worker loop:", error);
       return {
         status: "error",
-        message: error.message || "An unexpected error occurred",
+        message: message || "An unexpected error occurred",
         error,
         processedDays,
       };

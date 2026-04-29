@@ -23,7 +23,19 @@ export async function runRecoverWorker() {
     };
   }
 
-  const results: any[] = [];
+  type TimeframeRecoverResult = {
+    status: "no_candles" | "no_flips_detected" | "success" | "error";
+    message?: string;
+    error?: unknown;
+    detected_flips?: number;
+    new_events_created?: number;
+  };
+  type CoinRecoverResult = {
+    coin: string;
+    timeframes: Partial<Record<Timeframe, TimeframeRecoverResult>>;
+  };
+
+  const results: CoinRecoverResult[] = [];
   const timeframes: Timeframe[] = ["D1", "W1"];
 
   let i = 0;
@@ -31,7 +43,7 @@ export async function runRecoverWorker() {
     i++;
     console.log(`Processing pair ${i} of ${pairs.length}: ${pair.coin}`);
     const coin = pair.coin;
-    const coinResults: any = { coin, timeframes: {} };
+    const coinResults: CoinRecoverResult = { coin, timeframes: {} };
 
     for (const timeframe of timeframes) {
       const interval = timeframe === "D1" ? "1d" : "1w";
@@ -104,10 +116,11 @@ export async function runRecoverWorker() {
           detected_flips: trendAnalysis.flips.length,
           new_events_created: createdEvents.length,
         };
-      } catch (err: any) {
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
         coinResults.timeframes[timeframe] = {
           status: "error",
-          message: err.message,
+          message,
         };
       }
     }

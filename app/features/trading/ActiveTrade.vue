@@ -6,7 +6,7 @@ import { useActiveTrade } from "~/composables/useActiveTrade";
 import { formatPrice } from "~/utils/format";
 import EditTradeModal from "./EditTradeModal.vue";
 
-const props = withDefaults(
+withDefaults(
   defineProps<{
     isDashboard?: boolean;
   }>(),

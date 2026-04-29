@@ -1,4 +1,4 @@
-import { useSupabaseClient, useSupabaseUser } from "#imports";
+import { useSupabaseClient } from "#imports";
 import { useAsyncData } from "#app";
 import type { Database } from "~/types/database.types.js";
 import type { Profile } from "~/types/database.friendly.types.js";

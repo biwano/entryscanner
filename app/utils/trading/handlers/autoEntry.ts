@@ -90,11 +90,9 @@ export const handleAutoEntry = async (ctx: TraderContext) => {
       trade.coin
     } (${directionText}): Last Candle Open=$${lastClosedOpen.toFixed(
       4
-    )}, Close=$${lastClosedClose.toFixed(
+    )}, Close=$${lastClosedClose.toFixed(4)}, SMA50=$${lastClosedSma.toFixed(
       4
-    )}, SMA50=$${lastClosedSma.toFixed(4)} (Diff: ${diffPct.toFixed(
-      2
-    )}%). Current Mid=$${currentPrice.toFixed(
+    )} (Diff: ${diffPct.toFixed(2)}%). Current Mid=$${currentPrice.toFixed(
       4
     )}. Waiting for ${conditionText}`,
     trigger ? "success" : "info",
