@@ -16,18 +16,11 @@ Always refer to `SPECS.md` in the root directory to understand the application s
 - **Database Schema**: Details for `profiles`, `user_system`, `user_subscriptions`, `monitored_pairs`, `trends`, and `notification_history` tables.
 - **System Architecture**: Market data layer, trend engine, server-side workers, and persistence layer.
 
-## Code rules
-
-- Add the .js extension to imports when appropriate except in vue files
-- Remove unused imports
-- Never use the `any` type
-- Never cast using `as`
-- Use `~~shared` alias for imports from the shared directory instead of `#shared`
-
 ## Behaviour
 
 - Write migration files if necessary
 - Never try to run or write tests
+- If possible use types from @nktkas/hyperliquid
 
 ## Type Safety
 

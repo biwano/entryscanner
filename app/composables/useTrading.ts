@@ -1,8 +1,27 @@
 import { computed } from "vue";
-import { useProfile } from "~/composables/useProfile";
-import { PrivateKeySigner } from "@nktkas/hyperliquid/signing";
-import { HyperliquidClient } from "~~shared/hyperliquid";
+import { useProfile } from "~/composables/useProfile.js";
+import { privateKeyToAccount } from "viem/accounts";
+import type { UserFillsResponse } from "@nktkas/hyperliquid/api/info";
+import { HyperliquidClient } from "~~shared/hyperliquid.js";
 import { useAsyncData } from "#app";
+
+type UserFill = UserFillsResponse[number];
+type FillSide = UserFill["side"];
+
+type CompletedTrade = {
+  coin: string;
+  leverage: string;
+  entryTime: string;
+  entryPrice: number;
+  exitTime: string;
+  exitPrice: number;
+  pnl: number;
+  size: number;
+};
+
+const isHexPrivateKey = (value: string): value is `0x${string}` => {
+  return /^0x[0-9a-fA-F]{64}$/u.test(value);
+};
 
 export const useTrading = () => {
   const { profile } = useProfile();
@@ -11,7 +30,12 @@ export const useTrading = () => {
   const wallet = computed(() => {
     if (!profile.value?.hl_api_key) return null;
     try {
-      return new PrivateKeySigner(profile.value.hl_api_key);
+      const key = profile.value.hl_api_key;
+      const hexKey = key.startsWith("0x") ? key : `0x${key}`;
+      if (!isHexPrivateKey(hexKey)) {
+        throw new Error("Invalid private key format");
+      }
+      return privateKeyToAccount(hexKey);
     } catch (e) {
       console.error("Invalid HL API key", e);
       return null;
@@ -70,8 +94,8 @@ export const useTrading = () => {
   const recentTrades = computed(() => {
     if (!fills.value || !Array.isArray(fills.value)) return [];
 
-    const completedTrades: any[] = [];
-    const fillsByCoin: Record<string, any[]> = {};
+    const completedTrades: CompletedTrade[] = [];
+    const fillsByCoin: Record<string, UserFill[]> = {};
 
     // Group by coin
     [...fills.value].forEach((fill) => {
@@ -97,7 +121,8 @@ export const useTrading = () => {
       coinFills.forEach((fill) => {
         const sz = parseFloat(fill.sz);
         const px = parseFloat(fill.px);
-        const sideMult = fill.side === "B" ? 1 : -1;
+        const side: FillSide = fill.side;
+        const sideMult = side === "B" ? 1 : -1;
 
         // If we're opening or increasing a position
         if (currentPos === 0 || Math.sign(currentPos) === sideMult) {
@@ -136,7 +161,7 @@ export const useTrading = () => {
             entrySizeSum = 0;
             firstEntryTime = 0;
           } else if (
-            Math.sign(currentPos) !== (fill.side === "B" ? 1 : -1) &&
+            Math.sign(currentPos) !== (side === "B" ? 1 : -1) &&
             currentPos !== 0
           ) {
             // Position flipped - close current, start new
@@ -151,7 +176,7 @@ export const useTrading = () => {
               pnl: totalPnl,
               size: entrySizeSum,
             });
-              // Start new trade h the leftover size
+            // Start new trade h the leftover size
             currentPos = leftoverSz * sideMult;
             totalPnl = 0;
             entryPriceSum = px * leftoverSz;
@@ -165,9 +190,11 @@ export const useTrading = () => {
     // Final mapping to add leverage and sort by exit time
     return completedTrades
       .map((trade) => {
-        const position = clearinghouse.value?.assetPositions?.find(
-          (p: any) => p?.position?.coin === trade.coin
-        );
+        const position = Array.isArray(clearinghouse.value?.assetPositions)
+          ? clearinghouse.value.assetPositions.find(
+              (p) => p?.position?.coin === trade.coin
+            )
+          : undefined;
         const leverageValue = position?.position?.leverage?.value || null;
         const leverage = leverageValue ? `${leverageValue}x` : "N/A";
 

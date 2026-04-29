@@ -14,7 +14,7 @@
     "lint:fix": "eslint . --fix"
   },
   "dependencies": {
-    "@nktkas/hyperliquid": "^0.31.0",
+    "@nktkas/hyperliquid": "^0.32.2",
     "@nuxt/ui": "^4.5.0",
     "@nuxtjs/supabase": "^2.0.4",
     "@supa-kit/auth-ui-vue": "^0.4.3",
@@ -28,6 +28,7 @@
     "lucide-vue-next": "^0.575.0",
     "nuxt": "^4.3.1",
     "technicalindicators": "^3.1.0",
+    "viem": "^2.48.4",
     "vue": "^3.5.28",
     "vue-echarts": "^8.0.1",
     "vue-router": "^4.6.4"

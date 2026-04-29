@@ -4,7 +4,7 @@ import {
   HttpTransport,
   type CandleSnapshotParameters,
 } from "@nktkas/hyperliquid";
-import type { PrivateKeySigner } from "@nktkas/hyperliquid/signing";
+import type { PrivateKeyAccount } from "viem";
 
 export type CandleInterval = CandleSnapshotParameters["interval"];
 
@@ -17,7 +17,7 @@ export class HyperliquidClient {
     this.infoClient = new InfoClient({ transport: this.transport });
   }
 
-  getExchangeClient(signer: PrivateKeySigner) {
+  getExchangeClient(signer: PrivateKeyAccount) {
     return new ExchangeClient({
       transport: this.transport,
       wallet: signer,

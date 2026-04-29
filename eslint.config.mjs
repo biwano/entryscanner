@@ -7,6 +7,7 @@ export default withNuxt({
       "error",
       "always",
       {
+        ignorePackages: true,
         js: "always",
         jsx: "always",
         ts: "always",
@@ -14,6 +15,33 @@ export default withNuxt({
         vue: "always",
       },
     ],
+    "no-restricted-imports": [
+      "error",
+      {
+        patterns: [
+          {
+            group: ["#shared", "#shared/*"],
+            message: "Use ~~shared alias instead of #shared.",
+          },
+        ],
+      },
+    ],
+    "no-unused-vars": "off",
+    "@typescript-eslint/no-unused-vars": [
+      "error",
+      {
+        argsIgnorePattern: "^_",
+        varsIgnorePattern: "^_",
+        caughtErrorsIgnorePattern: "^_",
+      },
+    ],
+    "@typescript-eslint/no-explicit-any": "error",
+    "@typescript-eslint/consistent-type-assertions": [
+      "error",
+      {
+        assertionStyle: "never",
+      },
+    ],
   },
-  ignorePatterns: ["/app/**/*.vue"],
+  ignores: ["app/**/*.vue"],
 });
