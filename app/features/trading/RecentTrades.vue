@@ -20,6 +20,11 @@ const paginatedTrades = computed(() => {
 
 const totalItems = computed(() => recentTrades.value.length);
 
+const displayExitTime = (exitTime: string | null, isOpen: boolean) => {
+  if (isOpen || !exitTime) return "Open";
+  return formatTime(exitTime);
+};
+
 const columns = [
   { id: "asset", header: "Asset" },
   { id: "leverage", header: "Lev" },
@@ -40,7 +45,9 @@ const columns = [
           <UIcon name="i-lucide-history" class="text-primary" />
           Recent Trades
         </h2>
-        <p class="text-sm text-gray-500">History of your completed trades.</p>
+        <p class="text-sm text-gray-500">
+          History of your recent trades, including open positions.
+        </p>
       </div>
     </div>
 
@@ -75,18 +82,22 @@ const columns = [
 
         <template #exit-cell="{ row }">
           <div class="flex flex-col">
-            <span class="text-xs text-gray-500 font-mono">{{
-              formatTime(row.original.exitTime)
-            }}</span>
-            <span class="font-bold">{{
-              formatPrice(row.original.exitPrice)
-            }}</span>
+            <span class="text-xs text-gray-500 font-mono">
+              {{ displayExitTime(row.original.exitTime, row.original.isOpen) }}
+            </span>
+            <span class="font-bold">
+              {{
+                row.original.isOpen || row.original.exitPrice === null
+                  ? "-"
+                  : formatPrice(row.original.exitPrice)
+              }}
+            </span>
           </div>
         </template>
 
         <template #pnl-cell="{ row }">
           <div class="flex flex-col items-end">
-            <Private>
+            <Private v-if="!row.original.isOpen && row.original.pnl !== null">
               <span
                 :class="
                   row.original.pnl >= 0 ? 'text-green-500' : 'text-red-500'
@@ -103,9 +114,10 @@ const columns = [
                 "
               >
                 {{ row.original.pnl >= 0 ? "+" : ""
-                }}{{ row.original.pnlPct.toFixed(2) }}%
+                }}{{ (row.original.pnlPct ?? 0).toFixed(2) }}%
               </span>
             </Private>
+            <span v-else class="text-gray-400">-</span>
           </div>
         </template>
       </UTable>

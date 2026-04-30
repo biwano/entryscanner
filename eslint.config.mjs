@@ -30,6 +30,12 @@ export default withNuxt({
         assertionStyle: "never",
       },
     ],
+    "no-console": [
+      "error",
+      {
+        allow: ["warn", "info", "error"],
+      },
+    ],
   },
   ignores: ["app/**/*.vue"],
 });

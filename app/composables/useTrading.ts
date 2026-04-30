@@ -13,9 +13,10 @@ type CompletedTrade = {
   leverage: string;
   entryTime: string;
   entryPrice: number;
-  exitTime: string;
-  exitPrice: number;
-  pnl: number;
+  exitTime: string | null;
+  exitPrice: number | null;
+  pnl: number | null;
+  isOpen: boolean;
   size: number;
 };
 
@@ -95,21 +96,22 @@ export const useTrading = () => {
     if (!fills.value || !Array.isArray(fills.value)) return [];
 
     const completedTrades: CompletedTrade[] = [];
-    const fillsByCoin: Record<string, UserFill[]> = {};
+    const orderedFills = [...fills.value.slice(0, 15)]
+      .filter((fill): fill is UserFill => Boolean(fill?.coin))
+      .sort((a, b) => a.time - b.time);
 
-    // Group by coin
-    [...fills.value].forEach((fill) => {
-      if (!fill || !fill.coin) return;
-      if (!fillsByCoin[fill.coin]) fillsByCoin[fill.coin] = [];
-      (fillsByCoin[fill.coin] || []).push(fill);
+    const contiguousCoinGroups: { coin: string; fills: UserFill[] }[] = [];
+    orderedFills.forEach((fill) => {
+      const lastGroup = contiguousCoinGroups[contiguousCoinGroups.length - 1];
+      if (!lastGroup || lastGroup.coin !== fill.coin) {
+        contiguousCoinGroups.push({ coin: fill.coin, fills: [fill] });
+        return;
+      }
+
+      lastGroup.fills.push(fill);
     });
 
-    Object.keys(fillsByCoin).forEach((coin) => {
-      // Sort fills for this coin oldest to newest
-      const coinFills = [...(fillsByCoin[coin] || [])].sort(
-        (a, b) => a.time - b.time
-      );
-
+    contiguousCoinGroups.forEach(({ coin, fills: coinFills }) => {
       let currentPos = 0;
       let totalPnl = 0;
       let entryPriceSum = 0;
@@ -132,6 +134,7 @@ export const useTrading = () => {
           currentPos += sz * sideMult;
         } else {
           // We're closing or reducing a position
+
           const avgEntryPx = entryPriceSum / entrySizeSum;
           const reducedSz = Math.min(Math.abs(currentPos), sz);
           const realizedPnl =
@@ -143,7 +146,7 @@ export const useTrading = () => {
           lastExitPrice = px;
 
           // If position fully closed (or flipped)
-          if (Math.abs(currentPos) < 1e-8) {
+          if (Math.abs(currentPos) === 0 || Math.sign(currentPos) == sideMult) {
             completedTrades.push({
               coin,
               leverage: "N/A",
@@ -152,31 +155,11 @@ export const useTrading = () => {
               exitTime: new Date(lastExitTime).toISOString(),
               exitPrice: lastExitPrice,
               pnl: totalPnl,
+              isOpen: false,
               size: entrySizeSum,
             });
             // Reset for next trade
-            currentPos = 0;
-            totalPnl = 0;
-            entryPriceSum = 0;
-            entrySizeSum = 0;
-            firstEntryTime = 0;
-          } else if (
-            Math.sign(currentPos) !== (side === "B" ? 1 : -1) &&
-            currentPos !== 0
-          ) {
-            // Position flipped - close current, start new
             const leftoverSz = Math.abs(currentPos);
-            completedTrades.push({
-              coin,
-              leverage: "N/A",
-              entryTime: new Date(firstEntryTime).toISOString(),
-              entryPrice: avgEntryPx,
-              exitTime: new Date(fill.time).toISOString(),
-              exitPrice: px,
-              pnl: totalPnl,
-              size: entrySizeSum,
-            });
-            // Start new trade h the leftover size
             currentPos = leftoverSz * sideMult;
             totalPnl = 0;
             entryPriceSum = px * leftoverSz;
@@ -185,6 +168,20 @@ export const useTrading = () => {
           }
         }
       });
+
+      if (Math.abs(currentPos) >= 0 && entrySizeSum > 0) {
+        completedTrades.push({
+          coin,
+          leverage: "N/A",
+          entryTime: new Date(firstEntryTime).toISOString(),
+          entryPrice: entryPriceSum / entrySizeSum,
+          exitTime: null,
+          exitPrice: null,
+          pnl: null,
+          isOpen: true,
+          size: Math.abs(currentPos),
+        });
+      }
     });
 
     // Final mapping to add leverage and sort by exit time
@@ -198,11 +195,15 @@ export const useTrading = () => {
         const leverageValue = position?.position?.leverage?.value || null;
         const leverage = leverageValue ? `${leverageValue}x` : "N/A";
 
-        let pnlPct = 0;
-        if (leverageValue) {
+        let pnlPct: number | null = null;
+        if (!trade.isOpen && trade.pnl !== null && leverageValue) {
           const margin = (trade.size * trade.entryPrice) / leverageValue;
           pnlPct = (trade.pnl / margin) * 100;
-        } else {
+        } else if (
+          !trade.isOpen &&
+          trade.pnl !== null &&
+          trade.exitPrice !== null
+        ) {
           // Fallback to simple price change %
           const p = (trade.exitPrice - trade.entryPrice) / trade.entryPrice;
           pnlPct = p * 100;
@@ -212,7 +213,7 @@ export const useTrading = () => {
       })
       .sort(
         (a, b) =>
-          new Date(b.exitTime).getTime() - new Date(a.exitTime).getTime()
+          new Date(b.entryTime).getTime() - new Date(a.entryTime).getTime()
       );
   });
 

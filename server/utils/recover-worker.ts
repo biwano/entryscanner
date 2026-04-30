@@ -41,7 +41,7 @@ export async function runRecoverWorker() {
   let i = 0;
   for (const pair of pairs) {
     i++;
-    console.log(`Processing pair ${i} of ${pairs.length}: ${pair.coin}`);
+    console.info(`Processing pair ${i} of ${pairs.length}: ${pair.coin}`);
     const coin = pair.coin;
     const coinResults: CoinRecoverResult = { coin, timeframes: {} };
 

@@ -100,7 +100,6 @@ export const handleRequested = async (ctx: TraderContext) => {
     } at $${formatPriceNumber(price)} (Size: ${calculatedSizeUsd.toFixed(2)})`,
     "info"
   );
-  console.log(formattedPrice);
 
   await exchangeClient.order({
     orders: [

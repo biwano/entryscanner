@@ -163,7 +163,7 @@ export async function runStatsWorker() {
       if (insertError) throw insertError;
 
       processedDays.push({ day: targetDay, stat });
-      console.log(`Successfully computed and saved stats for ${targetDay}`);
+      console.info(`Successfully computed and saved stats for ${targetDay}`);
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
       console.error("Error in Stats Worker loop:", error);
