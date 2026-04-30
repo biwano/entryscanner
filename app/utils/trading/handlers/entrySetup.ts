@@ -33,7 +33,12 @@ export const handleEntrySetup = async (ctx: TraderContext) => {
 
     const assetInfo = meta.universe.find((u) => u.name === trade.coin);
     if (!assetInfo) throw new Error(`Asset ${trade.coin} not found`);
-    const assetIndex = meta.universe.indexOf(assetInfo);
+    const assetIndex = meta.universe.findIndex((u) => u.name === trade.coin);
+    if (assetIndex < 0) {
+      throw new Error(
+        `Invalid Hyperliquid asset index for ${trade.coin}. Unable to set exit orders.`
+      );
+    }
 
     // Use prices from trade record
     const slPrice = trade.stop_loss_price;

@@ -63,21 +63,43 @@ const {
 const maxLeverage = computed(() => {
   if (!metaAndAssetCtxs.value) return 50;
   const universe = metaAndAssetCtxs.value[0].universe;
-  const asset = universe.find((u: { name: string; maxLeverage?: number }) => u.name === props.coin);
-  return asset?.maxLeverage ?? 50;
+  try {
+    const assetIndex = getAssetIndex(props.coin);
+    return universe[assetIndex]?.maxLeverage ?? 50;
+  } catch {
+    return 50;
+  }
 });
 
-// Linkage logic
-// ... (useTradeLinkage handles this)
+function getAssetIndex(coin: string) {
+  if (!metaAndAssetCtxs.value) {
+    throw new Error(
+      "Missing Hyperliquid metadata. Unable to resolve asset index."
+    );
+  }
+
+  const meta = metaAndAssetCtxs.value[0];
+  const assetIndex = meta.universe.findIndex(
+    (u: { name: string }) => u.name === coin
+  );
+  if (assetIndex < 0) {
+    throw new Error(`Invalid Hyperliquid asset index for ${coin}.`);
+  }
+
+  return assetIndex;
+}
 
 watch(
   () => props.open,
   (newVal) => {
     if (newVal) {
-      localTpPrice.value = props.tpPrice || activeTrade.value?.take_profit_price || 0;
-      localSlPrice.value = props.slPrice || activeTrade.value?.stop_loss_price || 0;
+      localTpPrice.value =
+        props.tpPrice || activeTrade.value?.take_profit_price || 0;
+      localSlPrice.value =
+        props.slPrice || activeTrade.value?.stop_loss_price || 0;
       localLeverage.value = activeTrade.value?.leverage || 10;
-      activeInput.value = (localTpPrice.value > 0 || localSlPrice.value > 0) ? "price" : "pct";
+      activeInput.value =
+        localTpPrice.value > 0 || localSlPrice.value > 0 ? "price" : "pct";
 
       // If prices were provided from orders, update %
       updatePctsFromPrices();
@@ -91,25 +113,23 @@ const saveEdit = async () => {
     // 1. Cancel existing open orders for this coin
     if (hlClient && address.value && wallet.value && metaAndAssetCtxs.value) {
       const openOrders = await hlClient.fetchOpenOrders(address.value);
-      const coinOrders = openOrders.filter((o: { coin: string; oid: number }) => o.coin === props.coin);
+      const coinOrders = openOrders.filter(
+        (o: { coin: string; oid: number }) => o.coin === props.coin
+      );
 
       if (coinOrders.length > 0) {
-        const meta = metaAndAssetCtxs.value[0];
-        const assetInfo = meta.universe.find((u: { name: string }) => u.name === props.coin);
-        if (assetInfo) {
-          const assetIndex = meta.universe.indexOf(assetInfo);
-          const exchangeClient = hlClient.getExchangeClient(wallet.value);
+        const assetIndex = getAssetIndex(props.coin);
+        const exchangeClient = hlClient.getExchangeClient(wallet.value);
 
-          for (const order of coinOrders) {
-            await exchangeClient.cancel({
-              cancels: [
-                {
-                  a: assetIndex,
-                  o: order.oid,
-                },
-              ],
-            });
-          }
+        for (const order of coinOrders) {
+          await exchangeClient.cancel({
+            cancels: [
+              {
+                a: assetIndex,
+                o: order.oid,
+              },
+            ],
+          });
         }
       }
     }

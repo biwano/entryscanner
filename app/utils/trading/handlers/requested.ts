@@ -40,7 +40,12 @@ export const handleRequested = async (ctx: TraderContext) => {
     throw new Error(`Asset ${trade.coin} not found in Hyperliquid universe`);
   }
 
-  const assetIndex = meta.universe.indexOf(assetInfo);
+  const assetIndex = meta.universe.findIndex((u) => u.name === trade.coin);
+  if (assetIndex < 0) {
+    throw new Error(
+      `Invalid Hyperliquid asset index for ${trade.coin}. Unable to continue trade request.`
+    );
+  }
 
   // 1. Set leverage from trade record
   const leverage = trade.leverage || 10;

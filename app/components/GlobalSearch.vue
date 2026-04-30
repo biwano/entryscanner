@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 import { useRouter } from "vue-router";
 import { useSupabaseClient } from "#imports";
 import { useQuery } from "@tanstack/vue-query";
@@ -28,8 +28,11 @@ interface SearchOption {
   value: string;
 }
 
+const RESET_GLOBAL_COIN_SEARCH_EVENT = "reset-global-coin-search";
+
 const router = useRouter();
 const selected = ref<SearchOption | null>(null);
+const menuKey = ref(0);
 
 const options = computed(() => {
   if (!monitoredPairs.value) return [];
@@ -43,11 +46,26 @@ const onSelect = (coin: SearchOption) => {
   router.push(`/pair/${coin.value}`);
   selected.value = null; // Reset selection to clear input
 };
+
+const resetSearch = () => {
+  selected.value = null;
+  menuKey.value += 1;
+};
+
+onMounted(() => {
+  window.addEventListener(RESET_GLOBAL_COIN_SEARCH_EVENT, resetSearch);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener(RESET_GLOBAL_COIN_SEARCH_EVENT, resetSearch);
+});
 </script>
 
 <template>
   <div class="w-full max-w-[150px] sm:max-w-xs">
     <USelectMenu
+      :key="menuKey"
+      v-model="selected"
       :items="options"
       searchable
       placeholder="Search..."

@@ -42,12 +42,12 @@ const flips = computed(() => trendAnalysis.value?.flips || []);
     <div class="flex items-center justify-between">
       <h2 class="text-xl font-bold">Price Action ({{ timeframe }})</h2>
       <div class="flex gap-4">
-        <div class="text-xs text-orange-500 flex items-center gap-1">
-          <div class="w-2 h-0.5 bg-orange-500" />
-          SMA 50
-        </div>
         <div class="text-xs text-fuchsia-500 flex items-center gap-1">
           <div class="w-2 h-0.5 bg-fuchsia-500" />
+          SMA 50
+        </div>
+        <div class="text-xs text-orange-500 flex items-center gap-1">
+          <div class="w-2 h-0.5 bg-orange-500" />
           SMA 200
         </div>
       </div>

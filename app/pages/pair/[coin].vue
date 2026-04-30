@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, onBeforeRouteLeave } from "vue-router";
 import { useAsyncData, navigateTo } from "#app";
 import { useSupabaseClient } from "#imports";
 import { useHyperliquid } from "~/composables/useHyperliquid";
@@ -14,6 +14,8 @@ import AssetStats from "~/features/monitored-pairs/AssetStats.vue";
 import EventHistory from "~/features/monitored-pairs/EventHistory.vue";
 import TradingControls from "~/features/trading/TradingControls.vue";
 import PairHeader from "~/features/monitored-pairs/PairHeader.vue";
+
+const RESET_GLOBAL_COIN_SEARCH_EVENT = "reset-global-coin-search";
 
 const route = useRoute();
 const coinParam = route.params.coin;
@@ -129,6 +131,12 @@ const percentChangeSinceTrendStart = computed(() => {
 
   if (!flipEvent?.price_at_flip) return null;
   return formatPercentChange(currentPrice.value, flipEvent.price_at_flip);
+});
+
+onBeforeRouteLeave(() => {
+  if (import.meta.client) {
+    window.dispatchEvent(new Event(RESET_GLOBAL_COIN_SEARCH_EVENT));
+  }
 });
 </script>
 

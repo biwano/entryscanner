@@ -332,7 +332,7 @@ const option = computed(() => {
         type: "line",
         data: props.sma50 || [],
         smooth: true,
-        lineStyle: { opacity: 0.8, color: "#f59e0b", width: 2 },
+        lineStyle: { opacity: 0.8, color: "#d946ef", width: 2 },
         itemStyle: { opacity: 0 },
       },
       {
@@ -340,7 +340,7 @@ const option = computed(() => {
         type: "line",
         data: props.sma200 || [],
         smooth: true,
-        lineStyle: { opacity: 0.8, color: "#d946ef", width: 2 },
+        lineStyle: { opacity: 0.8, color: "#f59e0b", width: 2 },
         itemStyle: { opacity: 0 },
       },
       {
